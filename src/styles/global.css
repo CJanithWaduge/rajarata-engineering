@@ -80,6 +80,27 @@
   --color-outline-variant: #e4beba;
 
   /* ---------------------------------------------------------------------
+     Footer (dark surface)
+
+     These are NOT in DESIGN.md. The prototypes hardcode them, and they sit
+     outside the approved palette — the footer red (#ef4444) is a different
+     red from the primary, and the WhatsApp green is a third accent colour
+     with no token behind it.
+
+     Named here so the values live in one place rather than being scattered
+     as arbitrary hex classes. Whether the dark footer is intentional needs
+     confirming with the user; if it goes, delete this block and the
+     corresponding utilities go with it.
+     --------------------------------------------------------------------- */
+  --color-footer-bg: #0b0f17;
+  --color-footer-text: #9ca3af;
+  --color-footer-accent: #ef4444;
+  --color-footer-chip-bg: #1e293b;
+  --color-footer-chip-text: #cbd5e1;
+  --color-whatsapp: #16a34a;
+  --color-whatsapp-hover: #15803d;
+
+  /* ---------------------------------------------------------------------
      Type scale
      Source: DESIGN.md `typography` frontmatter
 

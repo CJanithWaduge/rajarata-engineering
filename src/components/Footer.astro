@@ -1,0 +1,176 @@
+---
+/**
+ * Site footer.
+ *
+ * Dark surface. The palette here is not in DESIGN.md — see the "Footer
+ * (dark surface)" block in global.css. The footer red (#ef4444) is a
+ * different colour from the primary red, and the WhatsApp green is a third
+ * accent with no token behind it. Both are named tokens now rather than
+ * arbitrary hex classes, but the whole block needs confirming as
+ * intentional.
+ *
+ * Contains four `[REPLACE: ...]` markers. They must be resolved from real
+ * business details before this page ships.
+ */
+import Container from './Container.astro';
+import Logo from './Logo.astro';
+
+const quickLinks = [
+  { label: 'Home', href: '/' },
+  { label: 'Services', href: '#' },
+  { label: 'About Us', href: '#' },
+  { label: 'Projects', href: '#' },
+  { label: 'Contact', href: '#' },
+];
+
+// The prototype lists seven, not the six the plan mentions. Kept as-is
+// rather than dropping one to hit the count.
+const services = [
+  'Residential & Commercial Wiring',
+  'Industrial Installations',
+  'MDB / SMDB Panel Installation',
+  'Cable Tray & Laying',
+  'Testing & Commissioning',
+  'ELV Solutions & Automation',
+  'Lightning Protection System',
+];
+
+const badges = ['ISO 9001:2015', 'Safety First'];
+
+const contact = [
+  { icon: 'location_on', label: '[REPLACE: BUSINESS ADDRESS]', href: undefined },
+  { icon: 'call', label: '[REPLACE: PHONE NUMBER]', href: 'tel:[REPLACE: PHONE NUMBER]' },
+  { icon: 'mail', label: '[REPLACE: EMAIL ADDRESS]', href: 'mailto:[REPLACE: EMAIL ADDRESS]' },
+  { icon: 'schedule', label: '[REPLACE: BUSINESS HOURS]', href: undefined },
+];
+
+const year = new Date().getFullYear();
+---
+
+<footer class="w-full bg-footer-bg text-footer-text font-body-sm text-body-sm">
+  <Container class="pt-16 pb-12">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-10 lg:gap-8">
+      <!-- Column 1 — brand -->
+      <div class="lg:col-span-4 flex flex-col space-y-4">
+        <a
+          href="/"
+          class="flex items-center gap-3 w-fit focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+        >
+          <Logo variant="dark" class="h-10 w-auto" />
+          <span class="flex flex-col">
+            <span class="font-title-lg text-title-lg tracking-tight text-white uppercase"
+              >Rajarata</span
+            >
+            <span
+              class="font-label-caps text-label-caps tracking-widest text-footer-accent uppercase"
+              >Engineering</span
+            >
+          </span>
+        </a>
+        <p class="text-footer-text font-body-md text-body-md pr-4 leading-relaxed">
+          Premier electrical engineering and contracting infrastructure solutions. Delivering
+          utility-grade industrial power distribution, commercial installations, and
+          mission-critical ELV building automation systems with uncompromising safety and
+          compliance standards.
+        </p>
+        <div class="flex items-center gap-2 pt-2">
+          {
+            badges.map((badge) => (
+              <span class="inline-flex items-center px-2.5 py-1 rounded bg-footer-chip-bg text-footer-chip-text font-label-caps text-label-caps uppercase">
+                {badge}
+              </span>
+            ))
+          }
+        </div>
+      </div>
+
+      <!-- Column 2 — quick links -->
+      <nav class="lg:col-span-2 flex flex-col space-y-3" aria-label="Footer">
+        <span class="font-title-md text-title-md text-white tracking-wide">Quick Links</span>
+        <ul class="space-y-2.5 mt-2">
+          {
+            quickLinks.map((item) => (
+              <li class="h-7 flex items-center">
+                <a
+                  href={item.href}
+                  class="hover:text-white transition-colors focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+                >
+                  {item.label}
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+      </nav>
+
+      <!-- Column 3 — services -->
+      <nav class="lg:col-span-3 flex flex-col space-y-3" aria-label="Services">
+        <span class="font-title-md text-title-md text-white tracking-wide">Our Services</span>
+        <ul class="space-y-2.5 mt-2">
+          {
+            services.map((service) => (
+              <li class="h-7 flex items-center">
+                <a
+                  href="#"
+                  class="hover:text-white transition-colors truncate focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+                >
+                  {service}
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+      </nav>
+
+      <!-- Column 4 — contact -->
+      <div class="lg:col-span-3 flex flex-col space-y-3">
+        <span class="font-title-md text-title-md text-white tracking-wide">Contact Info</span>
+        <div class="space-y-3 mt-2">
+          {
+            contact.map((item) => (
+              <div class="flex items-start gap-3">
+                <span class="material-symbols-outlined text-footer-accent text-[20px] mt-0.5">
+                  {item.icon}
+                </span>
+                {item.href ? (
+                  <a
+                    href={item.href}
+                    class="hover:text-white transition-colors truncate focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+                  >
+                    {item.label}
+                  </a>
+                ) : (
+                  <span>{item.label}</span>
+                )}
+              </div>
+            ))
+          }
+          <div class="pt-2">
+            <a
+              href="#"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-whatsapp text-white font-label-sm text-label-sm hover:bg-whatsapp-hover transition-colors focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+            >
+              <span class="material-symbols-outlined text-[16px]">chat</span>
+              <span>WhatsApp Direct</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom bar -->
+    <div class="mt-12 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <p class="text-xs text-footer-text">
+        &copy; {year} Rajarata Engineering. All Rights Reserved. Electrical Engineering
+        &amp; Contracting.
+      </p>
+      <p
+        class="text-xs text-footer-text font-label-caps uppercase tracking-wider"
+      >
+        Built for Safety &amp; Performance
+      </p>
+    </div>
+  </Container>
+</footer>
