@@ -1,29 +1,19 @@
 ---
 import Base from '../layouts/Base.astro';
 import Logo from '../components/Logo.astro';
+import Container from '../components/Container.astro';
 ---
 
 <Base
   title="Rajarata Engineering | Electrical Engineering & Contracting"
   description="[REPLACE: 1-2 sentence company introduction]"
 >
-  <!-- light variant on a white surface -->
-  <div class="p-6 bg-surface-container-lowest">
-    <Logo class="h-10 w-auto" />
-  </div>
-
-  <!-- dark variant on the footer surface (#0b0f17) -->
-  <div class="p-6 bg-[#0b0f17]">
-    <Logo variant="dark" class="h-10 w-auto" />
-  </div>
-
-  <!-- header sizing, per the home prototype: h-9 lg:h-10 -->
-  <div class="p-6 bg-surface-container-lowest">
-    <a href="/" class="flex items-center gap-3 focus:outline-none w-fit">
-      <Logo class="h-9 lg:h-10 w-auto" />
+  <!-- padded: the standard section wrapper -->
+  <Container class="pt-16 pb-12">
+    <div class="flex items-center gap-3">
+      <Logo class="h-10 w-auto" />
       <span class="flex flex-col">
-        <span
-          class="font-title-lg text-title-lg tracking-tight text-on-surface uppercase"
+        <span class="font-title-lg text-title-lg tracking-tight text-on-surface uppercase"
           >Rajarata</span
         >
         <span
@@ -31,19 +21,36 @@ import Logo from '../components/Logo.astro';
           >Engineering</span
         >
       </span>
-    </a>
+    </div>
+  </Container>
+
+  <!-- unpadded: full-bleed background, content still width-capped -->
+  <Container padded={false}>
+    <div class="bg-surface-container px-4 sm:px-6 lg:px-8 py-6">
+      <p class="font-body-md text-body-md text-secondary">
+        Unpadded variant — background spans the full width, inner content keeps
+        its own gutters.
+      </p>
+    </div>
+  </Container>
+
+  <!-- narrow variant, to confirm w-full + max-w holds -->
+  <div class="bg-surface-container-lowest">
+    <Container class="py-6">
+      <h1 class="font-display-hero text-display-hero text-primary-container">
+        Rajarata
+      </h1>
+      <p class="font-body-md text-body-md text-secondary">Step 4 container check</p>
+      <div
+        class="bg-surface-container p-4 rounded-card shadow-card border border-outline-variant"
+      >
+        card &middot; 18px radius
+      </div>
+    </Container>
   </div>
 
-  <div class="p-6 flex flex-col gap-4 items-start">
-    <h1 class="font-display-hero text-display-hero text-primary-container">Rajarata</h1>
-    <p class="font-body-md text-body-md text-secondary">Step 3 logo check</p>
-    <div
-      class="bg-surface-container p-4 rounded-card shadow-card border border-outline-variant"
-    >
-      card &middot; 18px radius
-    </div>
-    <span class="material-symbols-outlined text-primary-container text-3xl"
-      >electrical_bolt</span
-    >
+  <!-- dark logo, for the footer later -->
+  <div class="p-6 bg-[#0b0f17]">
+    <Logo variant="dark" class="h-10 w-auto" />
   </div>
 </Base>

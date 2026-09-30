@@ -1,0 +1,29 @@
+---
+/**
+ * Page gutter and max content width.
+ *
+ * The prototypes repeat `max-w-7xl mx-auto px-4 sm:px-6 lg:px-8` in every
+ * section of every page — 9 times on Home alone, and consistently across all
+ * five pages. This wraps it so the string lives in one place.
+ *
+ * Extra classes passed in are appended, so section-specific padding like
+ * `pt-16 pb-12` can be added without a second wrapper. Because Tailwind
+ * resolves conflicting utilities by source order in the generated CSS rather
+ * than by class order in the attribute, prefer the `padded` prop for the
+ * common cases instead of overriding `px-*` by hand.
+ */
+interface Props {
+  /** Opt out of the responsive gutters. Some footers manage their own. */
+  padded?: boolean;
+  class?: string;
+}
+
+const { padded = true, class: className } = Astro.props;
+
+const base = 'mx-auto w-full max-w-7xl';
+const gutter = 'px-4 sm:px-6 lg:px-8';
+---
+
+<div class:list={[base, padded && gutter, className]}>
+  <slot />
+</div>
