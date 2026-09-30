@@ -1,17 +1,25 @@
 ---
-
+import Base from '../layouts/Base.astro';
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<h1>Astro</h1>
-	</body>
-</html>
+<Base
+  title="Rajarata Engineering | Electrical Engineering & Contracting"
+  description="[REPLACE: 1-2 sentence company introduction]"
+>
+  <h1 class="font-display-hero text-display-hero text-primary-container">Rajarata</h1>
+  <p class="font-body-md text-body-md text-secondary">Step 2 font check</p>
+  <span class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-widest"
+    >label-caps</span
+  >
+  <div
+    class="bg-surface-container p-4 rounded-card shadow-card border border-outline-variant"
+  >
+    card &middot; 18px radius
+  </div>
+  <div class="p-3 rounded-control bg-primary text-on-primary shadow-hover">
+    control &middot; 12px radius
+  </div>
+  <span class="material-symbols-outlined text-primary-container text-3xl"
+    >electrical_bolt</span
+  >
+</Base>

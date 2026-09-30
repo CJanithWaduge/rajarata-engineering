@@ -1,1 +1,224 @@
 @import "tailwindcss";
+
+@theme {
+  /* ---------------------------------------------------------------------
+     Fonts
+     --------------------------------------------------------------------- */
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* Material Symbols loads as a standalone webfont (see layouts/Base.astro).
+     The `material-symbols-outlined` class is applied by components, not here. */
+  --font-symbols: "Material Symbols Outlined";
+
+  /* ---------------------------------------------------------------------
+     Palette
+     Source: UI-UX-design/precision_industrial_engineering/DESIGN.md
+     --------------------------------------------------------------------- */
+
+  /* Surfaces */
+  --color-surface: #f9f9f9;
+  --color-surface-dim: #dadada;
+  --color-surface-bright: #f9f9f9;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container-low: #f3f3f3;
+  --color-surface-container: #eeeeee;
+  --color-surface-container-high: #e8e8e8;
+  --color-surface-container-highest: #e2e2e2;
+  --color-surface-variant: #e2e2e2;
+  --color-background: #f9f9f9;
+
+  /* Text on surfaces */
+  --color-on-surface: #1b1b1b;
+  --color-on-surface-variant: #5b403d;
+  --color-on-background: #1b1b1b;
+
+  /* Inverted surfaces */
+  --color-inverse-surface: #303030;
+  --color-inverse-on-surface: #f1f1f1;
+  --color-inverse-primary: #ffb3ac;
+
+  /* Brand red */
+  --color-primary: #af101a;
+  --color-on-primary: #ffffff;
+  --color-primary-container: #d32f2f;
+  --color-on-primary-container: #fff2f0;
+  --color-primary-fixed: #ffdad6;
+  --color-primary-fixed-dim: #ffb3ac;
+  --color-on-primary-fixed: #410003;
+  --color-on-primary-fixed-variant: #930010;
+  --color-surface-tint: #ba1a20;
+
+  /* Secondary */
+  --color-secondary: #575e70;
+  --color-on-secondary: #ffffff;
+  --color-secondary-container: #d9dff5;
+  --color-on-secondary-container: #5c6274;
+  --color-secondary-fixed: #dce2f7;
+  --color-secondary-fixed-dim: #c0c6db;
+  --color-on-secondary-fixed: #141b2b;
+  --color-on-secondary-fixed-variant: #404758;
+
+  /* Tertiary — ELV / connectivity accent */
+  --color-tertiary: #0056aa;
+  --color-on-tertiary: #ffffff;
+  --color-tertiary-container: #276fca;
+  --color-on-tertiary-container: #f2f4ff;
+  --color-tertiary-fixed: #d6e3ff;
+  --color-tertiary-fixed-dim: #a9c7ff;
+  --color-on-tertiary-fixed: #001b3d;
+  --color-on-tertiary-fixed-variant: #00468c;
+
+  /* Error */
+  --color-error: #ba1a1a;
+  --color-on-error: #ffffff;
+  --color-error-container: #ffdad6;
+  --color-on-error-container: #93000a;
+
+  /* Outlines */
+  --color-outline: #8f6f6c;
+  --color-outline-variant: #e4beba;
+
+  /* ---------------------------------------------------------------------
+     Type scale
+     Source: DESIGN.md `typography` frontmatter
+
+     Each level is split across four sub-namespace vars rather than written
+     as a shorthand. The shorthand form (`--text-body-md: 15px 24px 400 0em`)
+     builds cleanly but emits only `font-size: var(--text-body-md)`, and the
+     browser discards it — font-size does not accept four values. The
+     expanded form below emits all four properties correctly.
+     --------------------------------------------------------------------- */
+  --text-display-hero: 56px;
+  --text-display-hero--line-height: 64px;
+  --text-display-hero--font-weight: 800;
+  --text-display-hero--letter-spacing: -0.03em;
+
+  --text-display-hero-mobile: 38px;
+  --text-display-hero-mobile--line-height: 46px;
+  --text-display-hero-mobile--font-weight: 800;
+  --text-display-hero-mobile--letter-spacing: -0.02em;
+
+  --text-headline-lg: 40px;
+  --text-headline-lg--line-height: 48px;
+  --text-headline-lg--font-weight: 700;
+  --text-headline-lg--letter-spacing: -0.02em;
+
+  --text-headline-lg-mobile: 30px;
+  --text-headline-lg-mobile--line-height: 38px;
+  --text-headline-lg-mobile--font-weight: 700;
+  --text-headline-lg-mobile--letter-spacing: -0.015em;
+
+  --text-headline-md: 28px;
+  --text-headline-md--line-height: 36px;
+  --text-headline-md--font-weight: 700;
+  --text-headline-md--letter-spacing: -0.015em;
+
+  --text-headline-sm: 22px;
+  --text-headline-sm--line-height: 30px;
+  --text-headline-sm--font-weight: 600;
+  --text-headline-sm--letter-spacing: -0.01em;
+
+  --text-title-lg: 18px;
+  --text-title-lg--line-height: 26px;
+  --text-title-lg--font-weight: 600;
+  --text-title-lg--letter-spacing: -0.005em;
+
+  --text-title-md: 16px;
+  --text-title-md--line-height: 24px;
+  --text-title-md--font-weight: 600;
+  --text-title-md--letter-spacing: 0em;
+
+  --text-body-lg: 18px;
+  --text-body-lg--line-height: 28px;
+  --text-body-lg--font-weight: 400;
+  --text-body-lg--letter-spacing: 0em;
+
+  --text-body-md: 15px;
+  --text-body-md--line-height: 24px;
+  --text-body-md--font-weight: 400;
+  --text-body-md--letter-spacing: 0em;
+
+  --text-body-sm: 13px;
+  --text-body-sm--line-height: 20px;
+  --text-body-sm--font-weight: 400;
+  --text-body-sm--letter-spacing: 0.005em;
+
+  --text-label-caps: 11px;
+  --text-label-caps--line-height: 16px;
+  --text-label-caps--font-weight: 700;
+  --text-label-caps--letter-spacing: 0.08em;
+
+  --text-label-md: 14px;
+  --text-label-md--line-height: 20px;
+  --text-label-md--font-weight: 600;
+  --text-label-md--letter-spacing: 0.01em;
+
+  --text-label-sm: 12px;
+  --text-label-sm--line-height: 16px;
+  --text-label-sm--font-weight: 600;
+  --text-label-sm--letter-spacing: 0.01em;
+
+  /* Per-level family aliases.
+     Prototypes pair these with the size token: `font-title-md text-title-md`. */
+  --font-display-hero: var(--font-sans);
+  --font-display-hero-mobile: var(--font-sans);
+  --font-headline-lg: var(--font-sans);
+  --font-headline-lg-mobile: var(--font-sans);
+  --font-headline-md: var(--font-sans);
+  --font-headline-sm: var(--font-sans);
+  --font-title-lg: var(--font-sans);
+  --font-title-md: var(--font-sans);
+  --font-body-lg: var(--font-sans);
+  --font-body-md: var(--font-sans);
+  --font-body-sm: var(--font-sans);
+  --font-label-caps: var(--font-sans);
+  --font-label-md: var(--font-sans);
+  --font-label-sm: var(--font-sans);
+
+  /* ---------------------------------------------------------------------
+     Radii
+     Source: DESIGN.md `rounded` + "Shapes"
+     --------------------------------------------------------------------- */
+  --radius-card: 18px;
+  --radius-control: 12px;
+  --radius-chip: 6px;
+
+  /* ---------------------------------------------------------------------
+     Elevation
+     Source: DESIGN.md "Elevation & Depth"
+     --------------------------------------------------------------------- */
+  --shadow-card: 0 1px 3px rgb(17 24 39 / 0.05), 0 1px 2px rgb(17 24 39 / 0.03);
+  --shadow-hover: 0 10px 25px -5px rgb(17 24 39 / 0.08), 0 8px 10px -6px rgb(17 24 39 / 0.04);
+  --shadow-overlay: 0 20px 35px -10px rgb(17 24 39 / 0.16);
+
+  /* ---------------------------------------------------------------------
+     Spacing
+     Source: DESIGN.md `spacing`
+     --------------------------------------------------------------------- */
+  --spacing-gutter: 1.5rem;
+  --spacing-gutter-mobile: 1rem;
+  --spacing-section: 3rem;
+  --spacing-section-mobile: 1.25rem;
+  --spacing-xs: 0.25rem;
+  --spacing-sm: 0.5rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 1.5rem;
+  --spacing-xl: 2.5rem;
+  --spacing-2xl: 4rem;
+}
+
+/* -----------------------------------------------------------------------
+   Base layer
+   ----------------------------------------------------------------------- */
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    background-color: var(--color-background);
+    color: var(--color-on-surface);
+  }
+}
