@@ -54,7 +54,7 @@ const sizes = {
   md: 'h-12 px-7',
 } as const;
 
-const classes = `${base} ${variants[variant]} ${sizes[size]}`;
+const classes = `${base} ${variants[variant]} ${sizes[size]} ${className ?? ''}`;
 
 // A disabled <a> is not a real state — it stays focusable and clickable.
 // Callers should not pass disabled together with href.

@@ -19,7 +19,8 @@ interface Props {
   id?: string;
   name: string;
   label: string;
-  type?: string;
+  /** Matches the valid values for the input `type` attribute. */
+  type?: astroHTML.JSX.InputHTMLAttributes['type'];
   placeholder?: string;
   required?: boolean;
   disabled?: boolean;
