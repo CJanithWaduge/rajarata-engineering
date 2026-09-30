@@ -1,88 +1,66 @@
 ---
 import Base from '../layouts/Base.astro';
+import Header from '../components/Header.astro';
+import Container from '../components/Container.astro';
+import Logo from '../components/Logo.astro';
 import Button from '../components/ui/Button.astro';
 import Card from '../components/ui/Card.astro';
 import Chip from '../components/ui/Chip.astro';
 import Field from '../components/ui/Field.astro';
-import Container from '../components/Container.astro';
 ---
 
-<Base title="Primitives" description="Scratch route for step 5 verification">
-  <Container class="py-10 space-y-10">
-    <h1 class="font-headline-lg text-headline-lg text-on-surface">Primitives</h1>
+<Base title="Rajarata Engineering | Electrical Engineering & Contracting" description="[REPLACE: 1-2 sentence company introduction]">
+  <Header />
 
-    <section class="space-y-4">
-      <h2 class="font-title-md text-title-md text-secondary">Button</h2>
-      <div class="flex flex-wrap items-center gap-4">
-        <Button>Primary md</Button>
-        <Button variant="secondary">Secondary</Button>
-        <Button variant="outline">Outline</Button>
-      </div>
-      <div class="flex flex-wrap items-center gap-4">
-        <Button size="sm">Primary sm</Button>
-        <Button size="sm" variant="outline">Outline sm</Button>
-        <Button href="#">Renders an anchor</Button>
-        <Button disabled>Disabled</Button>
-      </div>
+  <!-- pt-20 clears the fixed header. This padding is the page's job. -->
+  <main class="w-full pt-20 bg-surface min-h-[calc(100vh-80px)]">
+    <section class="bg-surface-container-lowest py-16">
+      <Container>
+        <h1 class="font-display-hero text-display-hero text-primary-container">Rajarata</h1>
+        <p class="font-body-lg text-body-lg text-secondary">Step 6 header check</p>
+      </Container>
     </section>
 
-    <section class="space-y-4">
-      <h2 class="font-title-md text-title-md text-secondary">Card</h2>
-      <div class="grid gap-6 md:grid-cols-2">
-        <Card>
-          <h3 class="font-title-lg text-title-lg">Standard card</h3>
-          <p class="font-body-md text-body-md text-secondary">
-            White, 18px radius, 1px hairline, 24px padding.
-          </p>
-        </Card>
-        <Card inverted>
-          <h3 class="font-title-lg text-title-lg">Inverted card</h3>
-          <p class="font-body-md text-body-md text-white/70">
-            Dark surface with the 3px red accent strip.
-          </p>
-        </Card>
-        <Card href="#" class="hover:shadow-md">
-          <h3 class="font-title-lg text-title-lg">Card as a link</h3>
-          <p class="font-body-md text-body-md text-secondary">Focus ring on this one.</p>
-        </Card>
-        <Card flush>
-          <div class="p-6">
-            <h3 class="font-title-lg text-title-lg">Flush card</h3>
-            <p class="font-body-md text-body-md text-secondary">Manages its own padding.</p>
-          </div>
-        </Card>
-      </div>
-    </section>
-
-    <section class="space-y-4">
-      <h2 class="font-title-md text-title-md text-secondary">Chip</h2>
-      <div class="flex flex-wrap items-center gap-3">
-        <Chip>Operational</Chip>
-        <Chip variant="critical">Critical</Chip>
-        <Chip variant="elv">ELV</Chip>
-        <Chip variant="warning" dot>HV warning</Chip>
-        <Chip dot>With dot</Chip>
-      </div>
-    </section>
-
-    <section class="space-y-4">
-      <h2 class="font-title-md text-title-md text-secondary">Field</h2>
-      <div class="grid gap-6 md:grid-cols-2">
-        <Field name="scratch-name" label="Full Name" placeholder="e.g. A. Perera" required />
-        <Field name="scratch-email" label="Email Address" type="email" placeholder="name@company.com" />
-        <Field name="scratch-hint" label="Project Urgency" hint="Tell us your timeline if you know it." />
-        <Field
-          name="scratch-error"
-          label="Company"
-          error="Company name is required before we can quote."
-          required
-        />
-        <Field name="scratch-disabled" label="Assigned Engineer" value="R. Bandara" disabled />
-        <div class="space-y-4">
-          <Field name="scratch-a" label="Message" rows={4} placeholder="Scope of work, site location, timeline." />
-          <Field name="scratch-b" label="Notes" rows={3} hint="Textarea with a hint." />
+    <!-- one full screen of scroll, to confirm the fixed header behaves -->
+    <section class="bg-surface-container-low py-16">
+      <Container class="space-y-6">
+        <h2 class="font-headline-md text-headline-md text-on-surface">Scroll test</h2>
+        <p class="font-body-md text-body-md text-secondary">
+          Tab the nav, then scroll. The header should stay put and the red underline
+          should sit under the active item only.
+        </p>
+        <div class="flex flex-wrap gap-3">
+          <Chip>Operational</Chip>
+          <Chip variant="critical">Critical</Chip>
+          <Chip variant="elv">ELV</Chip>
+          <Chip variant="warning" dot>HV warning</Chip>
         </div>
-      </div>
+        <div class="grid gap-6 md:grid-cols-2">
+          <Card>
+            <h3 class="font-title-lg text-title-lg">Card</h3>
+            <p class="font-body-md text-body-md text-secondary">Primitives still work.</p>
+          </Card>
+          <Card inverted>
+            <h3 class="font-title-lg text-title-lg">Inverted</h3>
+            <p class="font-body-md text-body-md text-white/70">Accent strip on the left.</p>
+          </Card>
+        </div>
+        <div class="grid gap-6 md:grid-cols-2">
+          <Field name="scratch-name" label="Full Name" placeholder="e.g. A. Perera" required />
+          <Field
+            name="scratch-error"
+            label="Company"
+            error="Company name is required before we can quote."
+            required
+          />
+        </div>
+        <div class="flex flex-wrap gap-4">
+          <Button>Primary</Button>
+          <Button variant="secondary">Secondary</Button>
+          <Button variant="outline">Outline</Button>
+          <Button size="sm">Primary sm</Button>
+        </div>
+      </Container>
     </section>
-  </Container>
+  </main>
 </Base>

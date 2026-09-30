@@ -1,0 +1,110 @@
+---
+/**
+ * Site header.
+ *
+ * Fixed at the top, so every page needs `pt-20` on its <main> to clear it.
+ * That padding lives on the page, not here — the header is a sibling of
+ * <main>, not its parent.
+ *
+ * Nav targets are placeholders until the routes exist. `href="#"` on a link
+ * that isn't the current page also makes the browser jump to the top, which
+ * is at least harmless.
+ */
+import Container from './Container.astro';
+import Logo from './Logo.astro';
+import Button from './ui/Button.astro';
+
+const nav = [
+  { label: 'Home', href: '/' },
+  { label: 'Services', href: '#' },
+  { label: 'About Us', href: '#' },
+  { label: 'Projects', href: '#' },
+  { label: 'Contact', href: '#' },
+];
+
+// Only `/` is a real route right now, so it is the only entry that can ever
+// match. The rest resolve to "#" and fall through to the inactive state.
+const path = Astro.url.pathname;
+const isActive = (href: string) =>
+  href === path || (href !== '#' && path.startsWith(href));
+---
+
+<header
+  class="fixed top-0 left-0 w-full z-50 bg-surface-container-lowest/95 backdrop-blur-md shadow-[0_1px_8px_rgba(0,0,0,0.04)] transition-all duration-200"
+>
+  <Container class="h-20 flex items-center justify-between">
+    <!-- Brand -->
+    <a
+      href="/"
+      class="flex items-center gap-3 focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-container"
+    >
+      <Logo class="h-9 lg:h-10 w-auto" />
+      <span class="flex flex-col">
+        <span class="font-title-lg text-title-lg tracking-tight text-on-surface uppercase"
+          >Rajarata</span
+        >
+        <span
+          class="font-label-caps text-label-caps tracking-widest text-primary uppercase"
+          >Engineering</span
+        >
+      </span>
+    </a>
+
+    <!-- Centre nav -->
+    <nav class="hidden lg:flex items-center space-x-8" aria-label="Main">
+      {
+        nav.map((item) => (
+          <a
+            href={item.href}
+            class:list={[
+              'font-title-md text-title-md py-1 transition-colors',
+              isActive(item.href)
+                ? 'text-primary relative after:content-[""] after:absolute after:-bottom-2 after:left-0 after:w-full after:h-0.5 after:bg-primary-container'
+                : 'text-on-surface-variant hover:text-on-surface',
+            ]}
+            aria-current={isActive(item.href) ? 'page' : undefined}
+          >
+            {item.label}
+          </a>
+        ))
+      }
+    </nav>
+
+    <!-- Desktop actions -->
+    <div class="hidden lg:flex items-center space-x-5">
+      <Button size="sm" href="#">Get a Quote</Button>
+      <div
+        class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"
+        title="Account"
+      >
+        <span class="material-symbols-outlined text-on-primary text-[18px]">person</span>
+      </div>
+    </div>
+
+    <!-- Mobile actions -->
+    <div class="flex lg:hidden items-center gap-2">
+      <div
+        class="w-8 h-8 rounded-full bg-primary flex items-center justify-center mr-1"
+        title="Account"
+      >
+        <span class="material-symbols-outlined text-on-primary text-[18px]">person</span>
+      </div>
+      <!--
+        Toggle is present but not wired. The prototype's drawer is a separate
+        block (backdrop + panel + its own nav list) and the plan scopes step 6
+        to the header only. Wiring `data-menu-toggle` up is the whole of the
+        mobile menu work.
+      -->
+      <button
+        type="button"
+        aria-label="Open navigation menu"
+        aria-expanded="false"
+        aria-controls="mobile-drawer"
+        data-menu-toggle
+        class="w-12 h-12 flex items-center justify-center text-on-surface rounded-control hover:bg-surface-container-high transition-colors focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-container"
+      >
+        <span class="material-symbols-outlined text-3xl">menu</span>
+      </button>
+    </div>
+  </Container>
+</header>
