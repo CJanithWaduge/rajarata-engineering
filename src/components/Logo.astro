@@ -1,0 +1,61 @@
+---
+/**
+ * Rajarata Engineering brand mark.
+ *
+ * Geometry is taken verbatim from
+ * UI-UX-design/rajarata_engineering_logo/code.html — 240x50 viewBox.
+ *
+ * Two variants, because the footer sits on a near-black surface where the
+ * original fills are invisible. The prototype handled this with a
+ * `brightness-0 invert` filter on an <img>; inline SVG cannot do that, so
+ * the fills are swapped here instead.
+ *
+ * The two <text> nodes render in whatever font has loaded when the SVG
+ * paints, so they can reflow briefly on a cold cache. Converting them to
+ * <path> would remove that, but it needs a font toolchain this project does
+ * not have. Accepted for now.
+ */
+interface Props {
+  /** `light` for white/light surfaces, `dark` for the dark footer. */
+  variant?: 'light' | 'dark';
+  class?: string;
+}
+
+const { variant = 'light', class: className } = Astro.props;
+
+const isDark = variant === 'dark';
+
+const markFill = isDark ? '#ffffff' : '#111827';
+const boltFill = isDark ? '#ffffff' : '#D32F2F';
+const dotFill = isDark ? '#ffffff' : '#FF6D00';
+const accentFill = isDark ? '#ffffff' : '#D32F2F';
+---
+
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 240 50"
+  fill="none"
+  role="img"
+  aria-label="Rajarata Engineering"
+  class={className}
+>
+  <rect x="2" y="5" width="40" height="40" rx="8" fill={markFill} />
+  <path d="M22 10L14 26H22L20 40L30 23H22L26 10H22Z" fill={boltFill} />
+  <circle cx="32" cy="14" r="2" fill={dotFill} />
+  <text
+    x="52"
+    y="27"
+    fill={markFill}
+    font-weight="800"
+    font-size="19"
+    letter-spacing="-0.5px">RAJARATA</text
+  >
+  <text
+    x="52"
+    y="40"
+    fill={accentFill}
+    font-weight="700"
+    font-size="10.5"
+    letter-spacing="2px">ENGINEERING</text
+  >
+</svg>

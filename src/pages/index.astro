@@ -1,25 +1,49 @@
 ---
 import Base from '../layouts/Base.astro';
+import Logo from '../components/Logo.astro';
 ---
 
 <Base
   title="Rajarata Engineering | Electrical Engineering & Contracting"
   description="[REPLACE: 1-2 sentence company introduction]"
 >
-  <h1 class="font-display-hero text-display-hero text-primary-container">Rajarata</h1>
-  <p class="font-body-md text-body-md text-secondary">Step 2 font check</p>
-  <span class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-widest"
-    >label-caps</span
-  >
-  <div
-    class="bg-surface-container p-4 rounded-card shadow-card border border-outline-variant"
-  >
-    card &middot; 18px radius
+  <!-- light variant on a white surface -->
+  <div class="p-6 bg-surface-container-lowest">
+    <Logo class="h-10 w-auto" />
   </div>
-  <div class="p-3 rounded-control bg-primary text-on-primary shadow-hover">
-    control &middot; 12px radius
+
+  <!-- dark variant on the footer surface (#0b0f17) -->
+  <div class="p-6 bg-[#0b0f17]">
+    <Logo variant="dark" class="h-10 w-auto" />
   </div>
-  <span class="material-symbols-outlined text-primary-container text-3xl"
-    >electrical_bolt</span
-  >
+
+  <!-- header sizing, per the home prototype: h-9 lg:h-10 -->
+  <div class="p-6 bg-surface-container-lowest">
+    <a href="/" class="flex items-center gap-3 focus:outline-none w-fit">
+      <Logo class="h-9 lg:h-10 w-auto" />
+      <span class="flex flex-col">
+        <span
+          class="font-title-lg text-title-lg tracking-tight text-on-surface uppercase"
+          >Rajarata</span
+        >
+        <span
+          class="font-label-caps text-label-caps tracking-widest text-primary uppercase"
+          >Engineering</span
+        >
+      </span>
+    </a>
+  </div>
+
+  <div class="p-6 flex flex-col gap-4 items-start">
+    <h1 class="font-display-hero text-display-hero text-primary-container">Rajarata</h1>
+    <p class="font-body-md text-body-md text-secondary">Step 3 logo check</p>
+    <div
+      class="bg-surface-container p-4 rounded-card shadow-card border border-outline-variant"
+    >
+      card &middot; 18px radius
+    </div>
+    <span class="material-symbols-outlined text-primary-container text-3xl"
+      >electrical_bolt</span
+    >
+  </div>
 </Base>
