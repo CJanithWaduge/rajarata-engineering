@@ -1,56 +1,88 @@
 ---
 import Base from '../layouts/Base.astro';
-import Logo from '../components/Logo.astro';
+import Button from '../components/ui/Button.astro';
+import Card from '../components/ui/Card.astro';
+import Chip from '../components/ui/Chip.astro';
+import Field from '../components/ui/Field.astro';
 import Container from '../components/Container.astro';
 ---
 
-<Base
-  title="Rajarata Engineering | Electrical Engineering & Contracting"
-  description="[REPLACE: 1-2 sentence company introduction]"
->
-  <!-- padded: the standard section wrapper -->
-  <Container class="pt-16 pb-12">
-    <div class="flex items-center gap-3">
-      <Logo class="h-10 w-auto" />
-      <span class="flex flex-col">
-        <span class="font-title-lg text-title-lg tracking-tight text-on-surface uppercase"
-          >Rajarata</span
-        >
-        <span
-          class="font-label-caps text-label-caps tracking-widest text-primary uppercase"
-          >Engineering</span
-        >
-      </span>
-    </div>
-  </Container>
+<Base title="Primitives" description="Scratch route for step 5 verification">
+  <Container class="py-10 space-y-10">
+    <h1 class="font-headline-lg text-headline-lg text-on-surface">Primitives</h1>
 
-  <!-- unpadded: full-bleed background, content still width-capped -->
-  <Container padded={false}>
-    <div class="bg-surface-container px-4 sm:px-6 lg:px-8 py-6">
-      <p class="font-body-md text-body-md text-secondary">
-        Unpadded variant — background spans the full width, inner content keeps
-        its own gutters.
-      </p>
-    </div>
-  </Container>
-
-  <!-- narrow variant, to confirm w-full + max-w holds -->
-  <div class="bg-surface-container-lowest">
-    <Container class="py-6">
-      <h1 class="font-display-hero text-display-hero text-primary-container">
-        Rajarata
-      </h1>
-      <p class="font-body-md text-body-md text-secondary">Step 4 container check</p>
-      <div
-        class="bg-surface-container p-4 rounded-card shadow-card border border-outline-variant"
-      >
-        card &middot; 18px radius
+    <section class="space-y-4">
+      <h2 class="font-title-md text-title-md text-secondary">Button</h2>
+      <div class="flex flex-wrap items-center gap-4">
+        <Button>Primary md</Button>
+        <Button variant="secondary">Secondary</Button>
+        <Button variant="outline">Outline</Button>
       </div>
-    </Container>
-  </div>
+      <div class="flex flex-wrap items-center gap-4">
+        <Button size="sm">Primary sm</Button>
+        <Button size="sm" variant="outline">Outline sm</Button>
+        <Button href="#">Renders an anchor</Button>
+        <Button disabled>Disabled</Button>
+      </div>
+    </section>
 
-  <!-- dark logo, for the footer later -->
-  <div class="p-6 bg-[#0b0f17]">
-    <Logo variant="dark" class="h-10 w-auto" />
-  </div>
+    <section class="space-y-4">
+      <h2 class="font-title-md text-title-md text-secondary">Card</h2>
+      <div class="grid gap-6 md:grid-cols-2">
+        <Card>
+          <h3 class="font-title-lg text-title-lg">Standard card</h3>
+          <p class="font-body-md text-body-md text-secondary">
+            White, 18px radius, 1px hairline, 24px padding.
+          </p>
+        </Card>
+        <Card inverted>
+          <h3 class="font-title-lg text-title-lg">Inverted card</h3>
+          <p class="font-body-md text-body-md text-white/70">
+            Dark surface with the 3px red accent strip.
+          </p>
+        </Card>
+        <Card href="#" class="hover:shadow-md">
+          <h3 class="font-title-lg text-title-lg">Card as a link</h3>
+          <p class="font-body-md text-body-md text-secondary">Focus ring on this one.</p>
+        </Card>
+        <Card flush>
+          <div class="p-6">
+            <h3 class="font-title-lg text-title-lg">Flush card</h3>
+            <p class="font-body-md text-body-md text-secondary">Manages its own padding.</p>
+          </div>
+        </Card>
+      </div>
+    </section>
+
+    <section class="space-y-4">
+      <h2 class="font-title-md text-title-md text-secondary">Chip</h2>
+      <div class="flex flex-wrap items-center gap-3">
+        <Chip>Operational</Chip>
+        <Chip variant="critical">Critical</Chip>
+        <Chip variant="elv">ELV</Chip>
+        <Chip variant="warning" dot>HV warning</Chip>
+        <Chip dot>With dot</Chip>
+      </div>
+    </section>
+
+    <section class="space-y-4">
+      <h2 class="font-title-md text-title-md text-secondary">Field</h2>
+      <div class="grid gap-6 md:grid-cols-2">
+        <Field name="scratch-name" label="Full Name" placeholder="e.g. A. Perera" required />
+        <Field name="scratch-email" label="Email Address" type="email" placeholder="name@company.com" />
+        <Field name="scratch-hint" label="Project Urgency" hint="Tell us your timeline if you know it." />
+        <Field
+          name="scratch-error"
+          label="Company"
+          error="Company name is required before we can quote."
+          required
+        />
+        <Field name="scratch-disabled" label="Assigned Engineer" value="R. Bandara" disabled />
+        <div class="space-y-4">
+          <Field name="scratch-a" label="Message" rows={4} placeholder="Scope of work, site location, timeline." />
+          <Field name="scratch-b" label="Notes" rows={3} hint="Textarea with a hint." />
+        </div>
+      </div>
+    </section>
+  </Container>
 </Base>

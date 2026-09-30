@@ -1,0 +1,81 @@
+---
+/**
+ * Button.
+ *
+ * Renders an <a> when `href` is given, otherwise a <button>. Same props,
+ * same look, so a link-that-goes-somewhere and a button-that-does-a-thing
+ * are interchangeable in layout.
+ *
+ * Sizing follows DESIGN.md: 48px desktop, 40px compact. The prototypes
+ * express this with padding pairs rather than fixed heights, so `sm` here
+ * maps to their compact button and `md` to their full-size one.
+ *
+ * Note on the prototypes' `rounded-xl`: their inline Tailwind config
+ * remapped the radius scale (xl -> 0.75rem), so `rounded-xl` there means
+ * 12px. This uses the named token instead, which is unambiguous.
+ */
+interface Props {
+  variant?: 'primary' | 'secondary' | 'outline';
+  size?: 'sm' | 'md';
+  href?: string;
+  type?: 'button' | 'submit' | 'reset';
+  /** Marks the control unavailable. Only valid on <button>. */
+  disabled?: boolean;
+  /** Accessible name when the visible content is an icon. */
+  'aria-label'?: string;
+  class?: string;
+}
+
+const {
+  variant = 'primary',
+  size = 'md',
+  href,
+  type = 'button',
+  disabled = false,
+  class: className,
+} = Astro.props;
+
+const base =
+  'inline-flex items-center justify-center gap-2 font-label-md text-label-md ' +
+  'rounded-control whitespace-nowrap transition-all duration-150 ' +
+  'active:translate-y-[1px]';
+
+const variants = {
+  primary:
+    'bg-primary-container text-on-primary shadow-sm hover:bg-primary hover:shadow-md',
+  secondary:
+    'bg-on-surface text-white hover:bg-[#1F2937] shadow-sm',
+  outline:
+    'bg-transparent text-on-surface border-[1.5px] border-outline-variant hover:bg-surface-container-low hover:border-outline',
+} as const;
+
+const sizes = {
+  sm: 'h-10 px-5',
+  md: 'h-12 px-7',
+} as const;
+
+const classes = `${base} ${variants[variant]} ${sizes[size]}`;
+
+// A disabled <a> is not a real state — it stays focusable and clickable.
+// Callers should not pass disabled together with href.
+const classesForAnchor = disabled
+  ? `${classes} pointer-events-none opacity-50`
+  : classes;
+---
+
+{
+  href ? (
+    <a class={classesForAnchor} href={href} aria-label={Astro.props['aria-label']}>
+      <slot />
+    </a>
+  ) : (
+    <button
+      class={classes}
+      type={type}
+      disabled={disabled}
+      aria-label={Astro.props['aria-label']}
+    >
+      <slot />
+    </button>
+  )
+}

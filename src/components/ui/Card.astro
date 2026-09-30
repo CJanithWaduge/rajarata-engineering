@@ -1,0 +1,59 @@
+---
+/**
+ * Card.
+ *
+ * 18px radius, 1px hairline border, 24px padding. The prototypes use
+ * `p-6 rounded-2xl` with no border, relying on `shadow-sm` alone to separate
+ * the card from the page — the hairline is an addition from DESIGN.md, and
+ * it is what makes the border read as crisp rather than blurry.
+ *
+ * The `inverted` variant carries the 3px red accent strip for dark
+ * surfaces. That strip is decorative, so it is hidden from assistive tech.
+ */
+interface Props {
+  inverted?: boolean;
+  /** Removes padding for cards that manage their own inner spacing. */
+  flush?: boolean;
+  /** Renders as a link wrapper. Use for cards that are navigation targets. */
+  href?: string;
+  class?: string;
+}
+
+const {
+  inverted = false,
+  flush = false,
+  href,
+  class: className,
+} = Astro.props;
+
+const shell = inverted
+  ? 'bg-[#0b0f17] text-white border-white/10'
+  : 'bg-surface-container-lowest text-on-surface border-outline-variant';
+
+const base =
+  'relative flex flex-col rounded-card border transition-all duration-200';
+
+const interactive = href
+  ? 'hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-container'
+  : 'shadow-sm';
+
+const classes = `${base} ${shell} ${interactive} ${flush ? '' : 'p-6'} ${className ?? ''}`;
+
+// Card.draw the accent strip with a pseudo-element so it does not become a
+// layout sibling that callers have to account for.
+const hasStrip = inverted
+  ? 'before:absolute before:left-0 before:top-0 before:h-full before:w-[3px] before:bg-primary-container before:rounded-l-card before:content-[""]'
+  : '';
+---
+
+{
+  href ? (
+    <a class={`${classes} ${hasStrip} hover:shadow-md`} href={href}>
+      <slot />
+    </a>
+  ) : (
+    <div class={`${classes} ${hasStrip}`}>
+      <slot />
+    </div>
+  )
+}

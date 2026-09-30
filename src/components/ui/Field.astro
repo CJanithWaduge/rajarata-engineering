@@ -1,0 +1,118 @@
+---
+/**
+ * Field — label, control, and error message as one unit.
+ *
+ * Handles the parts that are easy to get wrong by hand every time: a stable
+ * id, the label's `for`, `aria-invalid` when there's an error, and
+ * `aria-describedby` pointing at the message so screen readers announce the
+ * reason alongside the control.
+ *
+ * Pass an `id` if the form needs to reference the field from outside
+ * (validation, honeypots). One is generated if you don't, but generated ids
+ * are not addressable.
+ *
+ * The prototype's focus style (`focus:outline-none` plus a background shift)
+ * is a weak signal — a background tint on a white input is easy to miss.
+ * This adds the 2px ink ring with a 2px offset that DESIGN.md specifies.
+ */
+interface Props {
+  id?: string;
+  name: string;
+  label: string;
+  type?: string;
+  placeholder?: string;
+  required?: boolean;
+  disabled?: boolean;
+  /** Error text. Presence of this is what puts the field into its error state. */
+  error?: string;
+  /** Helper text shown when there is no error. */
+  hint?: string;
+  /** Renders a <textarea> at this many rows instead of an <input>. */
+  rows?: number;
+  class?: string;
+}
+
+const {
+  id,
+  name,
+  label,
+  type = 'text',
+  placeholder,
+  required = false,
+  disabled = false,
+  error,
+  hint,
+  rows,
+  class: className,
+} = Astro.props;
+
+const fieldId = id ?? `field-${name}`;
+const messageId = `${fieldId}-message`;
+
+const hasError = Boolean(error);
+
+const control =
+  'w-full h-12 px-4 rounded-control bg-surface-container-lowest text-on-surface ' +
+  'placeholder:text-secondary/60 shadow-sm transition-colors ' +
+  'disabled:opacity-60 disabled:cursor-not-allowed';
+
+const focusRing =
+  'focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-on-surface ' +
+  'focus:bg-surface-container-low';
+
+const border = hasError
+  ? 'border-[1.5px] border-primary-container focus:ring-primary-container'
+  : 'border-[1.5px] border-outline-variant focus:ring-on-surface';
+
+const classes = `${control} ${focusRing} ${border} ${className ?? ''}`;
+
+// The message is referenced whether or not it has content, so the id is
+// stable across states and React-style re-renders cannot orphan it.
+const describedBy = [hint || hasError ? messageId : null].filter(Boolean).join(' ');
+---
+
+<div class="flex flex-col space-y-1.5">
+  <label class="font-label-sm text-label-sm text-on-surface font-semibold" for={fieldId}>
+    {label}
+    {required && <span class="text-primary" aria-hidden="true">*</span>}
+  </label>
+
+  {
+    rows ? (
+      <textarea
+        class={`${classes} h-auto py-3 resize-y`}
+        id={fieldId}
+        name={name}
+        placeholder={placeholder}
+        rows={rows}
+        required={required}
+        disabled={disabled}
+        aria-invalid={hasError ? 'true' : undefined}
+        aria-describedby={describedBy || undefined}
+      />
+    ) : (
+      <input
+        class={classes}
+        id={fieldId}
+        name={name}
+        type={type}
+        placeholder={placeholder}
+        required={required}
+        disabled={disabled}
+        aria-invalid={hasError ? 'true' : undefined}
+        aria-describedby={describedBy || undefined}
+      />
+    )
+  }
+
+  {
+    (hint || hasError) && (
+      <p
+        id={messageId}
+        class={`font-body-sm text-body-sm ${hasError ? 'text-primary-container' : 'text-secondary'}`}
+      >
+        {hasError ? error : hint}
+      </p>
+    )
+  }
+</div>

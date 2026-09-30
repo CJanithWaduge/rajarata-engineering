@@ -1,0 +1,52 @@
+---
+/**
+ * Chip.
+ *
+ * 26px tall, 6px radius, 0 10px padding. Carries short status words —
+ * "operational", "critical", "LV", "HV" — not sentences.
+ *
+ * The variants map to the diagnostic roles DESIGN.md assigns: red for
+ * safety and primary actions, blue for ELV/connectivity, orange reserved
+ * for HV and warnings. The warning variant is the only one that should
+ * appear sparingly.
+ *
+ * Each chip is a static indicator, not an action. If you need something
+ * clickable, that is a button.
+ */
+interface Props {
+  variant?: 'operational' | 'critical' | 'elv' | 'warning';
+  /** Optional leading dot, for status chips that read better with one. */
+  dot?: boolean;
+  class?: string;
+}
+
+const { variant = 'operational', dot = false, class: className } = Astro.props;
+
+const variants = {
+  // Red container, red text. Used for primary/urgent states.
+  operational: 'bg-error-container/40 text-primary-container',
+  // Solid red, white text. Reserved for genuine criticals.
+  critical: 'bg-primary-container text-on-primary',
+  // Electric blue, for ELV / connectivity / low-voltage.
+  elv: 'bg-[#E3F0FB] text-[#0D47A1]',
+  // Energy orange, sparingly. HV and diagnostics.
+  warning: 'bg-[#FFF0E0] text-[#B34000]',
+} as const;
+
+const dotColor = {
+  operational: 'bg-primary-container',
+  critical: 'bg-white',
+  elv: 'bg-[#1565C0]',
+  warning: 'bg-[#FF6D00]',
+} as const;
+
+const classes =
+  'inline-flex items-center gap-1.5 h-[26px] px-2.5 rounded-chip ' +
+  'font-label-sm text-label-sm whitespace-nowrap shrink-0 ' +
+  `${variants[variant]} ${className ?? ''}`;
+---
+
+<span class={classes}>
+  {dot && <span class={`w-1.5 h-1.5 rounded-full ${dotColor[variant]}`} aria-hidden="true" />}
+  <slot />
+</span>
