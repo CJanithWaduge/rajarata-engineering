@@ -1,0 +1,27 @@
+---
+/**
+ * Hero — section 1 of the Home page.
+ *
+ * Shell only. This step exists to prove the section background and vertical
+ * rhythm before any content lands on top of it. The backgrounds on this page
+ * strictly alternate `surface-container-lowest` / `surface-container-low`, so
+ * a missing `bg-*` here breaks the page's rhythm and is easy to miss.
+ *
+ * Source: the first <section> in UI-UX-design/home_rajarata_engineering/code.html
+ */
+import Container from '../Container.astro';
+---
+
+<section
+  class="relative w-full bg-surface-container-lowest overflow-hidden py-12 md:py-16 lg:py-24"
+>
+  <Container>
+    <!--
+      Two equal columns: left 6 holds the copy, right 6 holds the image.
+      Both are built by later steps — 1.2 through 1.7 on the left, 1.8
+      through 1.11 on the right. The grid is deliberately empty until then.
+    -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-center">
+    </div>
+  </Container>
+</section>
