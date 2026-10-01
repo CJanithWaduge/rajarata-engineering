@@ -1,0 +1,43 @@
+rules_version = '2';
+
+/**
+ * Firestore rules — Rajarata Engineering.
+ *
+ * Only one document is world-readable: siteSettings/public. Those four
+ * values (address, phone, email, hours) are already printed on the footer
+ * of every page, so allowing anonymous reads exposes nothing that isn't
+ * published anyway. The site fetches it via the REST endpoint so an admin
+ * edit goes live without a rebuild.
+ *
+ * Everything else is admin-only. Note the absence of any recursive wildcard
+ * on the admin side — listing is not needed by the public site, and a broad
+ * match here would become a data leak the moment someone adds a collection.
+ */
+
+// --- Public business details -------------------------------------------
+// Read-only to the world. Writes are admin-only via the default deny below.
+match /siteSettings/public {
+  allow read: if true;
+  allow write: if false;
+}
+
+// --- Admin panel --------------------------------------------------------
+// Authenticated AND carrying the custom admin claim. Client-side checks are
+// not a security boundary, so the claim must be set by the Admin SDK from a
+// trusted server or Cloud Function — never from the browser.
+match /{document=**} {
+  allow read, write: if isAdmin();
+}
+
+// --- Admin identity -----------------------------------------------------
+// The claim itself lives in auth, not Firestore, so allow reading your own
+// user document.
+match /users/{uid} {
+  allow read: if request.auth.uid == uid;
+  allow write: if isAdmin();
+}
+
+function isAdmin() {
+  return request.auth != null
+    && request.auth.token.admin == true;
+}

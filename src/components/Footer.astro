@@ -11,11 +11,14 @@
  * surface-container-low (#f3f3f3); all pass WCAG AA. See the WhatsApp block
  * in global.css for the one deliberate exception to the palette.
  *
- * Contains four `[REPLACE: ...]` markers. They must be resolved from real
- * business details before this page ships.
+ * Contains the four business details as build-time defaults. They are
+ * overwritten at runtime from `siteSettings/public` in Firestore once
+ * credentials are configured — see src/lib/siteSettings.ts. Until then the
+ * values below are what renders.
  */
 import Container from './Container.astro';
 import Logo from './Logo.astro';
+import { DEFAULT_SETTINGS } from '../lib/siteSettings';
 
 const quickLinks = [
   { label: 'Home', href: '/' },
@@ -39,12 +42,19 @@ const services = [
 
 const badges = ['ISO 9001:2015', 'Safety First'];
 
+// Build-time fallbacks, imported rather than re-declared. This is what renders
+// when Firestore is unreachable, so duplicating it here would guarantee the
+// two copies drift apart and the fallback silently shows stale contact info.
+const details = DEFAULT_SETTINGS;
+
+// Each row pairs its icon with the field key and how to rebuild its href.
+// `href` is optional: address and hours are plain text, the rest are links.
 const contact = [
-  { icon: 'location_on', label: '[REPLACE: BUSINESS ADDRESS]', href: undefined },
-  { icon: 'call', label: '[REPLACE: PHONE NUMBER]', href: 'tel:[REPLACE: PHONE NUMBER]' },
-  { icon: 'mail', label: '[REPLACE: EMAIL ADDRESS]', href: 'mailto:[REPLACE: EMAIL ADDRESS]' },
-  { icon: 'schedule', label: '[REPLACE: BUSINESS HOURS]', href: undefined },
-];
+  { icon: 'location_on', key: 'address', href: undefined },
+  { icon: 'call', key: 'phone', href: 'tel' },
+  { icon: 'mail', key: 'email', href: 'mailto' },
+  { icon: 'schedule', key: 'hours', href: undefined },
+] as const;
 
 const year = new Date().getFullYear();
 
@@ -145,13 +155,17 @@ const focus = 'focus:outline-none focus-visible:outline-2 focus-visible:outline-
                 </span>
                 {item.href ? (
                   <a
-                    href={item.href}
+                    href={item.href === 'tel'
+                      ? `tel:${details[item.key].replace(/\s/g, '')}`
+                      : `mailto:${details[item.key]}`}
+                    data-site-field={item.key}
+                    data-site-href={item.href}
                     class={`hover:text-on-surface transition-colors truncate ${focus}`}
                   >
-                    {item.label}
+                    {details[item.key]}
                   </a>
                 ) : (
-                  <span>{item.label}</span>
+                  <span data-site-field={item.key}>{details[item.key]}</span>
                 )}
               </div>
             ))
@@ -161,6 +175,10 @@ const focus = 'focus:outline-none focus-visible:outline-2 focus-visible:outline-
               href="#"
               target="_blank"
               rel="noopener noreferrer"
+              data-site-field="whatsapp"
+              data-site-href="whatsapp"
+              data-site-text="false"
+              aria-label="WhatsApp direct chat"
               class={`inline-flex items-center gap-2 px-3 py-1.5 rounded-control bg-whatsapp text-white font-label-sm text-label-sm hover:bg-whatsapp-hover transition-colors ${focus}`}
             >
               <span class="material-symbols-outlined text-[16px]">chat</span>
@@ -185,3 +203,9 @@ const focus = 'focus:outline-none focus-visible:outline-2 focus-visible:outline-
     </div>
   </Container>
 </footer>
+
+<script>
+  import { hydrateSiteSettings } from '../lib/siteSettings';
+
+  hydrateSiteSettings();
+</script>
