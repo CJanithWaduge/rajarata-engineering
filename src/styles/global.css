@@ -80,25 +80,18 @@
   --color-outline-variant: #e4beba;
 
   /* ---------------------------------------------------------------------
-     Footer (dark surface)
+     WhatsApp CTA
 
-     These are NOT in DESIGN.md. The prototypes hardcode them, and they sit
-     outside the approved palette — the footer red (#ef4444) is a different
-     red from the primary, and the WhatsApp green is a third accent colour
-     with no token behind it.
+     The one deliberate exception to the palette. The prototypes use
+     #16a34a, but white text on that is 3.3:1 — it fails WCAG AA. The base
+     here is darkened to #15803d (5.02:1) so the label is actually readable,
+     and the hover goes darker again for a physical press feel.
 
-     Named here so the values live in one place rather than being scattered
-     as arbitrary hex classes. Whether the dark footer is intentional needs
-     confirming with the user; if it goes, delete this block and the
-     corresponding utilities go with it.
+     Justified because the button has to be recognisable as WhatsApp at a
+     glance. If this ever moves off WhatsApp, delete the block.
      --------------------------------------------------------------------- */
-  --color-footer-bg: #0b0f17;
-  --color-footer-text: #9ca3af;
-  --color-footer-accent: #ef4444;
-  --color-footer-chip-bg: #1e293b;
-  --color-footer-chip-text: #cbd5e1;
-  --color-whatsapp: #16a34a;
-  --color-whatsapp-hover: #15803d;
+  --color-whatsapp: #15803d;
+  --color-whatsapp-hover: #14532d;
 
   /* ---------------------------------------------------------------------
      Type scale

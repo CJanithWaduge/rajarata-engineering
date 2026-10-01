@@ -2,12 +2,14 @@
 /**
  * Site footer.
  *
- * Dark surface. The palette here is not in DESIGN.md — see the "Footer
- * (dark surface)" block in global.css. The footer red (#ef4444) is a
- * different colour from the primary red, and the WhatsApp green is a third
- * accent with no token behind it. Both are named tokens now rather than
- * arbitrary hex classes, but the whole block needs confirming as
- * intentional.
+ * Light surface. The prototypes use a near-black footer (#0b0f17) with
+ * colours that are not in DESIGN.md — a second red (#ef4444) and a grey
+ * (#9ca3af) that exists nowhere else in the system. That palette has been
+ * dropped in favour of the approved tokens.
+ *
+ * Every foreground/background pair below was contrast-checked against
+ * surface-container-low (#f3f3f3); all pass WCAG AA. See the WhatsApp block
+ * in global.css for the one deliberate exception to the palette.
  *
  * Contains four `[REPLACE: ...]` markers. They must be resolved from real
  * business details before this page ships.
@@ -45,29 +47,32 @@ const contact = [
 ];
 
 const year = new Date().getFullYear();
+
+// Focus rings on a light footer need the ink outline, not the white one the
+// dark footer used.
+const focus = 'focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-container';
 ---
 
-<footer class="w-full bg-footer-bg text-footer-text font-body-sm text-body-sm">
+<footer
+  class="w-full bg-surface-container-low text-secondary font-body-sm text-body-sm border-t border-outline-variant"
+>
   <Container class="pt-16 pb-12">
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-10 lg:gap-8">
       <!-- Column 1 — brand -->
       <div class="lg:col-span-4 flex flex-col space-y-4">
-        <a
-          href="/"
-          class="flex items-center gap-3 w-fit focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
-        >
-          <Logo variant="dark" class="h-10 w-auto" />
+        <a href="/" class={`flex items-center gap-3 w-fit ${focus}`}>
+          <Logo class="h-10 w-auto" />
           <span class="flex flex-col">
-            <span class="font-title-lg text-title-lg tracking-tight text-white uppercase"
+            <span class="font-title-lg text-title-lg tracking-tight text-on-surface uppercase"
               >Rajarata</span
             >
             <span
-              class="font-label-caps text-label-caps tracking-widest text-footer-accent uppercase"
+              class="font-label-caps text-label-caps tracking-widest text-primary uppercase"
               >Engineering</span
             >
           </span>
         </a>
-        <p class="text-footer-text font-body-md text-body-md pr-4 leading-relaxed">
+        <p class="text-secondary font-body-md text-body-md pr-4 leading-relaxed">
           Premier electrical engineering and contracting infrastructure solutions. Delivering
           utility-grade industrial power distribution, commercial installations, and
           mission-critical ELV building automation systems with uncompromising safety and
@@ -76,7 +81,7 @@ const year = new Date().getFullYear();
         <div class="flex items-center gap-2 pt-2">
           {
             badges.map((badge) => (
-              <span class="inline-flex items-center px-2.5 py-1 rounded bg-footer-chip-bg text-footer-chip-text font-label-caps text-label-caps uppercase">
+              <span class="inline-flex items-center px-2.5 py-1 rounded bg-surface-container-high text-on-surface font-label-caps text-label-caps uppercase">
                 {badge}
               </span>
             ))
@@ -86,14 +91,16 @@ const year = new Date().getFullYear();
 
       <!-- Column 2 — quick links -->
       <nav class="lg:col-span-2 flex flex-col space-y-3" aria-label="Footer">
-        <span class="font-title-md text-title-md text-white tracking-wide">Quick Links</span>
+        <span class="font-title-md text-title-md text-on-surface tracking-wide"
+          >Quick Links</span
+        >
         <ul class="space-y-2.5 mt-2">
           {
             quickLinks.map((item) => (
               <li class="h-7 flex items-center">
                 <a
                   href={item.href}
-                  class="hover:text-white transition-colors focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+                  class={`hover:text-on-surface transition-colors ${focus}`}
                 >
                   {item.label}
                 </a>
@@ -105,14 +112,16 @@ const year = new Date().getFullYear();
 
       <!-- Column 3 — services -->
       <nav class="lg:col-span-3 flex flex-col space-y-3" aria-label="Services">
-        <span class="font-title-md text-title-md text-white tracking-wide">Our Services</span>
+        <span class="font-title-md text-title-md text-on-surface tracking-wide"
+          >Our Services</span
+        >
         <ul class="space-y-2.5 mt-2">
           {
             services.map((service) => (
               <li class="h-7 flex items-center">
                 <a
                   href="#"
-                  class="hover:text-white transition-colors truncate focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+                  class={`hover:text-on-surface transition-colors truncate ${focus}`}
                 >
                   {service}
                 </a>
@@ -124,18 +133,20 @@ const year = new Date().getFullYear();
 
       <!-- Column 4 — contact -->
       <div class="lg:col-span-3 flex flex-col space-y-3">
-        <span class="font-title-md text-title-md text-white tracking-wide">Contact Info</span>
+        <span class="font-title-md text-title-md text-on-surface tracking-wide"
+          >Contact Info</span
+        >
         <div class="space-y-3 mt-2">
           {
             contact.map((item) => (
               <div class="flex items-start gap-3">
-                <span class="material-symbols-outlined text-footer-accent text-[20px] mt-0.5">
+                <span class="material-symbols-outlined text-primary text-[20px] mt-0.5">
                   {item.icon}
                 </span>
                 {item.href ? (
                   <a
                     href={item.href}
-                    class="hover:text-white transition-colors truncate focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+                    class={`hover:text-on-surface transition-colors truncate ${focus}`}
                   >
                     {item.label}
                   </a>
@@ -150,7 +161,7 @@ const year = new Date().getFullYear();
               href="#"
               target="_blank"
               rel="noopener noreferrer"
-              class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-whatsapp text-white font-label-sm text-label-sm hover:bg-whatsapp-hover transition-colors focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+              class={`inline-flex items-center gap-2 px-3 py-1.5 rounded-control bg-whatsapp text-white font-label-sm text-label-sm hover:bg-whatsapp-hover transition-colors ${focus}`}
             >
               <span class="material-symbols-outlined text-[16px]">chat</span>
               <span>WhatsApp Direct</span>
@@ -161,14 +172,14 @@ const year = new Date().getFullYear();
     </div>
 
     <!-- Bottom bar -->
-    <div class="mt-12 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-      <p class="text-xs text-footer-text">
+    <div
+      class="mt-12 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-outline-variant"
+    >
+      <p class="text-xs text-secondary">
         &copy; {year} Rajarata Engineering. All Rights Reserved. Electrical Engineering
         &amp; Contracting.
       </p>
-      <p
-        class="text-xs text-footer-text font-label-caps uppercase tracking-wider"
-      >
+      <p class="text-xs text-secondary font-label-caps uppercase tracking-wider">
         Built for Safety &amp; Performance
       </p>
     </div>

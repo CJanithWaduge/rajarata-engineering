@@ -5,10 +5,10 @@
  * Geometry is taken verbatim from
  * UI-UX-design/rajarata_engineering_logo/code.html — 240x50 viewBox.
  *
- * Two variants, because the footer sits on a near-black surface where the
- * original fills are invisible. The prototype handled this with a
- * `brightness-0 invert` filter on an <img>; inline SVG cannot do that, so
- * the fills are swapped here instead.
+ * Two variants. `light` is the default and is what every current page uses
+ * — the footer became a light surface, so the dark footer that motivated
+ * the second variant is gone. `dark` all-white is kept for a future
+ * near-black band (inverted cards, a promo strip); nothing renders it yet.
  *
  * The two <text> nodes render in whatever font has loaded when the SVG
  * paints, so they can reflow briefly on a cold cache. Converting them to

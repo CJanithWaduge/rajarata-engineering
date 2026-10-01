@@ -7,8 +7,10 @@
  * the card from the page — the hairline is an addition from DESIGN.md, and
  * it is what makes the border read as crisp rather than blurry.
  *
- * The `inverted` variant carries the 3px red accent strip for dark
- * surfaces. That strip is decorative, so it is hidden from assistive tech.
+ * The `inverted` variant carries the 3px red accent strip and uses the
+ * palette's inverse surface (#303030). Nothing in the prototypes actually
+ * uses it — it exists for a future dark CTA band or promo section. The
+ * strip is decorative, so it is hidden from assistive tech.
  */
 interface Props {
   inverted?: boolean;
@@ -27,7 +29,7 @@ const {
 } = Astro.props;
 
 const shell = inverted
-  ? 'bg-footer-bg text-white border-white/10'
+  ? 'bg-inverse-surface text-inverse-on-surface border-white/10'
   : 'bg-surface-container-lowest text-on-surface border-outline-variant';
 
 const base =
@@ -39,8 +41,8 @@ const interactive = href
 
 const classes = `${base} ${shell} ${interactive} ${flush ? '' : 'p-6'} ${className ?? ''}`;
 
-// Card.draw the accent strip with a pseudo-element so it does not become a
-// layout sibling that callers have to account for.
+// Drawn with a pseudo-element rather than a real child div — a sibling would
+// sit in the flex flow and push the card's content sideways.
 const hasStrip = inverted
   ? 'before:absolute before:left-0 before:top-0 before:h-full before:w-[3px] before:bg-primary-container before:rounded-l-card before:content-[""]'
   : '';
