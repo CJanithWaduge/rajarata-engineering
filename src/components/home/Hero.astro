@@ -22,6 +22,20 @@ import Container from '../Container.astro';
       through 1.11 on the right. The grid is deliberately empty until then.
     -->
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-center">
+      <!--
+        Left column. Steps 1.2 through 1.7 stack here in order: eyebrow pill,
+        h1, intro paragraph, then the two CTAs.
+      -->
+      <div class="lg:col-span-6 flex flex-col items-start space-y-6">
+        <p class="inline-flex items-center gap-2.5 px-3 py-1.5 rounded-full bg-error-container/40">
+          <span
+            class="w-2.5 h-2.5 rounded-full bg-primary-container animate-pulse"
+            aria-hidden="true"></span>
+          <span class="font-label-caps text-label-caps uppercase tracking-wider text-primary"
+            >Electrical Engineering &amp; Solutions</span
+          >
+        </p>
+      </div>
     </div>
   </Container>
 </section>
