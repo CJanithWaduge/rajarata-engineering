@@ -16,6 +16,16 @@
  * are inert until those sections are built:
  *   #contact        — Contact page, not started
  *   #services-list  — Services grid, step 4.1 must add `id="services-list"`
+ *
+ * Images. Every `src` below is still the prototype's `lh3.googleusercontent`
+ * hotlink. Those URLs will not survive. Each needs a real asset uploaded to
+ * Firebase Storage before Home ships. The parent element carries
+ * `bg-surface-container`, so a failed load degrades to a grey panel rather
+ * than a broken-image icon.
+ *
+ * Deliberately no `width`/`height` on the images: each sits in a fixed-height
+ * container at `h-full object-cover`, so the box never reflows and there is no
+ * layout shift to prevent. Intrinsic dimensions would be ignored anyway.
  */
 import Container from '../Container.astro';
 import Button from '../ui/Button.astro';
@@ -64,6 +74,21 @@ import Button from '../ui/Button.astro';
             >
             <span class="font-label-sm text-label-sm text-on-surface">Industrial Standard</span>
           </div>
+        </div>
+      </div>
+
+      <div class="lg:col-span-6 relative w-full">
+        <div
+          class="relative w-full h-[360px] sm:h-[420px] lg:h-[480px] rounded-2xl overflow-hidden shadow-xl bg-surface-container"
+        >
+          <img
+            class="w-full h-full object-cover object-center"
+            src="https://lh3.googleusercontent.com/aida-public/AB6AXuBGCO8SgW7oLqCs8-k81OOZount04OcaGdN0vURh96M3xpQaJ3Pg1m8LRdkTImpJzcKL7SbAA8ESnnXfP5e0H6gXrHEUAMuIR43rsW4jkChGBn4lWyIlSkbFt7HEOBVfrWTJSubBPVpCPt7q9e4LgBocmHQkji7DAGzJpYcw61eRDRR-z_yFTGzXZGbuhtDtmzjWXU6ydWyfZsFQeXH5RQq3u1fiUE_Rb6gb5cscKzkV808qS3luJlobQ"
+            alt="Professional female electrical engineer wearing white safety hardhat, high-visibility orange safety vest, and safety goggles examining an open industrial electrical MDB control panel board with terminal blocks and wiring harnesses inside a modern high-tech manufacturing plant"
+            loading="eager"
+            fetchpriority="high"
+            decoding="async"
+          />
         </div>
       </div>
     </div>
