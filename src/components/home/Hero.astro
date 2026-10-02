@@ -2,12 +2,20 @@
 /**
  * Hero — section 1 of the Home page.
  *
- * Shell only. This step exists to prove the section background and vertical
- * rhythm before any content lands on top of it. The backgrounds on this page
- * strictly alternate `surface-container-lowest` / `surface-container-low`, so
- * a missing `bg-*` here breaks the page's rhythm and is easy to miss.
- *
  * Source: the first <section> in UI-UX-design/home_rajarata_engineering/code.html
+ *
+ * Structure. The grid is two 6-column halves at `lg`, stacked below it:
+ *   - left  — eyebrow pill, h1, intro paragraph, CTA row
+ *   - right — hero image, gradient scrim, telemetry badge, status tag
+ *
+ * Note: Astro does NOT strip HTML comments from templates, so nothing
+ * explanatory belongs in the markup below — it would ship to production.
+ * Planning notes live in this frontmatter block instead, which is stripped.
+ *
+ * Anchor targets. Both CTA hrefs point at ids that do not exist yet, so both
+ * are inert until those sections are built:
+ *   #contact        — Contact page, not started
+ *   #services-list  — Services grid, step 4.1 must add `id="services-list"`
  */
 import Container from '../Container.astro';
 import Button from '../ui/Button.astro';
@@ -17,16 +25,7 @@ import Button from '../ui/Button.astro';
   class="relative w-full bg-surface-container-lowest overflow-hidden py-12 md:py-16 lg:py-24"
 >
   <Container>
-    <!--
-      Two equal columns: left 6 holds the copy, right 6 holds the image.
-      Both are built by later steps — 1.2 through 1.7 on the left, 1.8
-      through 1.11 on the right. The grid is deliberately empty until then.
-    -->
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-center">
-      <!--
-        Left column. Steps 1.2 through 1.7 stack here in order: eyebrow pill,
-        h1, intro paragraph, then the two CTAs.
-      -->
       <div class="lg:col-span-6 flex flex-col items-start space-y-6">
         <p class="inline-flex items-center gap-2.5 px-3 py-1.5 rounded-full bg-error-container/40">
           <span
@@ -43,16 +42,12 @@ import Button from '../ui/Button.astro';
           [REPLACE: 1–2 sentence company introduction]
         </p>
 
-        <!--
-          CTA row. Steps 1.5 and 1.6 share it. `flex-col sm:flex-row` stacks
-          the buttons full-width on mobile and puts them side by side
-          from `sm` up.
-        -->
         <div class="w-full sm:w-auto flex flex-col sm:flex-row items-stretch sm:items-center gap-4 pt-2">
           <Button variant="primary" href="#contact">
             <span>GET A QUOTE</span>
             <span class="material-symbols-outlined text-lg" aria-hidden="true">arrow_forward</span>
           </Button>
+          <Button variant="secondary" href="#services-list">EXPLORE SERVICES</Button>
         </div>
       </div>
     </div>
