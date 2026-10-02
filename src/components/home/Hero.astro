@@ -10,6 +10,7 @@
  * Source: the first <section> in UI-UX-design/home_rajarata_engineering/code.html
  */
 import Container from '../Container.astro';
+import Button from '../ui/Button.astro';
 ---
 
 <section
@@ -37,6 +38,22 @@ import Container from '../Container.astro';
         </p>
 
         <h1 class="text-[34px] sm:text-[46px] lg:text-[56px] leading-[1.12] tracking-tight font-display-hero text-on-surface">Reliable Electrical Solutions Built for <span class="text-primary-container">Safety &amp; Performance</span></h1>
+
+        <p class="font-body-lg text-body-lg text-secondary leading-relaxed max-w-xl">
+          [REPLACE: 1–2 sentence company introduction]
+        </p>
+
+        <!--
+          CTA row. Steps 1.5 and 1.6 share it. `flex-col sm:flex-row` stacks
+          the buttons full-width on mobile and puts them side by side
+          from `sm` up.
+        -->
+        <div class="w-full sm:w-auto flex flex-col sm:flex-row items-stretch sm:items-center gap-4 pt-2">
+          <Button variant="primary" href="#contact">
+            <span>GET A QUOTE</span>
+            <span class="material-symbols-outlined text-lg" aria-hidden="true">arrow_forward</span>
+          </Button>
+        </div>
       </div>
     </div>
   </Container>
