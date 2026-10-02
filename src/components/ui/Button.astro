@@ -34,6 +34,11 @@ interface Props {
  *
  * The secondary button carries no shadow in any prototype; a grey fill on a
  * light page does not need one to separate it.
+ *
+ * Focus: the ring matches Header, Footer, and Card — 2px primary-container
+ * outline at 2px offset, suppressed for pointer focus via `focus:outline-none`
+ * so it only appears for keyboard users. Button was the one interactive
+ * component missing this.
  */
 
 const {
@@ -48,7 +53,8 @@ const {
 const base =
   'inline-flex items-center justify-center gap-2 font-label-md text-label-md ' +
   'rounded-control whitespace-nowrap transition-all duration-150 ' +
-  'active:translate-y-[1px]';
+  'active:translate-y-[1px] ' +
+  'focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-container';
 
 const variants = {
   primary:
