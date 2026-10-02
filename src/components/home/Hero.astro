@@ -111,25 +111,24 @@ import Button from '../ui/Button.astro';
 >
           </div>
           <div
-            class="absolute bottom-4 left-4 right-4 z-10 w-auto max-w-full sm:bottom-6 sm:left-6 sm:right-auto sm:max-w-xs p-3 sm:p-4 rounded-xl bg-surface-container-lowest/95 backdrop-blur-md shadow-lg flex flex-nowrap items-center gap-3 sm:gap-3.5"
-          >
-            <div
-              class="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-error-container/60 flex items-center justify-center text-primary-container shrink-0"
-            >
-              <span class="material-symbols-outlined text-xl sm:text-2xl" aria-hidden="true"
-                >shield</span
-              >
-            </div>
-            <div class="flex flex-col min-w-0 flex-nowrap">
-              <span
-                class="font-title-md text-title-md text-on-surface leading-tight truncate"
-                >100% Safety &amp; Compliance</span
-              >
-              <span class="font-label-sm text-label-sm text-secondary truncate"
-                >Guaranteed Utility Standards</span
-              >
-            </div>
-          </div>
+  class="absolute bottom-6 left-6 z-10 w-[calc(100%-3rem)] sm:w-auto sm:max-w-xs p-4 rounded-xl bg-surface-container-lowest/95 backdrop-blur-md shadow-lg flex items-center gap-3.5"
+>
+  <div
+    class="w-12 h-12 rounded-lg bg-error-container/60 flex items-center justify-center text-primary-container shrink-0"
+  >
+    <span class="material-symbols-outlined text-2xl" aria-hidden="true"
+      >shield</span
+    >
+  </div>
+  <div class="flex flex-col min-w-0 shrink">
+    <span class="font-title-md text-title-md text-on-surface leading-tight whitespace-nowrap"
+      >100% Safety &amp; Compliance</span
+    >
+    <span class="font-label-sm text-label-sm text-secondary truncate"
+      >Guaranteed Utility Standards</span
+    >
+  </div>
+</div>
           <div
             class="absolute top-5 right-5 z-10 px-3 py-1.5 rounded-lg bg-inverse-surface/90 text-on-primary font-label-caps text-label-caps uppercase flex items-center gap-2"
           >
