@@ -33,16 +33,12 @@
  * reordered — so all three overlays carry `z-10`, which makes the intent
  * explicit and keeps the badge and tag at equal rank.
  *
- * Badge text fitting. The title is 16px and needs ~225px on one line. At a
- * 360px viewport the badge has ~250px of content width, so it fits; at 320px it
- * does not. `truncate` is used rather than bare `whitespace-nowrap` because it
- * implies nowrap *plus* overflow-hidden — a bare nowrap would push the text
- * outside the card and get clipped by the image wrapper, which is worse than
- * an ellipsis. The ellipsis only appears below ~340px.
+ * Badge text fitting. The title is kept to one line and truncated when the
+ * badge is too narrow. The mobile insets keep the card within the image;
+ * from `sm` upward it shrinks to its content and is capped at `max-w-xs`.
  *
- * Note `max-w-full` rather than `max-w-[calc(100%-2rem)]`: with both `left-4`
- * and `right-4` set on mobile, the inset already bounds the width to the
- * viewport minus 2rem, so a `calc()` cap could never bind.
+ * On mobile, the badge's left and right insets bound its width without needing
+ * an arbitrary `calc()` value.
  */
 import Container from '../Container.astro';
 import Button from '../ui/Button.astro';
@@ -106,37 +102,37 @@ import Button from '../ui/Button.astro';
             fetchpriority="high"
             decoding="async"
           />
-          <div
-            class="absolute inset-0 bg-gradient-to-t from-inverse-surface/80 via-inverse-surface/20 to-transparent"
->
-          </div>
-          <div
-  class="absolute bottom-6 left-6 z-10 w-[calc(100%-3rem)] sm:w-auto sm:max-w-xs p-4 rounded-xl bg-surface-container-lowest/95 backdrop-blur-md shadow-lg flex items-center gap-3.5"
->
-  <div
-    class="w-12 h-12 rounded-lg bg-error-container/60 flex items-center justify-center text-primary-container shrink-0"
-  >
-    <span class="material-symbols-outlined text-2xl" aria-hidden="true"
-      >shield</span
-    >
-  </div>
-  <div class="flex flex-col min-w-0 shrink">
-    <span class="font-title-md text-title-md text-on-surface leading-tight whitespace-nowrap"
-      >100% Safety &amp; Compliance</span
-    >
-    <span class="font-label-sm text-label-sm text-secondary truncate"
-      >Guaranteed Utility Standards</span
-    >
-  </div>
-</div>
-          <div
-            class="absolute top-5 right-5 z-10 px-3 py-1.5 rounded-lg bg-inverse-surface/90 text-on-primary font-label-caps text-label-caps uppercase flex items-center gap-2"
-          >
-            <span class="w-2 h-2 rounded-full bg-emerald-400" aria-hidden="true"></span>
-            <span>GRID LEVEL GRADE</span>
+            <div
+              class="absolute inset-0 bg-gradient-to-t from-inverse-surface/80 via-inverse-surface/20 to-transparent"
+            >
+            </div>
+            <div
+              class="absolute bottom-6 left-6 z-10 w-[calc(100%-3rem)] sm:w-80 p-4 rounded-xl bg-surface-container-lowest/95 backdrop-blur-md shadow-lg flex items-center gap-3.5"
+            >
+              <div
+                class="w-12 h-12 rounded-lg bg-error-container/60 flex items-center justify-center text-primary-container shrink-0"
+              >
+                <span class="material-symbols-outlined text-2xl" aria-hidden="true"
+                  >shield</span
+                >
+              </div>
+              <div class="flex flex-col flex-1 min-w-0">
+              <span class="font-title-md text-title-md text-on-surface leading-tight"
+                >100% Safety &amp; Compliance</span
+              >
+                <span class="font-label-sm text-label-sm text-secondary truncate"
+                  >Guaranteed Utility Standards</span
+                >
+              </div>
+            </div>
+            <div
+              class="absolute top-5 right-5 z-10 px-3 py-1.5 rounded-lg bg-inverse-surface/90 text-on-primary font-label-caps text-label-caps uppercase flex items-center gap-2"
+            >
+              <span class="w-2 h-2 rounded-full bg-emerald-400" aria-hidden="true"></span>
+              <span>GRID LEVEL GRADE</span>
+            </div>
           </div>
         </div>
-      </div>
     </div>
   </Container>
 </section>
