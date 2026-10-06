@@ -1,8 +1,8 @@
 ---
 /**
- * Why choose us (Step 5.2)
- * Added centred heading block: label-caps "Proven Excellence",
- * h2 "Why Choose Rajarata Engineering", and supporting sentence.
+ * Why choose us (Step 5.3)
+ * Added Feature card 1: health_and_safety icon,
+ * "Safety First". Carries [REPLACE: Safety protocols and zero-hazard commitment].
  */
 import Container from "../Container.astro";
 ---
@@ -20,6 +20,21 @@ import Container from "../Container.astro";
         Engineering rigor, technical competence, and complete regulatory accountability deployed on every site.
       </p>
     </div>
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"></div>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <!-- Feature 1 -->
+      <div class="p-6 rounded-2xl bg-surface-container-low flex flex-col space-y-4">
+        <div
+          class="w-12 h-12 rounded-xl bg-surface-container-lowest flex items-center justify-center text-primary-container shadow-sm"
+        >
+          <span class="material-symbols-outlined text-2xl"
+            >health_and_safety</span
+          >
+        </div>
+        <h3 class="font-title-lg text-title-lg text-on-surface">Safety First</h3>
+        <p class="font-body-md text-body-md text-secondary leading-relaxed">
+          [REPLACE: Safety protocols and zero-hazard commitment]
+        </p>
+      </div>
+    </div>
   </Container>
 </section>
