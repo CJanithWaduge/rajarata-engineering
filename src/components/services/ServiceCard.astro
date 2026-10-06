@@ -44,6 +44,8 @@ const badgeClass =
         ? 'bg-tertiary-fixed text-on-tertiary-fixed'
         : 'bg-secondary-container text-on-secondary-fixed';
 
+const scopeLabelClass = accent === 'tertiary' ? 'text-tertiary' : 'text-primary';
+
 const detailId = `service-detail-${parseInt(number, 10)}`;
 ---
 
@@ -69,7 +71,7 @@ const detailId = `service-detail-${parseInt(number, 10)}`;
       <!-- Collapsible Content Wrapper -->
       <div class="hidden flex-col space-y-4 pt-3" id={detailId}>
         <div class="p-4 rounded-xl bg-surface-container-low space-y-2">
-          <span class="font-label-caps text-label-caps uppercase text-primary font-bold">Scope of Work Includes:</span>
+          <span class={`font-label-caps text-label-caps uppercase ${scopeLabelClass} font-bold`}>Scope of Work Includes:</span>
           <p class="font-body-sm text-body-sm text-on-surface leading-relaxed">
             {scope}
           </p>
