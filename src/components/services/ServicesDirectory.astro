@@ -1,8 +1,9 @@
 ---
 /**
- * Services directory (Step S3.17)
- * Shell: section, container, and responsive card grid.
+ * Services directory (Steps S3.17–S3.28)
+ * Section shell, heading row, and responsive card grid.
  */
+import ServiceCard from './ServiceCard.astro';
 ---
 
 <section class="w-full py-16 sm:py-24 bg-surface">
@@ -20,6 +21,17 @@
     </div>
     <!-- Services 2-Column Desktop Grid / 1-Column Mobile -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-10">
+      <!-- 01 Residential & Commercial Electrical Wiring -->
+      <ServiceCard
+        id="service-01"
+        number="01"
+        categoryIcon="apartment"
+        categoryLabel="LV Distribution"
+        title="Residential & Commercial Electrical Wiring"
+        description="[REPLACE: Detailed definition - Full architectural electrical infrastructure planning, rough-in, conduit installation, and final wiring designed for continuous high efficiency, fire resistance, and full compliance with municipal building codes.]"
+        scope="[REPLACE: Distribution boards, modular switches, concealed conduit networks, architectural lighting fixtures, dedicated circuit breakers, sub-metering, and load calculation checks.]"
+        suitableFor={['Residential complexes', 'Commercial buildings', 'Retail plazas', 'Corporate headquarters']}
+      />
     </div>
   </div>
 </section>
