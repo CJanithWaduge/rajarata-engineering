@@ -1,7 +1,8 @@
 ---
 /**
- * About introduction (Step 3.8)
- * Added "About Us" text link with arrow (data-path="about-us", href="#").
+ * About introduction (Step 3.9)
+ * Added spec card shell: right 5 columns, p-8 rounded-2xl bg-inverse-surface,
+ * label-caps "System Specifications" + "Active Standards" badge.
  */
 import Container from "../Container.astro";
 ---
@@ -60,6 +61,22 @@ import Container from "../Container.astro";
               >arrow_right_alt</span
             >
           </a>
+        </div>
+      </div>
+
+      <!-- Metric & Operational Highlights Card -->
+      <div class="lg:col-span-5 flex flex-col gap-6">
+        <div class="p-8 rounded-2xl bg-inverse-surface text-on-primary shadow-xl relative overflow-hidden">
+          <div class="relative z-10 flex flex-col space-y-6">
+            <div class="flex items-center justify-between pb-4">
+              <span class="font-label-caps text-label-caps tracking-widest text-primary-fixed uppercase"
+                >System Specifications</span
+              >
+              <span class="px-2.5 py-1 rounded bg-surface-container-highest/20 font-label-sm text-label-sm text-white"
+                >Active Standards</span
+              >
+            </div>
+          </div>
         </div>
       </div>
     </div>
