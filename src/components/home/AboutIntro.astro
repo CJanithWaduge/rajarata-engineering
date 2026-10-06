@@ -1,8 +1,12 @@
 ---
 /**
- * About introduction (Step 3.11)
- * Added data point 2: label "Compliance Threshold", value carries
- * [REPLACE: INDUSTRY COMPLIANCE], supporting line.
+ * About introduction (Step 3.12)
+ * Added live stat strip: bg-white/5, health_and_safety icon (text-emerald-400),
+ * "Zero Hazard Index" / "Uncompromised site safety record", done_all icon.
+ *
+ * NOTE: text-emerald-400 and bg-emerald-400 are the only stock Tailwind colours
+ * in the build. DESIGN.md defines no green token. This is a deliberate prototype
+ * carry-over — see IMPLEMENTATION.md. Flagged for design decision, not changed.
  */
 import Container from "../Container.astro";
 ---
@@ -102,6 +106,22 @@ import Container from "../Container.astro";
               <span class="font-body-sm text-body-sm text-gray-400">
                 Validated across all commercial &amp; utility grade tiers
               </span>
+            </div>
+
+            <!-- Live Stat Strip Graphic -->
+            <div class="pt-4 flex items-center justify-between p-3 rounded-xl bg-white/5">
+              <div class="flex items-center gap-3">
+                <span class="material-symbols-outlined text-emerald-400 text-2xl"
+                  >health_and_safety</span
+                >
+                <div class="flex flex-col">
+                  <span class="font-label-sm text-label-sm text-white">Zero Hazard Index</span>
+                  <span class="font-body-sm text-body-sm text-gray-400"
+                    >Uncompromised site safety record</span
+                  >
+                </div>
+              </div>
+              <span class="material-symbols-outlined text-gray-500">done_all</span>
             </div>
           </div>
         </div>
