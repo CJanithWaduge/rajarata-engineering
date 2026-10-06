@@ -1,10 +1,12 @@
 ---
 /**
- * Featured projects (Step 6.2)
- * Added heading row: label-caps "Demonstrated Capability",
- * h2 "Featured Engineering Projects", and the "View All Projects" link.
+ * Featured projects (Step 6.4)
+ * Added Project card 1 via ProjectCard component.
+ * Markers carried: PROJECT TYPE, PROJECT LOCATION, PROJECT YEAR, PROJECT NAME.
+ * Image is a hotlinked placeholder — needs a real Firebase Storage asset.
  */
 import Container from "../Container.astro";
+import ProjectCard from "./ProjectCard.astro";
 ---
 
 <section class="w-full bg-surface-container-low py-16 lg:py-24">
@@ -26,6 +28,15 @@ import Container from "../Container.astro";
         <span class="material-symbols-outlined text-base">arrow_forward</span>
       </a>
     </div>
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"></div>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      <ProjectCard
+        imageSrc="https://lh3.googleusercontent.com/aida-public/AB6AXuD-uG0XdKSnk5zesV3RfugA0mdgFAYQ6Dv-LsQYroLUEUKfcfYh1k3xAp9mpqQ2WKAC3Y-VqVwQe5fF_Au8vI3WPekAk-xdlXgssPNmVOV7MaS9npASWyddK-HgwnUJyeO_iMBJZxYx7L4xKqA52i-7HlTESrPc_2bZEKnK2ZucO6fyHzVZG3PxY4w_QCzjHFZt35OE0YijLBUaX6LmOapcfwVrA34vkOr8spI3M8bvXzm0g4rd_zP9Qg"
+        imageAlt="Heavy industrial power substation installation with main distribution switchboards, overhead aluminum cable trays, and busbar connections inside a high-tech corporate facility with bright fluorescent lighting"
+        category="[REPLACE: PROJECT TYPE]"
+        location="[REPLACE: PROJECT LOCATION]"
+        year="[REPLACE: PROJECT YEAR]"
+        name="[REPLACE: PROJECT NAME]"
+      />
+    </div>
   </Container>
 </section>
