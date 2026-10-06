@@ -1,0 +1,74 @@
+---
+/**
+ * Reusable service card (Step S3.19)
+ * Number, category badge, title, "What It Is" copy, expandable details,
+ * suitable-for chips, and contact link.
+ */
+interface Props {
+  id: string;
+  number: string;
+  categoryIcon: string;
+  categoryLabel: string;
+  title: string;
+  description: string;
+  scope: string;
+  suitableFor: string[];
+}
+
+const { id, number, categoryIcon, categoryLabel, title, description, scope, suitableFor } = Astro.props;
+const detailId = `service-detail-${parseInt(number, 10)}`;
+---
+
+<article class="group flex flex-col justify-between p-6 sm:p-8 rounded-2xl bg-surface-container-lowest shadow-sm hover:shadow-md transition-all duration-200" id={id}>
+  <div>
+    <div class="flex items-center justify-between pb-6 mb-6">
+      <span class="font-headline-lg text-headline-sm sm:text-headline-md text-secondary-container font-extrabold tracking-tight">{number}</span>
+      <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-secondary-container text-on-secondary-fixed font-label-caps text-label-caps uppercase">
+        <span class="material-symbols-outlined text-[14px]">{categoryIcon}</span>
+        {categoryLabel}
+      </span>
+    </div>
+    <h3 class="font-headline-sm text-headline-sm text-on-surface group-hover:text-primary transition-colors">
+      {title}
+    </h3>
+    <div class="mt-4 space-y-4">
+      <div>
+        <span class="font-label-caps text-label-caps uppercase text-secondary">What It Is</span>
+        <p class="font-body-md text-body-md text-on-surface mt-1 leading-relaxed">
+          {description}
+        </p>
+      </div>
+      <!-- Collapsible Content Wrapper -->
+      <div class="hidden flex-col space-y-4 pt-3" id={detailId}>
+        <div class="p-4 rounded-xl bg-surface-container-low space-y-2">
+          <span class="font-label-caps text-label-caps uppercase text-primary font-bold">Scope of Work Includes:</span>
+          <p class="font-body-sm text-body-sm text-on-surface leading-relaxed">
+            {scope}
+          </p>
+        </div>
+        <div>
+          <span class="font-label-caps text-label-caps uppercase text-secondary">Suitable For</span>
+          <div class="flex flex-wrap gap-2 mt-2">
+            {suitableFor.map((item) => (
+              <span class="px-2.5 py-1 rounded-md bg-surface-container text-on-surface font-body-sm text-body-sm">{item}</span>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="pt-6 mt-6 flex items-center justify-between">
+    <button
+      class="inline-flex items-center gap-2 font-label-md text-label-md text-primary font-semibold hover:text-primary-container focus:outline-none transition-colors"
+      aria-expanded="false"
+      aria-controls={detailId}
+      data-service-toggle
+    >
+      <span class="btn-text">Read Detailed Specifications</span>
+      <span class="material-symbols-outlined text-[18px] transition-transform duration-200 expand-icon">keyboard_arrow_down</span>
+    </button>
+    <a class="p-2 rounded-xl bg-surface-container hover:bg-primary-container hover:text-on-primary text-secondary transition-all" data-path="contact" href="#">
+      <span class="material-symbols-outlined text-[20px] block">arrow_forward</span>
+    </a>
+  </div>
+</article>
