@@ -9,6 +9,12 @@
  * Nav targets are placeholders until the routes exist. `href="#"` on a link
  * that isn't the current page also makes the browser jump to the top, which
  * is at least harmless.
+ *
+ * The mobile backdrop and drawer follow `</header>` as siblings rather than
+ * living inside it. The header carries `backdrop-blur-md`, and a backdrop
+ * filter makes an element a containing block for `position: fixed`
+ * descendants — nesting them would anchor the drawer to the header box
+ * instead of the viewport. The prototype puts them at body level too.
  */
 import Container from './Container.astro';
 import Logo from './Logo.astro';
@@ -27,6 +33,9 @@ const nav = [
 const path = Astro.url.pathname;
 const isActive = (href: string) =>
   href === path || (href !== '#' && path.startsWith(href));
+
+const focusRing =
+  'focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-container';
 ---
 
 <header
@@ -34,10 +43,7 @@ const isActive = (href: string) =>
 >
   <Container class="h-20 flex items-center justify-between">
     <!-- Brand -->
-    <a
-      href="/"
-      class="flex items-center gap-3 focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-container"
-    >
+    <a href="/" class={`flex items-center gap-3 ${focusRing}`}>
       <Logo class="h-9 lg:h-10 w-auto" />
       <span class="flex flex-col">
         <span class="font-title-lg text-title-lg tracking-tight text-on-surface uppercase"
@@ -89,22 +95,154 @@ const isActive = (href: string) =>
       >
         <span class="material-symbols-outlined text-on-primary text-[18px]">person</span>
       </div>
-      <!--
-        Toggle is present but not wired. The prototype's drawer is a separate
-        block (backdrop + panel + its own nav list) and the plan scopes step 6
-        to the header only. Wiring `data-menu-toggle` up is the whole of the
-        mobile menu work.
-      -->
       <button
         type="button"
         aria-label="Open navigation menu"
         aria-expanded="false"
         aria-controls="mobile-drawer"
         data-menu-toggle
-        class="w-12 h-12 flex items-center justify-center text-on-surface rounded-control hover:bg-surface-container-high transition-colors focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-container"
+        class={`w-12 h-12 flex items-center justify-center text-on-surface rounded-control hover:bg-surface-container-high transition-colors ${focusRing}`}
       >
         <span class="material-symbols-outlined text-3xl">menu</span>
       </button>
     </div>
   </Container>
 </header>
+
+{/* Mobile backdrop (Step 7.7). Closed by default; `inert` keeps it out of
+    the tab order until the drawer opens. */}
+<div
+  id="mobile-backdrop"
+  data-menu-backdrop
+  data-state="closed"
+  aria-hidden="true"
+  inert
+  class="fixed inset-0 z-50 bg-inverse-surface/60 lg:hidden transition-opacity duration-300 opacity-0 pointer-events-none data-[state=open]:opacity-100 data-[state=open]:pointer-events-auto"
+>
+</div>
+
+{/* Mobile drawer (Step 7.7). Open/closed states are written as real Tailwind
+    utilities on `data-state` — the prototype's `drawer-closed` /
+    `backdrop-closed` names are not defined in this setup. */}
+<div
+  id="mobile-drawer"
+  data-menu-drawer
+  data-state="closed"
+  aria-hidden="true"
+  inert
+  class="fixed top-0 right-0 z-50 flex h-full w-full max-w-[24rem] flex-col justify-between overflow-y-auto bg-surface-container-lowest shadow-2xl lg:hidden transition-[transform,opacity] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] translate-x-full opacity-0 pointer-events-none data-[state=open]:translate-x-0 data-[state=open]:opacity-100 data-[state=open]:pointer-events-auto"
+>
+  <div class="p-6">
+    <div class="flex items-center justify-between pb-6">
+      <a href="/" class={`flex items-center gap-3 ${focusRing}`}>
+        <Logo class="h-8 w-auto" />
+      </a>
+      <button
+        type="button"
+        data-menu-close
+        aria-label="Close navigation menu"
+        class={`w-12 h-12 flex items-center justify-center rounded-control text-on-surface hover:bg-surface-container-high transition-colors ${focusRing}`}
+      >
+        <span class="material-symbols-outlined text-2xl">close</span>
+      </button>
+    </div>
+
+    <nav class="flex flex-col space-y-2 mt-4" aria-label="Mobile">
+      {
+        nav.map((item) => (
+          <a
+            href={item.href}
+            class:list={[
+              'flex h-12 items-center rounded-control px-4 font-title-md text-title-md transition-colors',
+              isActive(item.href)
+                ? 'bg-surface-container-high text-primary'
+                : 'text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface',
+            ]}
+            aria-current={isActive(item.href) ? 'page' : undefined}
+          >
+            {item.label}
+          </a>
+        ))
+      }
+    </nav>
+
+    <div class="mt-8 pt-6">
+      <Button href="#" class="w-full">Get a Quote</Button>
+    </div>
+  </div>
+
+  <div class="p-6 bg-surface-container-low">
+    <div class="flex flex-col space-y-3 font-body-sm text-body-sm text-secondary">
+      <a
+        href="tel:[REPLACE: PHONE NUMBER]"
+        class={`flex items-center gap-3 py-1 text-on-surface transition-colors hover:text-primary ${focusRing}`}
+      >
+        <span class="material-symbols-outlined text-primary text-[20px]">call</span>
+        <span>[REPLACE: PHONE NUMBER]</span>
+      </a>
+      <a
+        href="mailto:[REPLACE: EMAIL ADDRESS]"
+        class={`flex items-center gap-3 py-1 text-on-surface transition-colors hover:text-primary ${focusRing}`}
+      >
+        <span class="material-symbols-outlined text-primary text-[20px]">mail</span>
+        <span class="truncate">[REPLACE: EMAIL ADDRESS]</span>
+      </a>
+    </div>
+  </div>
+</div>
+
+<script>
+  const toggle = document.querySelector('[data-menu-toggle]') as HTMLElement | null;
+  const drawer = document.getElementById('mobile-drawer');
+  const backdrop = document.getElementById('mobile-backdrop');
+  const closeBtn = document.querySelector('[data-menu-close]') as HTMLElement | null;
+
+  if (toggle && drawer && backdrop) {
+    const setOpen = (open: boolean) => {
+      if (open) {
+        drawer.removeAttribute('inert');
+        backdrop.removeAttribute('inert');
+        drawer.removeAttribute('aria-hidden');
+        backdrop.removeAttribute('aria-hidden');
+        drawer.dataset.state = 'open';
+        backdrop.dataset.state = 'open';
+        document.body.style.overflow = 'hidden';
+      } else {
+        // Return focus before the panel becomes unfocusable, otherwise the
+        // browser drops focus on the floor.
+        toggle.focus();
+        drawer.dataset.state = 'closed';
+        backdrop.dataset.state = 'closed';
+        document.body.style.overflow = '';
+        drawer.setAttribute('inert', '');
+        backdrop.setAttribute('inert', '');
+        drawer.setAttribute('aria-hidden', 'true');
+        backdrop.setAttribute('aria-hidden', 'true');
+      }
+      toggle.setAttribute('aria-expanded', String(open));
+      toggle.setAttribute(
+        'aria-label',
+        open ? 'Close navigation menu' : 'Open navigation menu'
+      );
+      if (open) closeBtn?.focus();
+    };
+
+    const isOpen = () => drawer.dataset.state === 'open';
+
+    toggle.addEventListener('click', () => setOpen(!isOpen()));
+    closeBtn?.addEventListener('click', () => setOpen(false));
+    backdrop.addEventListener('click', () => setOpen(false));
+
+    // Everything in the drawer dismisses it except the contact links, which
+    // hand off to the dialler or mail client and should not move the page.
+    drawer.querySelectorAll('a').forEach((link) => {
+      const href = link.getAttribute('href') ?? '';
+      if (href.startsWith('tel:') || href.startsWith('mailto:')) return;
+      link.addEventListener('click', () => setOpen(false));
+    });
+
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && isOpen()) setOpen(false);
+    });
+  }
+</script>
