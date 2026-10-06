@@ -22,17 +22,19 @@ import Button from './ui/Button.astro';
 
 const nav = [
   { label: 'Home', href: '/' },
-  { label: 'Services', href: '#' },
+  { label: 'Services', href: '/services' },
   { label: 'About Us', href: '#' },
   { label: 'Projects', href: '#' },
   { label: 'Contact', href: '#' },
 ];
 
-// Only `/` is a real route right now, so it is the only entry that can ever
-// match. The rest resolve to "#" and fall through to the inactive state.
+// Exact match, or a nested route under this one. `/` is excluded from the
+// prefix branch — `path.startsWith('/')` is true for every path, which would
+// mark Home active on every page. Unrouted entries resolve to "#" and fall
+// through to the inactive state.
 const path = Astro.url.pathname;
 const isActive = (href: string) =>
-  href === path || (href !== '#' && path.startsWith(href));
+  href === path || (href !== '#' && href !== '/' && path.startsWith(`${href}/`));
 
 const focusRing =
   'focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-container';

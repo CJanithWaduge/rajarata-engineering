@@ -1,0 +1,27 @@
+---
+/**
+ * Services page.
+ *
+ * Route shell with the shared layout. Section components land in
+ * src/components/services/ and are rendered here as the Phase 3 steps
+ * come in.
+ *
+ * `pt-20` clears the fixed header — same arrangement as Home, and for the
+ * same reason: the header is a sibling of <main>, not its parent.
+ */
+import Base from '../layouts/Base.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+---
+
+<Base
+  title="Rajarata Engineering | Electrical Engineering & Contracting"
+  description="[REPLACE: services page meta description]"
+>
+  <Header />
+
+  <main class="w-full pt-20 bg-surface">
+  </main>
+
+  <Footer />
+</Base>
