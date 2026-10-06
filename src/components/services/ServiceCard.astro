@@ -13,17 +13,45 @@ interface Props {
   description: string;
   scope: string;
   suitableFor: string[];
+  accent?: 'secondary' | 'error' | 'surface' | 'tertiary';
 }
 
-const { id, number, categoryIcon, categoryLabel, title, description, scope, suitableFor } = Astro.props;
+const {
+  id,
+  number,
+  categoryIcon,
+  categoryLabel,
+  title,
+  description,
+  scope,
+  suitableFor,
+  accent = 'secondary',
+} = Astro.props;
+
+const numberClass =
+  accent === 'error'
+    ? 'text-primary-fixed-dim'
+    : accent === 'tertiary'
+      ? 'text-tertiary-fixed-dim'
+      : 'text-secondary-container';
+
+const badgeClass =
+  accent === 'error'
+    ? 'bg-error-container text-on-error-container'
+    : accent === 'surface'
+      ? 'bg-surface-container-high text-on-surface'
+      : accent === 'tertiary'
+        ? 'bg-tertiary-fixed text-on-tertiary-fixed'
+        : 'bg-secondary-container text-on-secondary-fixed';
+
 const detailId = `service-detail-${parseInt(number, 10)}`;
 ---
 
 <article class="group flex flex-col justify-between p-6 sm:p-8 rounded-2xl bg-surface-container-lowest shadow-sm hover:shadow-md transition-all duration-200" id={id}>
   <div>
     <div class="flex items-center justify-between pb-6 mb-6">
-      <span class="font-headline-lg text-headline-sm sm:text-headline-md text-secondary-container font-extrabold tracking-tight">{number}</span>
-      <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-secondary-container text-on-secondary-fixed font-label-caps text-label-caps uppercase">
+      <span class={`font-headline-lg text-headline-sm sm:text-headline-md ${numberClass} font-extrabold tracking-tight`}>{number}</span>
+      <span class={`inline-flex items-center gap-1.5 px-3 py-1 rounded-md ${badgeClass} font-label-caps text-label-caps uppercase`}>
         <span class="material-symbols-outlined text-[14px]">{categoryIcon}</span>
         {categoryLabel}
       </span>
