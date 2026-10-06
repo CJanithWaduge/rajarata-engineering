@@ -1,0 +1,20 @@
+---
+/**
+ * Services hero (Step S3.1)
+ * Shell: section, responsive container, and background grid motif.
+ */
+---
+
+<section class="relative w-full overflow-hidden bg-surface-container-lowest pb-16 pt-8 sm:pb-24 sm:pt-12">
+  <div class="absolute inset-0 pointer-events-none opacity-40">
+    <svg class="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <pattern height="40" id="grid-pattern" patternUnits="userSpaceOnUse" width="40">
+          <path class="text-surface-variant" d="M 40 0 L 0 0 0 40" fill="none" stroke="currentColor" stroke-width="1"></path>
+        </pattern>
+      </defs>
+      <rect fill="url(#grid-pattern)" height="100%" width="100%"></rect>
+    </svg>
+  </div>
+  <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"></div>
+</section>
