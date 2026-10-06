@@ -89,7 +89,7 @@ const detailId = `service-detail-${parseInt(number, 10)}`;
   </div>
   <div class="pt-6 mt-6 flex items-center justify-between">
     <button
-      class="inline-flex items-center gap-2 font-label-md text-label-md text-primary font-semibold hover:text-primary-container focus:outline-none transition-colors"
+      class="inline-flex items-center gap-2 font-label-md text-label-md text-primary font-semibold hover:text-primary-container focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary transition-colors"
       aria-expanded="false"
       aria-controls={detailId}
       data-service-toggle
@@ -102,3 +102,26 @@ const detailId = `service-detail-${parseInt(number, 10)}`;
     </a>
   </div>
 </article>
+
+<script>
+  document.querySelectorAll<HTMLElement>('[data-service-toggle]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const detailId = button.getAttribute('aria-controls');
+      const container = detailId ? document.getElementById(detailId) : null;
+      if (!container) return;
+
+      const textSpan = button.querySelector('.btn-text');
+      const icon = button.querySelector('.expand-icon');
+      const isOpen = button.getAttribute('aria-expanded') === 'true';
+      const nextState = !isOpen;
+
+      button.setAttribute('aria-expanded', String(nextState));
+      container.classList.toggle('hidden', !nextState);
+      container.classList.toggle('flex', nextState);
+      if (textSpan) {
+        textSpan.textContent = nextState ? 'Hide Specifications' : 'Read Detailed Specifications';
+      }
+      icon?.classList.toggle('rotate-180', nextState);
+    });
+  });
+</script>
