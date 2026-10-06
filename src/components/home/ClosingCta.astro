@@ -1,12 +1,18 @@
 ---
 /**
- * Closing CTA (Step 7.1)
- * Dark section wrapper only (bg-[#111827] as per prototype; token mismatch noted).
+ * Closing CTA (Step 7.2)
+ * Added 64px red rule (w-16 h-1 bg-primary-container rounded-full)
+ * and h2 "Have an Electrical Project in Mind?" at display-hero.
  */
 ---
 
 <section class="w-full bg-[#111827] text-white py-16 lg:py-24 relative overflow-hidden">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-    <div class="max-w-4xl mx-auto flex flex-col items-center text-center space-y-8"></div>
+    <div class="max-w-4xl mx-auto flex flex-col items-center text-center space-y-8">
+      <div class="w-16 h-1 bg-primary-container rounded-full"></div>
+      <h2 class="font-display-hero text-display-hero text-white tracking-tight">
+        Have an Electrical Project in Mind?
+      </h2>
+    </div>
   </div>
 </section>
