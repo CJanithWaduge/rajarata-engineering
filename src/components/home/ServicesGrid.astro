@@ -1,14 +1,28 @@
 ---
 /**
- * Services grid (Step 4.1)
- * Shell: wrapper, grid, and the id="services-list" anchor target
- * for the Hero "EXPLORE SERVICES" button.
+ * Services grid (Step 4.2)
+ * Added section heading block: "Core Competencies" pill,
+ * h2 "Our Electrical Services", and descriptive paragraph.
  */
 import Container from "../Container.astro";
 ---
 
 <section class="w-full bg-surface-container-low py-16 lg:py-24" id="services-list">
   <Container>
+    <!-- Section Header -->
+    <div class="flex flex-col items-center text-center max-w-3xl mx-auto space-y-4 mb-14">
+      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-surface-container-high">
+        <span class="font-label-caps text-label-caps uppercase tracking-wider text-primary"
+          >Core Competencies</span
+        >
+      </div>
+      <h2 class="font-headline-lg text-headline-lg text-on-surface"
+        >Our Electrical Services</h2
+      >
+      <p class="font-body-lg text-body-lg text-secondary">
+        Comprehensive electrical engineering, contracting, and ELV solutions delivered with technical excellence.
+      </p>
+    </div>
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"></div>
   </Container>
 </section>
