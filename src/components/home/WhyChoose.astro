@@ -1,8 +1,9 @@
 ---
 /**
- * Why choose us (Step 5.5)
- * Added Feature card 3: engineering icon,
- * "Technical Expertise". Carries [REPLACE: Certified engineers and specialized instrumentation].
+ * Why choose us (Step 5.6)
+ * Added Feature card 4: support_agent icon,
+ * "Reliable Support". Carries [REPLACE: 24/7 responsive maintenance and technical assistance].
+ * Section 5 complete: all 4 feature cards rendered.
  */
 import Container from "../Container.astro";
 ---
@@ -61,6 +62,21 @@ import Container from "../Container.astro";
         >
         <p class="font-body-md text-body-md text-secondary leading-relaxed">
           [REPLACE: Certified engineers and specialized instrumentation]
+        </p>
+      </div>
+
+      <!-- Feature 4 -->
+      <div class="p-6 rounded-2xl bg-surface-container-low flex flex-col space-y-4">
+        <div
+          class="w-12 h-12 rounded-xl bg-surface-container-lowest flex items-center justify-center text-primary-container shadow-sm"
+        >
+          <span class="material-symbols-outlined text-2xl">support_agent</span>
+        </div>
+        <h3 class="font-title-lg text-title-lg text-on-surface"
+          >Reliable Support</h3
+        >
+        <p class="font-body-md text-body-md text-secondary leading-relaxed">
+          [REPLACE: 24/7 responsive maintenance and technical assistance]
         </p>
       </div>
     </div>
