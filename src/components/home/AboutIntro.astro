@@ -1,7 +1,7 @@
 ---
 /**
- * About introduction (Step 3.7)
- * Added capability card #3: tune, Precision Equipment (real copy).
+ * About introduction (Step 3.8)
+ * Added "About Us" text link with arrow (data-path="about-us", href="#").
  */
 import Container from "../Container.astro";
 ---
@@ -49,6 +49,17 @@ import Container from "../Container.astro";
               Lab-calibrated diagnostic, thermal imaging, and load testing assets.
             </p>
           </div>
+        </div>
+        <div class="pt-4">
+          <a
+            class="inline-flex items-center gap-2 font-label-md text-label-md text-primary-container hover:text-primary transition-colors group"
+            data-path="about-us"
+            href="#">
+            <span class="uppercase tracking-wider">About Us</span>
+            <span class="material-symbols-outlined text-lg transition-transform group-hover:translate-x-1"
+              >arrow_right_alt</span
+            >
+          </a>
         </div>
       </div>
     </div>
