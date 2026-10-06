@@ -1,8 +1,8 @@
 ---
 /**
- * Services grid (Step 4.2)
- * Added section heading block: "Core Competencies" pill,
- * h2 "Our Electrical Services", and descriptive paragraph.
+ * Services grid (Step 4.3)
+ * Added Service 01: home_repair_service icon,
+ * Residential & Commercial Wiring.
  */
 import Container from "../Container.astro";
 ---
@@ -23,6 +23,43 @@ import Container from "../Container.astro";
         Comprehensive electrical engineering, contracting, and ELV solutions delivered with technical excellence.
       </p>
     </div>
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"></div>
+    <!-- 8 Services Responsive Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <!-- Service 01 -->
+      <div
+        class="flex flex-col justify-between p-6 rounded-2xl bg-surface-container-lowest shadow-sm hover:shadow-md transition-all duration-200 group"
+      >
+        <div class="flex flex-col space-y-4">
+          <div class="flex items-center justify-between">
+            <span
+              class="font-headline-sm text-headline-sm font-bold text-surface-container-highest group-hover:text-primary-container transition-colors"
+              >01</span
+            >
+            <div
+              class="w-12 h-12 rounded-xl bg-surface-container flex items-center justify-center text-primary-container"
+            >
+              <span class="material-symbols-outlined text-2xl"
+                >home_repair_service</span
+              >
+            </div>
+          </div>
+          <h3 class="font-title-lg text-title-lg text-on-surface"
+            >Residential &amp; Commercial Wiring</h3
+          >
+          <p class="font-body-md text-body-md text-secondary">
+            Certified schematic design, conduit routing, and energy-efficient load distributions for complex facilities.
+          </p>
+        </div>
+        <div class="pt-6">
+          <a
+            class="inline-flex items-center gap-1.5 font-label-md text-label-md text-primary-container hover:text-primary transition-colors"
+            data-path="services"
+            href="#">
+            <span>Learn More</span>
+            <span class="material-symbols-outlined text-base">arrow_forward</span>
+          </a>
+        </div>
+      </div>
+    </div>
   </Container>
 </section>
