@@ -1,13 +1,25 @@
 ---
 /**
- * Why choose us (Step 5.1)
- * Shell: wrapper and grid.
+ * Why choose us (Step 5.2)
+ * Added centred heading block: label-caps "Proven Excellence",
+ * h2 "Why Choose Rajarata Engineering", and supporting sentence.
  */
 import Container from "../Container.astro";
 ---
 
 <section class="w-full bg-surface-container-lowest py-16 lg:py-24">
   <Container>
+    <div class="flex flex-col items-center text-center max-w-3xl mx-auto space-y-4 mb-14">
+      <span class="font-label-caps text-label-caps uppercase tracking-wider text-primary"
+        >Proven Excellence</span
+      >
+      <h2 class="font-headline-lg text-headline-lg text-on-surface"
+        >Why Choose Rajarata Engineering</h2
+      >
+      <p class="font-body-lg text-body-lg text-secondary">
+        Engineering rigor, technical competence, and complete regulatory accountability deployed on every site.
+      </p>
+    </div>
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"></div>
   </Container>
 </section>
