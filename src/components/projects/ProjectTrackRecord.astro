@@ -1,0 +1,26 @@
+---
+/**
+ * Track record metrics band (Steps P5.24–P5.27)
+ * Inverse-surface section with a three-column trust/metrics layout.
+ * Metric values remain [REPLACE: ...] placeholders until the user
+ * supplies verified numbers — current copy is development-only.
+ */
+import Container from '../Container.astro';
+---
+
+<section class="w-full bg-inverse-surface text-inverse-on-surface py-16 relative overflow-hidden">
+  <!-- Faint Technical Background Glow -->
+  <div
+    class="absolute -right-24 -bottom-24 w-96 h-96 rounded-full bg-primary/10 blur-3xl pointer-events-none"
+    aria-hidden="true"
+  ></div>
+  <Container class="relative z-10">
+    <div
+      class="grid grid-cols-1 md:grid-cols-3 gap-8 text-center md:text-left divide-y md:divide-y-0 md:divide-x divide-white/10"
+    >
+      <div class="flex flex-col space-y-2 pt-6 md:pt-0 md:pr-8"></div>
+      <div class="flex flex-col space-y-2 pt-6 md:pt-0 md:px-8"></div>
+      <div class="flex flex-col space-y-2 pt-6 md:pt-0 md:pl-8"></div>
+    </div>
+  </Container>
+</section>
