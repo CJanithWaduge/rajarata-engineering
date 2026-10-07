@@ -9,6 +9,16 @@ import Container from '../Container.astro';
 
 <section class="w-full bg-surface py-6 sticky top-20 z-30 backdrop-blur-md bg-surface/90 shadow-sm">
   <Container>
+    <div class="flex items-center justify-between gap-4">
+      <div class="w-full overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden py-1">
+        <div class="flex items-center gap-2 sm:gap-3 min-w-max">
+        </div>
+      </div>
+      <div class="hidden xl:flex items-center gap-2 text-on-surface-variant font-label-sm text-label-sm whitespace-nowrap pl-4">
+        <span class="inline-block w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+        <span aria-live="polite">Showing <strong class="text-on-surface" id="project-count">0</strong> Projects</span>
+      </div>
+    </div>
   </Container>
 </section>
 
