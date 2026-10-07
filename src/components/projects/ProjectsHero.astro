@@ -1,0 +1,20 @@
+---
+/**
+ * Projects hero (Steps P5.2–P5.7)
+ * Section shell, background treatment, breadcrumb, trust label, heading,
+ * introduction, and compliance/scope indicators.
+ */
+import Container from '../Container.astro';
+---
+
+<section class="relative w-full bg-surface-container-lowest overflow-hidden">
+  <!-- Dotted Technical Background Pattern -->
+  <div
+    class="absolute inset-0 opacity-[0.03] pointer-events-none [background-image:radial-gradient(var(--color-on-surface)_1px,transparent_1px)] [background-size:24px_24px]"
+    aria-hidden="true"
+  ></div>
+  <!-- Secondary Glow Accent -->
+  <div class="absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20"></div>
+  <Container class="pt-10 pb-16 lg:pt-14 lg:pb-20 relative z-10">
+  </Container>
+</section>
