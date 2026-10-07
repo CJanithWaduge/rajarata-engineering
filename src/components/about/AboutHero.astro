@@ -9,5 +9,17 @@ import Container from '../Container.astro';
 
 <section class="relative w-full overflow-hidden bg-surface-container-lowest pb-16 pt-8 sm:pb-24 sm:pt-12">
   <Container class="relative">
+    <!-- Breadcrumb -->
+    <nav aria-label="Breadcrumb" class="flex items-center gap-2 mb-6 sm:mb-8">
+      <a
+        href="/"
+        class="font-label-sm text-label-sm text-secondary hover:text-primary transition-colors flex items-center gap-1.5 focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-container"
+      >
+        <span class="material-symbols-outlined text-[16px]">home</span>
+        <span>Home</span>
+      </a>
+      <span class="material-symbols-outlined text-[14px] text-secondary">chevron_right</span>
+      <span class="font-label-sm text-label-sm text-primary font-semibold">About Us</span>
+    </nav>
   </Container>
 </section>
