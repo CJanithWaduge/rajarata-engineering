@@ -5,6 +5,30 @@
  * live project count, and per-card specification disclosures.
  */
 import Container from '../Container.astro';
+import ProjectCard from './ProjectCard.astro';
+
+const projects = [
+  {
+    id: 'ind-01',
+    category: 'industrial',
+    categoryLabel: 'Industrial',
+    categoryChip: 'bg-surface-container-lowest text-primary',
+    subTag: 'HV/LV',
+    imgSrc:
+      'https://lh3.googleusercontent.com/aida-public/AB6AXuBjRu2nMAVReuf9ds1eO-Ub5BEZTvRpvAfnwRgzLpDJ_qKpPqVKd7bplMfoFb0oaVpoqQ32KPeHRDxUAlhncJXZuwf161sXakiXjObTVwZ82h5S3jfIMCKq7WJ-5G2ze3xT0eA0eqstgA8cV-vzh34vd5kkmSmvdhNQzBLVYvTNmzC5zv_W39QF47SwSq5CS17f6n_tL87K7520S60i8q3ufur_Oq0qKju-Wt5BEdPAd6skXr9K9pCW1Q',
+    imgAlt:
+      'Modern high-voltage industrial manufacturing substation with heavy duty copper busbars, main distribution switchboards, and red safety indicators under bright architectural illumination.',
+    locationIcon: 'text-primary-fixed',
+    ref: 'REF: IND-01',
+    refColor: 'text-primary',
+    typePlaceholder: '[REPLACE: PROJECT TYPE]',
+    titlePlaceholder: '[REPLACE: PROJECT 01]',
+    summaryPlaceholder: '[REPLACE: Brief scope of electrical installation, capacity, and results]',
+    specLabel: 'Execution Scope',
+    specValue: 'Substation & Heavy Feeders',
+    specDetail: '[REPLACE: Supplemental Execution Scope details]',
+  },
+];
 ---
 
 <section class="w-full bg-surface py-6 sticky top-20 z-30 backdrop-blur-md bg-surface/90 shadow-sm">
@@ -79,6 +103,28 @@ import Container from '../Container.astro';
 <section class="w-full bg-surface py-12 lg:py-16">
   <Container>
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      {
+        projects.map((p) => (
+          <ProjectCard
+            category={p.category}
+            categoryLabel={p.categoryLabel}
+            categoryChip={p.categoryChip}
+            subTag={p.subTag}
+            imgSrc={p.imgSrc}
+            imgAlt={p.imgAlt}
+            locationIcon={p.locationIcon}
+            ref={p.ref}
+            refColor={p.refColor}
+            typePlaceholder={p.typePlaceholder}
+            titlePlaceholder={p.titlePlaceholder}
+            summaryPlaceholder={p.summaryPlaceholder}
+            specLabel={p.specLabel}
+            specValue={p.specValue}
+            specDetail={p.specDetail}
+            specId={`spec-${p.id}`}
+          />
+        ))
+      }
     </div>
   </Container>
 </section>
