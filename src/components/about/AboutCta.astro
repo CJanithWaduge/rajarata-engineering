@@ -1,0 +1,27 @@
+---
+/**
+ * Engineering consultation CTA (Steps A4.44–A4.48)
+ * Inverse CTA panel, grid background motif, actions, and contact methods.
+ */
+import Container from '../Container.astro';
+---
+
+<section class="w-full py-16 bg-surface-container-lowest">
+  <Container>
+    <div class="bg-inverse-surface rounded-3xl p-8 sm:p-12 lg:p-16 relative overflow-hidden shadow-2xl">
+      <!-- Technical Grid Background Pattern Accent -->
+      <div class="absolute inset-0 opacity-5 pointer-events-none">
+        <svg height="100%" width="100%" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <pattern height="40" id="cta-grid" patternUnits="userSpaceOnUse" width="40">
+              <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#ffffff" stroke-width="1"></path>
+            </pattern>
+          </defs>
+          <rect fill="url(#cta-grid)" height="100%" width="100%"></rect>
+        </svg>
+      </div>
+      <div class="relative z-10 max-w-3xl">
+      </div>
+    </div>
+  </Container>
+</section>
