@@ -23,6 +23,32 @@ import Container from '../Container.astro';
         Direct engineering access for procurement teams, site facility managers, and project contractors.
       </p>
     </div>
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"></div>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div class="bg-surface-container-lowest p-6 rounded-xl shadow-sm hover:shadow-md transition-all duration-200 flex flex-col justify-between group">
+        <div>
+          <div
+            class="w-12 h-12 rounded-lg bg-surface-container flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-on-primary transition-colors mb-6"
+          >
+            <span class="material-symbols-outlined text-2xl">call</span>
+          </div>
+          <span class="font-label-caps text-label-caps text-secondary uppercase tracking-wider block mb-1"
+            >Direct Telephony</span
+          >
+          <h3 class="font-title-lg text-title-lg text-on-surface mb-2 font-bold">Voice Support</h3>
+          <a
+            class="font-title-md text-title-md text-primary hover:underline font-semibold block mb-3 break-all focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-container"
+            href="tel:[REPLACE: PHONE NUMBER]"
+          >
+            [REPLACE: PHONE NUMBER]
+          </a>
+        </div>
+        <div class="pt-4 bg-surface-container-low px-3 py-2 rounded-lg mt-4">
+          <div class="flex items-center gap-1.5 text-secondary font-body-sm text-body-sm">
+            <span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span>
+            <span>24/7 Emergency dispatch available</span>
+          </div>
+        </div>
+      </div>
+    </div>
   </Container>
 </section>
