@@ -14,7 +14,18 @@ import Container from '../Container.astro';
   <Container>
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
       <div class="lg:col-span-7 bg-surface-container-lowest p-8 lg:p-10 rounded-2xl shadow-md">
-        <div class="mb-8"></div>
+        <div class="mb-8">
+          <div class="inline-flex items-center gap-2 text-primary font-label-caps text-label-caps uppercase tracking-wider mb-2">
+            <span class="material-symbols-outlined text-[16px]">engineering</span>
+            <span>Engineering Tender &amp; Estimation</span>
+          </div>
+          <h2 class="font-headline-md text-headline-md text-on-surface tracking-tight font-bold">
+            Request a Technical Quotation or Consultation
+          </h2>
+          <p class="font-body-md text-body-md text-secondary mt-2">
+            Submit your project requirements and our engineering estimation team will respond within 24 hours.
+          </p>
+        </div>
         <form class="space-y-6" id="contact-quotation-form"></form>
       </div>
       <div class="lg:col-span-5 flex flex-col space-y-8"></div>
