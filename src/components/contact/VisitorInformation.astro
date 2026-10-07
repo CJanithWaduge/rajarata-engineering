@@ -57,7 +57,56 @@ import Container from '../Container.astro';
         </div>
       </div>
     </div>
-      <div class="lg:col-span-4 bg-surface-container-lowest p-6 sm:p-8 rounded-2xl shadow-sm flex flex-col justify-between"></div>
+      <div class="lg:col-span-4 bg-surface-container-lowest p-6 sm:p-8 rounded-2xl shadow-sm flex flex-col justify-between">
+        <div>
+          <h3
+            class="font-title-lg text-title-lg text-on-surface font-bold mb-4 flex items-center gap-2"
+          >
+            <span class="material-symbols-outlined text-primary">security</span>
+            <span>Site Access Protocol</span>
+          </h3>
+          <ul class="space-y-4 font-body-sm text-body-sm text-secondary">
+            <li class="flex items-start gap-3">
+              <span class="material-symbols-outlined text-primary text-[18px] mt-0.5">check</span>
+              <span
+                ><strong class="text-on-surface">Prior Appointment:</strong> Visitors must register at
+                least 2 hours prior to arrival for safety clearance and security badge issue.</span
+              >
+            </li>
+            <li class="flex items-start gap-3">
+              <span class="material-symbols-outlined text-primary text-[18px] mt-0.5">check</span>
+              <span
+                ><strong class="text-on-surface">PPE Requirement:</strong> Steel-toe boots, hi-vis vest,
+                and hard hats are mandatory inside the panel fabrication &amp; testing yard.</span
+              >
+            </li>
+            <li class="flex items-start gap-3">
+              <span class="material-symbols-outlined text-primary text-[18px] mt-0.5">check</span>
+              <span
+                ><strong class="text-on-surface">Heavy Deliveries:</strong> Switchgear freight and heavy
+                container unloading hours: Mon–Fri, 9:00 AM – 4:00 PM via Bay 2.</span
+              >
+            </li>
+          </ul>
+        </div>
+        <div class="mt-8 pt-6 bg-surface-container-low p-4 rounded-xl">
+          <span class="font-label-caps text-label-caps uppercase text-secondary block mb-1"
+            >Direct Gate Dispatch</span
+          >
+          <div class="flex items-center justify-between">
+            <span class="font-title-md text-title-md text-on-surface font-semibold"
+              >Security Gate House</span
+            >
+            <a
+              class="text-primary hover:text-primary-container focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-container"
+              href="tel:[REPLACE: PHONE NUMBER]"
+              aria-label="Call security gate house"
+            >
+              <span class="material-symbols-outlined text-2xl">call</span>
+            </a>
+          </div>
+        </div>
+      </div>
     </div>
   </Container>
 </section>
