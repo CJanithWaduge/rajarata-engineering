@@ -230,3 +230,56 @@ const projects = [
     </div>
   </Container>
 </section>
+
+<script>
+  const filterButtons = document.querySelectorAll<HTMLButtonElement>('.filter-btn');
+  const projectCards = document.querySelectorAll<HTMLElement>('.project-card');
+  const counterDisplay = document.getElementById('project-count');
+
+  const activeClasses = ['bg-primary-container', 'text-on-primary'];
+  const inactiveClasses = ['bg-surface-container-lowest', 'text-secondary'];
+
+  const applyFilter = (active: HTMLButtonElement) => {
+    const filterValue = active.dataset.filter ?? 'all';
+
+    filterButtons.forEach((btn) => {
+      const on = btn === active;
+      btn.classList.remove(...(on ? inactiveClasses : activeClasses));
+      btn.classList.add(...(on ? activeClasses : inactiveClasses));
+      btn.setAttribute('aria-pressed', String(on));
+    });
+
+    let visibleCount = 0;
+    projectCards.forEach((card) => {
+      const match = filterValue === 'all' || card.dataset.category === filterValue;
+      card.classList.toggle('hidden', !match);
+      if (match) visibleCount++;
+    });
+
+    if (counterDisplay) counterDisplay.textContent = String(visibleCount);
+  };
+
+  filterButtons.forEach((button) => {
+    button.addEventListener('click', () => applyFilter(button));
+  });
+
+  const initCount = () => {
+    const visible = Array.from(projectCards).filter(
+      (card) => !card.classList.contains('hidden')
+    ).length;
+    if (counterDisplay) counterDisplay.textContent = String(visible);
+  };
+  initCount();
+
+  document.querySelectorAll<HTMLButtonElement>('.spec-toggle').forEach((toggle) => {
+    const panel = document.getElementById(toggle.getAttribute('aria-controls') ?? '');
+    const icon = toggle.querySelector<HTMLElement>('.spec-icon');
+    toggle.addEventListener('click', () => {
+      if (!panel) return;
+      const expanded = toggle.getAttribute('aria-expanded') === 'true';
+      toggle.setAttribute('aria-expanded', String(!expanded));
+      panel.classList.toggle('hidden', expanded);
+      icon?.classList.toggle('rotate-180', !expanded);
+    });
+  });
+</script>
