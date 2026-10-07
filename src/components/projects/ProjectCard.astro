@@ -1,0 +1,124 @@
+---
+/**
+ * Project card (Step P5.16).
+ *
+ * One reusable card: image treatment with meaningful alt text, category and
+ * scope chips, location/year overlay, project reference, title, summary, and
+ * an accessible per-card specification disclosure.
+ */
+interface Props {
+  category: string;
+  categoryLabel: string;
+  categoryChip: string;
+  subTag: string;
+  imgSrc: string;
+  imgAlt: string;
+  locationIcon: string;
+  ref: string;
+  refColor: string;
+  typePlaceholder: string;
+  titlePlaceholder: string;
+  summaryPlaceholder: string;
+  specLabel: string;
+  specValue: string;
+  specDetail: string;
+  specId: string;
+}
+
+const {
+  category,
+  categoryLabel,
+  categoryChip,
+  subTag,
+  imgSrc,
+  imgAlt,
+  locationIcon,
+  ref,
+  refColor,
+  typePlaceholder,
+  titlePlaceholder,
+  summaryPlaceholder,
+  specLabel,
+  specValue,
+  specDetail,
+  specId,
+} = Astro.props;
+
+const focusRing =
+  'focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-container';
+---
+
+<article
+  class="project-card group flex flex-col bg-surface-container-lowest rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300"
+  data-category={category}
+>
+  <div class="relative h-60 w-full overflow-hidden bg-surface-container-high">
+    <img
+      class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+      src={imgSrc}
+      alt={imgAlt}
+      loading="lazy"
+    />
+    <div class="absolute inset-0 bg-gradient-to-t from-inverse-surface/80 via-transparent to-transparent"></div>
+    <div class="absolute top-4 left-4 flex items-center gap-2">
+      <span
+        class={`px-2.5 py-1 rounded ${categoryChip} font-label-caps text-label-caps uppercase shadow-sm`}
+        >{categoryLabel}</span
+      >
+      <span
+        class="px-2 py-0.5 rounded bg-inverse-surface/80 text-on-primary font-label-caps text-label-caps tracking-widest backdrop-blur-sm"
+        >{subTag}</span
+      >
+    </div>
+    <div class="absolute bottom-3 left-4 right-4 flex items-center justify-between text-on-primary text-xs">
+      <span class="flex items-center gap-1 font-label-sm text-label-sm">
+        <span class={`material-symbols-outlined text-[16px] ${locationIcon}`}>location_on</span>
+        [REPLACE: PROJECT LOCATION]
+      </span>
+      <span class="font-label-caps text-label-caps bg-inverse-surface/60 px-2 py-0.5 rounded"
+        >[REPLACE: PROJECT YEAR]</span
+      >
+    </div>
+  </div>
+
+  <div class="p-6 flex flex-col flex-1 justify-between bg-surface-container-lowest">
+    <div>
+      <div class="flex items-center justify-between gap-2 mb-2">
+        <span class="font-label-caps text-label-caps text-secondary uppercase tracking-wider"
+          >{typePlaceholder}</span
+        >
+        <span class={`font-label-sm text-label-sm ${refColor} font-semibold`}>{ref}</span>
+      </div>
+      <h2 class="font-headline-sm text-headline-sm text-on-surface group-hover:text-primary transition-colors">
+        {titlePlaceholder}
+      </h2>
+      <p class="mt-3 font-body-md text-body-md text-secondary leading-relaxed">
+        {summaryPlaceholder}
+      </p>
+    </div>
+
+    <div class="mt-6 pt-4 bg-surface-container-low -mx-6 -mb-6 p-6">
+      <div class="flex items-center justify-between">
+        <div class="flex flex-col">
+          <span class="font-label-caps text-label-caps text-secondary uppercase">{specLabel}</span>
+          <span class="font-title-md text-title-md text-on-surface">{specValue}</span>
+        </div>
+        <button
+          type="button"
+          class={`spec-toggle inline-flex items-center gap-1.5 font-label-md text-label-md text-primary font-bold ${focusRing}`}
+          aria-expanded="false"
+          aria-controls={specId}
+        >
+          <span>View Project Specs</span>
+          <span
+            class="material-symbols-outlined text-[18px] spec-icon transition-transform duration-200"
+            >expand_more</span
+          >
+        </button>
+      </div>
+      <div id={specId} class="spec-panel font-body-sm text-body-sm text-secondary leading-relaxed mt-4 hidden">
+        {specDetail}
+      </div>
+    </div>
+  </div>
+</article>
