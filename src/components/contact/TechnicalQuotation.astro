@@ -27,6 +27,20 @@ import Container from '../Container.astro';
           </p>
         </div>
         <form class="space-y-6" id="contact-quotation-form">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <div class="flex flex-col space-y-1.5">
+            <label class="font-label-sm text-label-sm text-on-surface font-semibold" for="full-name">
+              Full Name <span class="text-primary">*</span>
+            </label>
+            <input
+              class="w-full h-12 px-4 rounded-xl bg-surface-container-lowest text-on-surface placeholder:text-secondary/60 shadow-sm focus:outline-none focus:bg-surface-container-low transition-colors"
+              id="full-name"
+              placeholder="e.g. Priyantha Jayasuriya"
+              required
+              type="text"
+            />
+          </div>
+        </div>
 
         <div class="pt-2">
           <button
