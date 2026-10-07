@@ -12,6 +12,15 @@ import Container from '../Container.astro';
     <div class="flex items-center justify-between gap-4">
       <div class="w-full overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden py-1">
         <div class="flex items-center gap-2 sm:gap-3 min-w-max">
+          <button
+            class="filter-btn px-4 py-2 rounded-xl font-label-md text-label-md bg-primary-container text-on-primary transition-all duration-150 shadow-sm flex items-center gap-2"
+            data-filter="all"
+            type="button"
+            aria-pressed="true"
+          >
+            <span class="material-symbols-outlined text-[18px]">apps</span>
+            <span>All Projects</span>
+          </button>
         </div>
       </div>
       <div class="hidden xl:flex items-center gap-2 text-on-surface-variant font-label-sm text-label-sm whitespace-nowrap pl-4">
