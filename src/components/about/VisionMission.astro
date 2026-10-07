@@ -9,6 +9,24 @@ import Container from '../Container.astro';
 <section class="w-full py-16 bg-surface-container-low">
   <Container>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+      <!-- Vision Card (Primary Red Theme) -->
+      <div class="relative bg-surface-container-lowest p-8 lg:p-10 rounded-2xl shadow-sm flex flex-col justify-between overflow-hidden">
+        <div class="absolute top-0 left-0 right-0 h-1.5 bg-primary"></div>
+        <div>
+          <div class="w-14 h-14 rounded-xl bg-primary-fixed flex items-center justify-center text-primary mb-6">
+            <span class="material-symbols-outlined text-[32px]">lightbulb</span>
+          </div>
+          <span class="font-label-caps text-label-caps uppercase tracking-widest text-primary">Strategic Horizon</span>
+          <h2 class="font-headline-md text-headline-md text-on-surface mt-2 mb-4">Our Vision</h2>
+          <p class="font-body-lg text-body-lg text-secondary leading-relaxed">
+            [REPLACE: Vision statement]
+          </p>
+        </div>
+        <div class="mt-8 pt-6 flex items-center gap-3">
+          <span class="material-symbols-outlined text-primary text-[20px]">electric_bolt</span>
+          <span class="font-label-sm text-label-sm text-on-surface font-semibold uppercase tracking-wider">Engineering Future-Ready Infrastructure</span>
+        </div>
+      </div>
     </div>
   </Container>
 </section>
