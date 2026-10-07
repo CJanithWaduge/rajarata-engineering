@@ -71,6 +71,31 @@ import Container from '../Container.astro';
         </div>
       </div>
       <div class="lg:col-span-6 relative">
+        <!-- Hero visual with telemetry overlay -->
+        <div class="relative rounded-2xl overflow-hidden shadow-xl bg-surface-container-high">
+          <img
+            alt="Rajarata Engineering On-site Diagnostics"
+            class="w-full h-[460px] object-cover object-center"
+            src="https://lh3.googleusercontent.com/aida-public/AB6AXuCnKV23Eha84-kcIWtHodH_D_EXdCqXuNhcrQJAsmsRj6KKUnLD9C1_bAjaYquLNTgX1wUQxibVqoWh601lfwfwnyi4LkeiYX6zMVaWkE6WUYedGiJgQGXviJThAgtINz0QXP2VA-U_2TjLmJYrUSdr5g4_zuxEYQqxYnvj_sSvvew0gmP8WzudmTuML4tutD772ZR2EkgET_kh7ZlLS0cBjM1F77GUtZRuG5QHE74mQeuG7oGMFHa0Cw"
+          />
+          <div class="absolute inset-0 bg-gradient-to-t from-inverse-surface/80 via-inverse-surface/20 to-transparent"></div>
+          <!-- Precision Overlay Card -->
+          <div class="absolute bottom-6 left-6 right-6 p-4 rounded-xl bg-surface-container-lowest/95 backdrop-blur-md shadow-lg flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-lg bg-primary-fixed flex items-center justify-center text-primary">
+                <span class="material-symbols-outlined text-[24px]">verified</span>
+              </div>
+              <div>
+                <div class="font-title-md text-title-md text-on-surface">Certified Switchgear Commissioning</div>
+                <div class="font-body-sm text-body-sm text-secondary">Industrial &amp; Utility-Grade Verification</div>
+              </div>
+            </div>
+            <div class="hidden sm:flex flex-col items-end">
+              <span class="font-label-caps text-label-caps text-primary uppercase">Standard</span>
+              <span class="font-title-md text-title-md text-on-surface">IEC 61439-2</span>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </Container>
