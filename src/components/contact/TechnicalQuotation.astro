@@ -1,0 +1,23 @@
+---
+/**
+ * Technical quotation request and estimation process
+ * (Steps C6.19–C6.35)
+ * Two-column layout: inquiry form (7 cols) and estimation/support
+ * sidebar (5 cols). The form submits through the callable Cloud
+ * Function; success is reported only after the function confirms
+ * acceptance (see C6.30).
+ */
+import Container from '../Container.astro';
+---
+
+<section class="w-full py-16 bg-surface-container-low">
+  <Container>
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+      <div class="lg:col-span-7 bg-surface-container-lowest p-8 lg:p-10 rounded-2xl shadow-md">
+        <div class="mb-8"></div>
+        <form class="space-y-6" id="contact-quotation-form"></form>
+      </div>
+      <div class="lg:col-span-5 flex flex-col space-y-8"></div>
+    </div>
+  </Container>
+</section>
