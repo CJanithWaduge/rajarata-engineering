@@ -26,7 +26,24 @@ import Container from '../Container.astro';
             Submit your project requirements and our engineering estimation team will respond within 24 hours.
           </p>
         </div>
-        <form class="space-y-6" id="contact-quotation-form"></form>
+        <form class="space-y-6" id="contact-quotation-form">
+
+        <div class="pt-2">
+          <button
+            class="w-full h-14 rounded-xl bg-primary-container text-on-primary font-title-md text-title-md tracking-wider uppercase font-bold shadow-md hover:bg-primary transition-all duration-150 active:translate-y-[1px] flex items-center justify-center gap-3 focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+            type="submit"
+          >
+            <span class="material-symbols-outlined">send</span>
+            <span>SEND INQUIRY</span>
+          </button>
+          <div
+            class="hidden mt-4 p-4 rounded-xl bg-secondary-container text-on-secondary-fixed flex items-center gap-3"
+            id="form-feedback"
+            role="status"
+            aria-live="polite"
+          ></div>
+        </div>
+      </form>
       </div>
       <div class="lg:col-span-5 flex flex-col space-y-8"></div>
     </div>
