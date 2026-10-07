@@ -25,7 +25,31 @@ import Container from '../Container.astro';
       </p>
     </div>
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
-      <div class="lg:col-span-8 flex flex-col"></div>
+      <div class="lg:col-span-8 flex flex-col">
+      <div
+        class="relative w-full h-80 sm:h-96 lg:h-full min-h-[350px] rounded-2xl shadow-md overflow-hidden flex flex-col justify-between p-6"
+        data-location="Colombo, Sri Lanka"
+      >
+        <img
+          class="absolute inset-0 w-full h-full object-cover"
+          alt="Approximate map view of the Rajarata Engineering facility area"
+          loading="lazy"
+          src="https://lh3.googleusercontent.com/aida-public/AB6AXuAGCkEDt4NzfLXijJm_Y2QlNetjfGk4dlw-VjrB-Df6v1mAS97ocyHcr6LK4RbMEnUlElgSg4_yb5YCA5qyAiPXWeL91gnCicHjVNUpAvVLClXTwdoBD5JjCJkR615H-PcwC5IJdGyttWHMuXkqkOAEJ5_1BLQJHy4Jy9aNE-HSFRkHRnlD7fSjSJgobOlGKCkSH_hWXOwUUefAsT3ybCjSH9tWbThtVelnqczpL98aCJv-LUw9kJWmwA"
+        />
+        <div
+          class="relative bg-inverse-surface/90 text-inverse-on-surface backdrop-blur-md px-4 py-2.5 rounded-xl shadow-lg w-fit flex items-center gap-2"
+        >
+          <span class="material-symbols-outlined text-primary text-[20px]">pin_drop</span>
+          <span class="font-title-md text-title-md font-bold">Rajarata Engineering Facility</span>
+        </div>
+        <div
+          class="relative bg-surface-container-lowest/95 backdrop-blur-md p-4 rounded-xl shadow-lg self-start max-w-sm"
+        >
+          <p class="font-label-caps text-label-caps uppercase text-secondary">Location</p>
+          <p class="font-body-sm text-body-sm text-on-surface font-semibold mt-0.5">[REPLACE: BUSINESS ADDRESS]</p>
+        </div>
+      </div>
+    </div>
       <div class="lg:col-span-4 bg-surface-container-lowest p-6 sm:p-8 rounded-2xl shadow-sm flex flex-col justify-between"></div>
     </div>
   </Container>
