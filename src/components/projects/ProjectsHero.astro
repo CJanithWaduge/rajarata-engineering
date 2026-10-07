@@ -16,5 +16,17 @@ import Container from '../Container.astro';
   <!-- Secondary Glow Accent -->
   <div class="absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20"></div>
   <Container class="pt-10 pb-16 lg:pt-14 lg:pb-20 relative z-10">
+    <div class="flex items-center gap-2 mb-6 text-on-surface-variant font-label-sm text-label-sm">
+      <a
+        class="hover:text-primary transition-colors flex items-center gap-1.5 focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-container"
+        data-path="home"
+        href="#"
+      >
+        <span class="material-symbols-outlined text-[16px]">home</span>
+        <span>Home</span>
+      </a>
+      <span class="text-secondary/50">/</span>
+      <span class="text-primary font-semibold">Projects</span>
+    </div>
   </Container>
 </section>
