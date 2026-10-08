@@ -10,7 +10,7 @@ import Container from '../Container.astro';
   <Container>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
       <!-- Vision Card (Primary Red Theme) -->
-      <div class="relative bg-surface-container-lowest p-8 lg:p-10 rounded-2xl shadow-sm flex flex-col justify-between overflow-hidden">
+      <div class="card-interactive card-tilt relative bg-surface-container-lowest p-8 lg:p-10 rounded-2xl shadow-sm flex flex-col justify-between overflow-hidden" data-card-tilt>
         <div class="absolute top-0 left-0 right-0 h-1.5 bg-primary"></div>
         <div>
           <div class="w-14 h-14 rounded-xl bg-primary-fixed flex items-center justify-center text-primary mb-6">
@@ -28,7 +28,7 @@ import Container from '../Container.astro';
         </div>
       </div>
       <!-- Mission Card (Dark Charcoal Industrial Theme) -->
-      <div class="relative bg-inverse-surface text-on-primary p-8 lg:p-10 rounded-2xl shadow-sm flex flex-col justify-between overflow-hidden">
+      <div class="card-interactive card-tilt relative bg-inverse-surface text-on-primary p-8 lg:p-10 rounded-2xl shadow-sm flex flex-col justify-between overflow-hidden" data-card-tilt>
         <div class="absolute top-0 left-0 right-0 h-1.5 bg-secondary"></div>
         <div>
           <div class="w-14 h-14 rounded-xl bg-on-surface/20 flex items-center justify-center text-white mb-6">

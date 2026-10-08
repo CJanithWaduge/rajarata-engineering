@@ -49,7 +49,7 @@ const scopeLabelClass = accent === 'tertiary' ? 'text-tertiary' : 'text-primary'
 const detailId = `service-detail-${parseInt(number, 10)}`;
 ---
 
-<article class="group flex flex-col justify-between p-6 sm:p-8 rounded-2xl bg-surface-container-lowest shadow-sm hover:shadow-md transition-all duration-200" id={id}>
+<article class="card-interactive card-tilt group flex flex-col justify-between p-6 sm:p-8 rounded-2xl bg-surface-container-lowest shadow-sm" id={id} data-card-tilt>
   <div>
     <div class="flex items-center justify-between pb-6 mb-6">
       <span class={`font-headline-lg text-headline-sm sm:text-headline-md ${numberClass} font-extrabold tracking-tight`}>{number}</span>

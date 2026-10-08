@@ -36,5 +36,9 @@ const { title, description } = Astro.props;
   </head>
   <body class="bg-background text-on-surface font-sans antialiased">
     <slot />
+    <script>
+      import { initCardTilt } from '../lib/cardTilt';
+      initCardTilt();
+    </script>
   </body>
 </html>

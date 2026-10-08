@@ -33,11 +33,9 @@ const shell = inverted
   : 'bg-surface-container-lowest text-on-surface border-outline-variant';
 
 const base =
-  'relative flex flex-col rounded-card border transition-all duration-200';
+  'card-interactive card-tilt relative flex flex-col rounded-card border';
 
-const interactive = href
-  ? 'hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-container'
-  : 'shadow-sm';
+const interactive = href ? '' : 'shadow-sm';
 
 const classes = `${base} ${shell} ${interactive} ${flush ? '' : 'p-6'} ${className ?? ''}`;
 
@@ -50,11 +48,11 @@ const hasStrip = inverted
 
 {
   href ? (
-    <a class={`${classes} ${hasStrip} hover:shadow-md`} href={href}>
+    <a class={`${classes} ${hasStrip}`} href={href} data-card-tilt>
       <slot />
     </a>
   ) : (
-    <div class={`${classes} ${hasStrip}`}>
+    <div class={`${classes} ${hasStrip}`} data-card-tilt>
       <slot />
     </div>
   )

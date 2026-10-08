@@ -236,3 +236,110 @@
     color: var(--color-on-surface);
   }
 }
+
+/* -----------------------------------------------------------------------
+   Card interaction contract (Phase 7, T7.1)
+   -----------------------------------------------------------------------
+   One shared hover / focus / press behavior for every card surface so the
+   motion is defined once in the stylesheet instead of being repeated as
+   utilities inside each component. Cards opt in with `.card-interactive`.
+
+   The base visuals (surface, radius, border) stay on the component; this
+   layer only standardizes the interaction rhythm: a quick physical lift on
+   hover, an immediate press on click, and a visible ring whenever focus
+   lands on the card or any control inside it.
+   ----------------------------------------------------------------------- */
+@layer components {
+  .card-interactive {
+    transition:
+      box-shadow 200ms cubic-bezier(0.2, 0, 0, 1),
+      transform 200ms cubic-bezier(0.2, 0, 0, 1);
+  }
+
+  /* Promote a card to its own layer only where a hovering fine pointer can
+     actually transform it; touch-first devices skip the layer cost entirely. */
+  @media (hover: hover) and (pointer: fine) {
+    .card-interactive {
+      will-change: transform;
+    }
+  }
+
+  .card-interactive:hover {
+    box-shadow: var(--shadow-hover);
+  }
+
+  .card-interactive:focus-visible,
+  .card-interactive:has(:focus-visible) {
+    outline: 2px solid var(--color-primary-container);
+    outline-offset: 2px;
+    box-shadow: var(--shadow-hover);
+  }
+
+  .card-interactive:active {
+    transform: translateY(1px);
+  }
+
+  /* --------------------------------------------------------------------
+     Card tilt foundation (Phase 7, T7.2–T7.5)
+     --------------------------------------------------------------------
+     T7.2 establish the 3D context: perspective, preserve-3d, and a
+     transform origin so every tilted card rotates around the same axis.
+     T7.3 pointer tracking writes `--card-tilt-x/y` (see cardTilt.ts).
+     T7.4 depth comes from a `translateZ` lift on hover + the shared
+     `--shadow-hover` lift already provided by `.card-interactive`.
+     T7.5 motion is disabled for touch and for `prefers-reduced-motion`.
+
+     Cards opt in with both `.card-interactive` (contract: shadow, press,
+     focus) and `.card-tilt` (3D layer) plus a `data-card-tilt` attribute
+     for the JS tracker.
+     -------------------------------------------------------------------- */
+  .card-tilt {
+    --card-tilt-x: 0deg;
+    --card-tilt-y: 0deg;
+    --card-tilt-lift: 0px;
+    --card-tilt-perspective: 900px;
+    transform: perspective(var(--card-tilt-perspective))
+      rotateX(var(--card-tilt-x))
+      rotateY(var(--card-tilt-y))
+      translateZ(var(--card-tilt-lift));
+    transform-style: preserve-3d;
+    transform-origin: 50% 50%;
+    transition:
+      transform 200ms cubic-bezier(0.2, 0, 0, 1),
+      box-shadow 200ms cubic-bezier(0.2, 0, 0, 1),
+      background-color 200ms cubic-bezier(0.2, 0, 0, 1);
+  }
+
+  /* While the pointer is actively moving over a card, track instantly and
+     let the transform settle only on leave. */
+  .card-tilt.is-tracking {
+    transition:
+      transform 0ms,
+      box-shadow 200ms cubic-bezier(0.2, 0, 0, 1),
+      background-color 200ms cubic-bezier(0.2, 0, 0, 1);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .card-tilt:hover {
+      --card-tilt-lift: 14px;
+    }
+  }
+
+  /* Touch-first devices never accumulate a stuck tilt under a finger. */
+  @media (hover: none), (pointer: coarse) {
+    .card-tilt {
+      transform: none;
+    }
+  }
+
+  /* Reduced motion: keep the static layout and contrast, drop all motion. */
+  @media (prefers-reduced-motion: reduce) {
+    .card-tilt {
+      transform: none;
+    }
+
+    .card-tilt:hover {
+      --card-tilt-lift: 0px;
+    }
+  }
+}
