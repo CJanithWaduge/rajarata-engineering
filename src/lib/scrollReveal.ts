@@ -13,6 +13,8 @@ export function initScrollReveal(): void {
         if (!(entry.target instanceof HTMLElement)) return;
 
         const state = entry.isIntersecting ? 'visible' : 'hidden';
+        if (entry.target.dataset.scrollRevealState === state) return;
+
         entry.target.dataset.scrollRevealState = state;
       });
     },
