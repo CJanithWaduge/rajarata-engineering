@@ -250,6 +250,21 @@
    lands on the card or any control inside it.
    ----------------------------------------------------------------------- */
 @layer components {
+  /* Scroll-reveal state contract (Phase 8, S8.1).
+     Elements opt in with `data-scroll-reveal` and move between `hidden`
+     (outside the viewport) and `visible` (inside it). The root readiness
+     attribute is added only after the runtime observer is installed, so
+     content remains visible when JavaScript is unavailable. */
+  html[data-scroll-reveal-ready] [data-scroll-reveal][data-scroll-reveal-state="hidden"] {
+    opacity: 0;
+    transform: translateY(0.75rem);
+  }
+
+  html[data-scroll-reveal-ready] [data-scroll-reveal][data-scroll-reveal-state="visible"] {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
   .card-interactive {
     transition:
       box-shadow 200ms cubic-bezier(0.2, 0, 0, 1),
