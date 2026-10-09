@@ -1,6 +1,8 @@
 const SCROLL_REVEAL_SELECTOR = '[data-scroll-reveal]';
 
 export function initScrollReveal(): void {
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
   const elements = document.querySelectorAll<HTMLElement>(SCROLL_REVEAL_SELECTOR);
 
   if (elements.length === 0 || !('IntersectionObserver' in window)) return;
