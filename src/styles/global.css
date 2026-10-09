@@ -265,6 +265,12 @@
     transform: translateY(0);
   }
 
+  html[data-scroll-reveal-ready] [data-scroll-reveal][data-scroll-reveal-state="hidden"]:focus-within {
+    opacity: 1;
+    transform: translateY(0);
+    transition: none;
+  }
+
   html[data-scroll-reveal-ready] [data-scroll-reveal] {
     transition:
       opacity 360ms cubic-bezier(0.2, 0, 0, 1),
