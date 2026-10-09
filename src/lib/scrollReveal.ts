@@ -16,7 +16,7 @@ export function initScrollReveal(): void {
         entry.target.dataset.scrollRevealState = state;
       });
     },
-    { threshold: 0.1 },
+    { threshold: 0 },
   );
 
   elements.forEach((element) => observer.observe(element));
