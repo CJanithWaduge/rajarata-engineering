@@ -32,8 +32,7 @@ const shell = inverted
   ? 'bg-inverse-surface text-inverse-on-surface border-white/10'
   : 'bg-surface-container-lowest text-on-surface border-outline-variant';
 
-const base =
-  'card-interactive card-tilt relative flex flex-col rounded-card border';
+const base = 'card-tilt relative flex flex-col rounded-card border';
 
 const interactive = href ? '' : 'shadow-sm';
 
@@ -48,7 +47,7 @@ const hasStrip = inverted
 
 {
   href ? (
-    <a class={`${classes} ${hasStrip}`} href={href} data-card-tilt>
+    <a class={`card-interactive ${classes} ${hasStrip}`} href={href} data-card-tilt>
       <slot />
     </a>
   ) : (

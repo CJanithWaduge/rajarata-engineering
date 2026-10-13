@@ -240,14 +240,10 @@
 /* -----------------------------------------------------------------------
    Card interaction contract (Phase 7, T7.1)
    -----------------------------------------------------------------------
-   One shared hover / focus / press behavior for every card surface so the
-   motion is defined once in the stylesheet instead of being repeated as
-   utilities inside each component. Cards opt in with `.card-interactive`.
-
-   The base visuals (surface, radius, border) stay on the component; this
-   layer only standardizes the interaction rhythm: a quick physical lift on
-   hover, an immediate press on click, and a visible ring whenever focus
-   lands on the card or any control inside it.
+   Native card links and buttons get a shared hover / focus / press behavior.
+   A non-interactive wrapper may still use `.card-interactive` to show a focus
+   ring when it contains a focused control, but it does not respond to hover
+   or press as if the whole card were a link.
    ----------------------------------------------------------------------- */
 @layer components {
   /* Scroll-reveal state contract (Phase 8, S8.1).
@@ -306,7 +302,7 @@
     }
   }
 
-  .card-interactive {
+  .card-interactive:is(a, button) {
     transition:
       box-shadow 200ms cubic-bezier(0.2, 0, 0, 1),
       transform 200ms cubic-bezier(0.2, 0, 0, 1);
@@ -315,12 +311,12 @@
   /* Promote a card to its own layer only where a hovering fine pointer can
      actually transform it; touch-first devices skip the layer cost entirely. */
   @media (hover: hover) and (pointer: fine) {
-    .card-interactive {
+    .card-interactive:is(a, button) {
       will-change: transform;
     }
   }
 
-  .card-interactive:hover {
+  .card-interactive:is(a, button):hover {
     box-shadow: var(--shadow-hover);
   }
 
@@ -331,7 +327,7 @@
     box-shadow: var(--shadow-hover);
   }
 
-  .card-interactive:active {
+  .card-interactive:is(a, button):active {
     transform: translateY(1px);
   }
 
@@ -345,9 +341,8 @@
      `--shadow-hover` lift already provided by `.card-interactive`.
      T7.5 motion is disabled for touch and for `prefers-reduced-motion`.
 
-     Cards opt in with both `.card-interactive` (contract: shadow, press,
-     focus) and `.card-tilt` (3D layer) plus a `data-card-tilt` attribute
-     for the JS tracker.
+     Native card links opt in with `.card-interactive`; `.card-tilt` provides
+     the 3D layer and `data-card-tilt` enables pointer tracking.
      -------------------------------------------------------------------- */
   .card-tilt {
     --card-tilt-x: 0deg;
