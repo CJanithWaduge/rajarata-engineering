@@ -46,13 +46,9 @@ import Container from '../Container.astro';
           <p class="font-label-caps text-label-caps uppercase text-secondary">Location</p>
           <p class="font-body-sm text-body-sm text-on-surface font-semibold mt-0.5">[REPLACE: BUSINESS ADDRESS]</p>
           <div class="mt-3 flex items-center gap-2">
-            <a
-              class="inline-flex items-center gap-1 font-label-sm text-label-sm text-primary hover:underline font-bold focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-container"
-              href="#"
-            >
-              <span>Get Driving Directions</span>
-              <span class="material-symbols-outlined text-[16px]">navigation</span>
-            </a>
+            <span class="font-label-sm text-label-sm text-secondary">
+              Directions unavailable until the business location is confirmed.
+            </span>
           </div>
         </div>
       </div>
@@ -97,13 +93,9 @@ import Container from '../Container.astro';
             <span class="font-title-md text-title-md text-on-surface font-semibold"
               >Security Gate House</span
             >
-            <a
-              class="text-primary hover:text-primary-container focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-container"
-              href="tel:[REPLACE: PHONE NUMBER]"
-              aria-label="Call security gate house"
-            >
+            <span class="text-secondary" aria-hidden="true">
               <span class="material-symbols-outlined text-2xl">call</span>
-            </a>
+            </span>
           </div>
         </div>
       </div>

@@ -153,28 +153,19 @@ const focus = 'focus:outline-none focus-visible:outline-2 focus-visible:outline-
                 <span class="material-symbols-outlined text-primary text-[20px] mt-0.5">
                   {item.icon}
                 </span>
-                {item.href ? (
-                  <a
-                    href={item.href === 'tel'
-                      ? `tel:${details[item.key].replace(/\s/g, '')}`
-                      : `mailto:${details[item.key]}`}
-                    data-site-field={item.key}
-                    data-site-href={item.href}
-                    class={`hover:text-on-surface transition-colors truncate ${focus}`}
-                  >
-                    {details[item.key]}
-                  </a>
-                ) : (
-                  <span data-site-field={item.key}>{details[item.key]}</span>
-                )}
+                <span
+                  data-site-field={item.key}
+                  data-site-href={item.href}
+                  class={item.href ? 'truncate' : ''}
+                >
+                  {details[item.key]}
+                </span>
               </div>
             ))
           }
           <div class="pt-2">
-            <a
-              href="#"
-              target="_blank"
-              rel="noopener noreferrer"
+            <span
+              hidden
               data-site-field="whatsapp"
               data-site-href="whatsapp"
               data-site-text="false"
@@ -183,7 +174,7 @@ const focus = 'focus:outline-none focus-visible:outline-2 focus-visible:outline-
             >
               <span class="material-symbols-outlined text-[16px]">chat</span>
               <span>WhatsApp Direct</span>
-            </a>
+            </span>
           </div>
         </div>
       </div>

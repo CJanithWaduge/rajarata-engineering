@@ -127,7 +127,19 @@ export async function fetchSiteSettings(): Promise<SiteSettings | null> {
 /** wa.me links need the number with no `+`, spaces, or dashes. */
 function whatsappHref(number: string): string | null {
   const digits = number.replace(/\D/g, '');
-  return digits ? `https://wa.me/${digits}` : null;
+  return /^\d{7,15}$/.test(digits) ? `https://wa.me/${digits}` : null;
+}
+
+function siteActionHref(kind: string, value: string): string | null {
+  if (kind === 'tel') {
+    const number = value.replace(/[^\d+]/g, '');
+    return /^\+?\d{7,15}$/.test(number) ? `tel:${number}` : null;
+  }
+  if (kind === 'mailto') {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value) ? `mailto:${value}` : null;
+  }
+  if (kind === 'whatsapp') return whatsappHref(value);
+  return null;
 }
 
 /**
@@ -154,7 +166,7 @@ export function hydrateSiteSettings(): void {
       const key = el.dataset.siteField as keyof SiteSettings | undefined;
       if (!key) continue;
 
-      const value = settings[key];
+      const value = settings[key].trim();
       if (!value) continue;
 
       if (el.dataset.siteText !== 'false') {
@@ -162,16 +174,33 @@ export function hydrateSiteSettings(): void {
       }
 
       const hrefKind = el.dataset.siteHref;
-      if (!hrefKind) continue;
+      if (!hrefKind || value === DEFAULT_SETTINGS[key]) continue;
 
-      if (hrefKind === 'tel') {
-        el.setAttribute('href', `tel:${value.replace(/\s/g, '')}`);
-      } else if (hrefKind === 'mailto') {
-        el.setAttribute('href', `mailto:${value}`);
-      } else if (hrefKind === 'whatsapp') {
-        const href = whatsappHref(value);
-        if (href) el.setAttribute('href', href);
+      const href = siteActionHref(hrefKind, value);
+      if (!href) continue;
+
+      if (el instanceof HTMLAnchorElement) {
+        el.href = href;
+        el.hidden = false;
+        if (hrefKind === 'whatsapp') {
+          el.target = '_blank';
+          el.rel = 'noopener noreferrer';
+        }
+        continue;
       }
+
+      const link = document.createElement('a');
+      Array.from(el.attributes).forEach((attribute) => {
+        link.setAttribute(attribute.name, attribute.value);
+      });
+      link.href = href;
+      link.hidden = false;
+      if (hrefKind === 'whatsapp') {
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+      }
+      link.append(...Array.from(el.childNodes));
+      el.replaceWith(link);
     }
   });
 }
