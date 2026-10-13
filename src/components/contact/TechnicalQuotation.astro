@@ -3,9 +3,8 @@
  * Technical quotation request and estimation process
  * (Steps C6.19–C6.35)
  * Two-column layout: inquiry form (7 cols) and estimation/support
- * sidebar (5 cols). The form submits through the callable Cloud
- * Function; success is reported only after the function confirms
- * acceptance (see C6.30).
+ * sidebar (5 cols). Submission remains unavailable until the callable
+ * Cloud Function is configured.
  */
 import Container from '../Container.astro';
 ---
@@ -27,6 +26,9 @@ import Container from '../Container.astro';
           </p>
         </div>
         <form class="space-y-6" id="contact-quotation-form">
+          <p class="rounded-xl border border-outline-variant bg-surface-container-low p-4 font-body-sm text-body-sm text-on-surface">
+            Online inquiry submission is not configured yet. Information entered here is not sent or stored.
+          </p>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
           <div class="flex flex-col space-y-1.5">
             <label class="font-label-sm text-label-sm text-on-surface font-semibold" for="full-name">
@@ -162,14 +164,14 @@ import Container from '../Container.astro';
             <span>SEND INQUIRY</span>
           </button>
           <div
-            class="hidden mt-4 p-4 rounded-xl bg-secondary-container text-on-secondary-fixed flex items-center gap-3"
+            class="hidden mt-4 p-4 rounded-xl bg-error-container text-on-error-container flex items-center gap-3"
             id="form-feedback"
-            role="status"
-            aria-live="polite"
+            role="alert"
+            aria-live="assertive"
           ></div>
         <div class="flex items-center justify-center gap-2 mt-4 text-secondary font-body-sm text-body-sm">
-            <span class="material-symbols-outlined text-[18px] text-tertiary">lock</span>
-            <span>Your engineering details and site plans are kept strictly confidential.</span>
+            <span class="material-symbols-outlined text-[18px] text-tertiary">info</span>
+            <span>Do not enter sensitive project information until online submission is available.</span>
           </div>
         </div>
       </form>
@@ -274,3 +276,17 @@ import Container from '../Container.astro';
     </div>
   </Container>
 </section>
+
+<script>
+  const inquiryForm = document.getElementById('contact-quotation-form');
+  const formFeedback = document.getElementById('form-feedback');
+
+  inquiryForm?.addEventListener('submit', (event) => {
+    event.preventDefault();
+    if (!formFeedback) return;
+
+    formFeedback.textContent =
+      'Your inquiry was not sent. Online submission is not configured yet; please try again when this service is available.';
+    formFeedback.classList.remove('hidden');
+  });
+</script>
