@@ -23,7 +23,7 @@ import { DEFAULT_SETTINGS } from '../lib/siteSettings';
 const quickLinks = [
   { label: 'Home', href: '/' },
   { label: 'Services', href: '/services' },
-  { label: 'About Us', href: '#' },
+  { label: 'About Us', href: '/about-us' },
   { label: 'Projects', href: '/projects' },
   { label: 'Contact', href: '/contact' },
 ];
@@ -130,7 +130,7 @@ const focus = 'focus:outline-none focus-visible:outline-2 focus-visible:outline-
             services.map((service) => (
               <li class="h-7 flex items-center">
                 <a
-                  href="#"
+                  href="/services"
                   class={`hover:text-on-surface transition-colors truncate ${focus}`}
                 >
                   {service}
