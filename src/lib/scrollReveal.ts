@@ -51,14 +51,25 @@ export function initScrollReveal(): void {
     { threshold: 0 },
   );
 
+  const initiallyVisibleTargets = new Set<HTMLElement>();
   revealTargets.forEach((element) => {
     const bounds = element.getBoundingClientRect();
     const isVisible = bounds.top < window.innerHeight && bounds.bottom > 0;
-    const state = isVisible ? 'visible' : bounds.bottom <= 0 ? 'hidden-up' : 'hidden-down';
+    const state = isVisible ? 'hidden-down' : bounds.bottom <= 0 ? 'hidden-up' : 'hidden-down';
 
     element.dataset.scrollRevealState = state;
+    if (isVisible) initiallyVisibleTargets.add(element);
     observer.observe(element);
   });
 
   document.documentElement.setAttribute('data-scroll-reveal-ready', '');
+  elements[0].getBoundingClientRect();
+
+  requestAnimationFrame(() => {
+    initiallyVisibleTargets.forEach((element) => {
+      if (element.dataset.scrollRevealState?.startsWith('hidden-')) {
+        element.dataset.scrollRevealState = 'visible';
+      }
+    });
+  });
 }
