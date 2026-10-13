@@ -31,13 +31,13 @@ const quickLinks = [
 // The prototype lists seven, not the six the plan mentions. Kept as-is
 // rather than dropping one to hit the count.
 const services = [
-  'Residential & Commercial Wiring',
-  'Industrial Installations',
-  'MDB / SMDB Panel Installation',
-  'Cable Tray & Laying',
-  'Testing & Commissioning',
-  'ELV Solutions & Automation',
-  'Lightning Protection System',
+  { label: 'Residential & Commercial Wiring', href: '/services#service-01' },
+  { label: 'Industrial Installations', href: '/services#service-02' },
+  { label: 'MDB / SMDB Panel Installation', href: '/services#service-03' },
+  { label: 'Cable Tray & Laying', href: '/services#service-04' },
+  { label: 'Testing & Commissioning', href: '/services#service-05' },
+  { label: 'ELV Solutions & Automation', href: '/services#service-07' },
+  { label: 'Lightning Protection System', href: '/services#service-08' },
 ];
 
 const badges = ['ISO 9001:2015', 'Safety First'];
@@ -130,10 +130,10 @@ const focus = 'focus:outline-none focus-visible:outline-2 focus-visible:outline-
             services.map((service) => (
               <li class="h-7 flex items-center">
                 <a
-                  href="/services"
+                  href={service.href}
                   class={`hover:text-on-surface transition-colors truncate ${focus}`}
                 >
-                  {service}
+                  {service.label}
                 </a>
               </li>
             ))
