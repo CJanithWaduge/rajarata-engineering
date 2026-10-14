@@ -1,0 +1,19 @@
+---
+/** Admin — Media Library route stub (Phase 11, A11.1). Built out in Step A11.8. */
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import AdminPageHeader from '../../../components/admin/AdminPageHeader.astro';
+import AdminNotice from '../../../components/admin/AdminNotice.astro';
+---
+
+<AdminLayout title="Media Library" pageLabel="Media Library">
+  <div class="space-y-6">
+    <AdminPageHeader
+      title="Media Library"
+      description="Select, upload, and archive the images used across the public site."
+    />
+    <AdminNotice tone="unavailable" title="Not connected">
+      Upload and storage are not connected. The asset picker, upload zone, and fallback previews
+      are implemented in a later step, without persisting any files.
+    </AdminNotice>
+  </div>
+</AdminLayout>

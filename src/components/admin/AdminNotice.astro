@@ -1,0 +1,59 @@
+---
+/**
+ * Admin notice banner (Phase 11, A11.1).
+ *
+ * Used to state the frontend/backend boundary honestly: "not connected",
+ * "illustrative data", warnings, and errors. Icons and labels carry the
+ * meaning, so tone is not colour-only. `role="note"` keeps it out of the
+ * live-region announcement path — banners are contextual, not async alerts.
+ */
+interface Props {
+  tone?: 'info' | 'warning' | 'unavailable' | 'error' | 'success';
+  title: string;
+  /** Optional leading icon override; defaults per tone. */
+  icon?: string;
+  class?: string;
+}
+
+const { tone = 'info', title, icon, class: className } = Astro.props;
+
+const tones = {
+  info: {
+    cls: 'bg-secondary-container text-on-secondary-container border-transparent',
+    icon: 'info',
+  },
+  warning: {
+    cls: 'bg-primary-fixed text-on-primary-fixed border-transparent',
+    icon: 'warning',
+  },
+  unavailable: {
+    cls: 'bg-surface-container text-on-surface border-outline-variant',
+    icon: 'cloud_off',
+  },
+  error: {
+    cls: 'bg-error-container text-on-error-container border-transparent',
+    icon: 'error',
+  },
+  success: {
+    cls: 'bg-tertiary-fixed text-on-tertiary-fixed border-transparent',
+    icon: 'check_circle',
+  },
+} as const;
+
+const t = tones[tone];
+---
+
+<div
+  role="note"
+  class={`flex items-start gap-3 rounded-control border p-4 ${t.cls} ${className ?? ''}`}
+>
+  <span class="material-symbols-outlined text-[20px] shrink-0" aria-hidden="true"
+    >{icon ?? t.icon}</span
+  >
+  <div class="min-w-0 space-y-0.5">
+    <p class="font-label-md text-label-md">{title}</p>
+    <div class="font-body-sm text-body-sm opacity-90">
+      <slot />
+    </div>
+  </div>
+</div>

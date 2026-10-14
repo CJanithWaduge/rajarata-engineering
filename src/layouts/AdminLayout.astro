@@ -1,0 +1,256 @@
+---
+/**
+ * Admin shell (Phase 11, Step A11.1).
+ *
+ * A dedicated layout for the CMS console — it deliberately does not include
+ * the public marketing header/footer, per DESIGN.md. It provides the
+ * responsive navigation rail (dark inverse surface), a top context bar with
+ * breadcrumb and administrator identity, a sign-out affordance, the main
+ * content canvas, and a persistent "not connected" publishing status.
+ *
+ * Security boundary (DESIGN.md / IMPLEMENTATION.md): a static `/admin` route
+ * is NOT access control. `noindex` keeps the console out of search results
+ * but is not privacy; real protection requires Firebase Auth. Every screen
+ * built on this layout therefore uses clearly identified illustrative
+ * content until authentication exists.
+ */
+import '../styles/global.css';
+import AdminNav from '../components/admin/AdminNav.astro';
+import StatusChip from '../components/admin/StatusChip.astro';
+import { adminBreadcrumb } from '../lib/adminNav';
+
+interface Props {
+  /** Browser document title (without the brand suffix). */
+  title: string;
+  /** Trail leaf; defaults to `title`. */
+  pageLabel?: string;
+}
+
+const { title, pageLabel } = Astro.props;
+
+const path = Astro.url.pathname;
+const trail = adminBreadcrumb(path, pageLabel ?? title);
+const documentTitle = `${title} · Rajarata Engineering Admin`;
+
+const focusRing =
+  'focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-container';
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex, nofollow" />
+
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" href="/favicon.ico" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap"
+      rel="stylesheet"
+    />
+
+    <title>{documentTitle}</title>
+
+    <meta name="generator" content={Astro.generator} />
+  </head>
+  <body class="min-h-screen bg-background text-on-surface font-sans antialiased">
+    <a
+      href="#admin-content"
+      class={`sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[60] focus:rounded-control focus:bg-surface-container-lowest focus:px-4 focus:py-2 focus:font-label-md focus:shadow-overlay ${focusRing}`}
+    >
+      Skip to content
+    </a>
+
+    <div class="lg:flex lg:min-h-screen">
+      <!-- Desktop navigation rail -->
+      <aside
+        class="hidden lg:sticky lg:top-0 lg:flex lg:h-screen lg:w-[264px] lg:shrink-0 lg:flex-col"
+      >
+        <AdminNav />
+      </aside>
+
+      <div class="flex min-w-0 flex-1 flex-col">
+        <!-- Top context bar -->
+        <header
+          class="sticky top-0 z-30 border-b border-outline-variant bg-surface-container-lowest/95 backdrop-blur-md"
+        >
+          <div class="flex h-16 items-center gap-3 px-4 sm:px-6 lg:px-8">
+            <button
+              type="button"
+              data-admin-menu-toggle
+              aria-label="Open navigation menu"
+              aria-expanded="false"
+              aria-controls="admin-drawer"
+              class={`flex h-10 w-10 items-center justify-center rounded-control text-on-surface hover:bg-surface-container-high lg:hidden ${focusRing}`}
+            >
+              <span class="material-symbols-outlined text-2xl" aria-hidden="true">menu</span>
+            </button>
+
+            <nav aria-label="Breadcrumb" class="min-w-0 flex-1">
+              <ol class="flex min-w-0 items-center gap-1.5 font-body-sm text-body-sm">
+                {
+                  trail.map((crumb, i) => (
+                    <li class="flex min-w-0 items-center gap-1.5">
+                      {i > 0 && (
+                        <span
+                          class="material-symbols-outlined text-[16px] text-secondary"
+                          aria-hidden="true"
+                        >
+                          chevron_right
+                        </span>
+                      )}
+                      <span
+                        class:list={[
+                          'truncate',
+                          i === trail.length - 1
+                            ? 'font-label-md text-label-md text-on-surface'
+                            : 'text-secondary',
+                        ]}
+                        aria-current={i === trail.length - 1 ? 'page' : undefined}
+                      >
+                        {crumb}
+                      </span>
+                    </li>
+                  ))
+                }
+              </ol>
+            </nav>
+
+            <div class="flex items-center gap-3">
+              <span class="hidden sm:inline-flex">
+                <StatusChip status="unavailable" label="Publishing not connected" />
+              </span>
+
+              <div class="flex items-center gap-2 border-l border-outline-variant pl-3">
+                <div class="hidden text-right sm:block">
+                  <p class="font-label-md text-label-md leading-tight text-on-surface">
+                    Administrator
+                  </p>
+                  <p class="font-body-sm text-body-sm leading-tight text-secondary">
+                    Identity placeholder
+                  </p>
+                </div>
+                <div
+                  class="flex h-9 w-9 items-center justify-center rounded-full bg-primary-container text-on-primary"
+                  aria-hidden="true"
+                >
+                  <span class="material-symbols-outlined text-[20px]">person</span>
+                </div>
+                <button
+                  type="button"
+                  disabled
+                  aria-describedby="admin-signout-note"
+                  title="Sign-out is unavailable until authentication is connected."
+                  class="hidden h-10 items-center gap-2 rounded-control px-3 font-label-md text-label-md text-on-surface-variant opacity-60 sm:inline-flex"
+                >
+                  <span class="material-symbols-outlined text-[18px]" aria-hidden="true"
+                    >logout</span
+                  >
+                  Sign out
+                </button>
+              </div>
+            </div>
+          </div>
+          <p id="admin-signout-note" class="sr-only">
+            Sign-out becomes available once Firebase Authentication is connected. It is shown
+            here to represent the intended control.
+          </p>
+        </header>
+
+        <!-- Content canvas -->
+        <main id="admin-content" class="flex-1 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+          <slot />
+        </main>
+      </div>
+    </div>
+
+    <!-- Mobile drawer + backdrop -->
+    <div
+      id="admin-backdrop"
+      data-admin-backdrop
+      data-state="closed"
+      aria-hidden="true"
+      inert
+      class="fixed inset-0 z-40 bg-inverse-surface/60 transition-opacity duration-200 opacity-0 pointer-events-none data-[state=open]:opacity-100 data-[state=open]:pointer-events-auto lg:hidden"
+    >
+    </div>
+
+    <div
+      id="admin-drawer"
+      data-admin-drawer
+      data-state="closed"
+      aria-hidden="true"
+      inert
+      role="dialog"
+      aria-modal="true"
+      aria-label="Admin navigation"
+      class="fixed inset-y-0 left-0 z-50 flex w-[280px] max-w-[85vw] flex-col bg-inverse-surface transition-transform duration-200 ease-[cubic-bezier(0.2,0,0,1)] -translate-x-full lg:hidden data-[state=open]:translate-x-0"
+    >
+      <div class="flex items-center justify-end px-3 pt-3">
+        <button
+          type="button"
+          data-admin-menu-close
+          aria-label="Close navigation menu"
+          class="flex h-10 w-10 items-center justify-center rounded-control text-inverse-on-surface hover:bg-white/10 focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-fixed"
+        >
+          <span class="material-symbols-outlined text-2xl" aria-hidden="true">close</span>
+        </button>
+      </div>
+      <AdminNav variant="drawer" class="flex-1" />
+    </div>
+
+    <script>
+      const toggle = document.querySelector('[data-admin-menu-toggle]') as HTMLElement | null;
+      const drawer = document.getElementById('admin-drawer');
+      const backdrop = document.getElementById('admin-backdrop');
+      const closeBtn = document.querySelector('[data-admin-menu-close]') as HTMLElement | null;
+
+      if (toggle && drawer && backdrop) {
+        const setOpen = (open: boolean) => {
+          if (open) {
+            drawer.removeAttribute('inert');
+            backdrop.removeAttribute('inert');
+            drawer.removeAttribute('aria-hidden');
+            backdrop.removeAttribute('aria-hidden');
+            drawer.dataset.state = 'open';
+            backdrop.dataset.state = 'open';
+            document.body.style.overflow = 'hidden';
+          } else {
+            toggle.focus();
+            drawer.dataset.state = 'closed';
+            backdrop.dataset.state = 'closed';
+            document.body.style.overflow = '';
+            drawer.setAttribute('inert', '');
+            backdrop.setAttribute('inert', '');
+            drawer.setAttribute('aria-hidden', 'true');
+            backdrop.setAttribute('aria-hidden', 'true');
+          }
+          toggle.setAttribute('aria-expanded', String(open));
+          toggle.setAttribute(
+            'aria-label',
+            open ? 'Close navigation menu' : 'Open navigation menu'
+          );
+          if (open) closeBtn?.focus();
+        };
+
+        const isOpen = () => drawer.dataset.state === 'open';
+
+        toggle.addEventListener('click', () => setOpen(!isOpen()));
+        closeBtn?.addEventListener('click', () => setOpen(false));
+        backdrop.addEventListener('click', () => setOpen(false));
+
+        document.addEventListener('keydown', (event) => {
+          if (event.key === 'Escape' && isOpen()) setOpen(false);
+        });
+      }
+    </script>
+  </body>
+</html>

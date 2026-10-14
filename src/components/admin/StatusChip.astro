@@ -1,0 +1,98 @@
+---
+/**
+ * Admin status chip (Phase 11, A11.1).
+ *
+ * Publication, pipeline, and asset states are never colour-only — each chip
+ * carries a Material Symbols icon and a text label, as DESIGN.md requires.
+ * Colours stay inside the approved token palette; no success green is
+ * introduced, so "published/live" uses the informational tertiary family and
+ * "failed" uses the error family.
+ */
+export type AdminStatus =
+  | 'draft'
+  | 'published'
+  | 'archived'
+  | 'queued'
+  | 'building'
+  | 'deploying'
+  | 'live'
+  | 'failed'
+  | 'attention'
+  | 'info'
+  | 'unavailable';
+
+interface Props {
+  status: AdminStatus;
+  /** Overrides the default label for the status. */
+  label?: string;
+  class?: string;
+}
+
+const { status, label, class: className } = Astro.props;
+
+const styles: Record<AdminStatus, { label: string; icon: string; cls: string }> = {
+  draft: {
+    label: 'Draft',
+    icon: 'edit_note',
+    cls: 'bg-surface-container-high text-on-surface-variant',
+  },
+  published: {
+    label: 'Published',
+    icon: 'check_circle',
+    cls: 'bg-tertiary-fixed text-on-tertiary-fixed',
+  },
+  archived: {
+    label: 'Archived',
+    icon: 'inventory_2',
+    cls: 'bg-surface-container text-secondary',
+  },
+  queued: {
+    label: 'Queued',
+    icon: 'schedule',
+    cls: 'bg-surface-container-high text-on-surface-variant',
+  },
+  building: {
+    label: 'Building',
+    icon: 'precision_manufacturing',
+    cls: 'bg-primary-fixed text-on-primary-fixed',
+  },
+  deploying: {
+    label: 'Deploying',
+    icon: 'rocket_launch',
+    cls: 'bg-primary-fixed text-on-primary-fixed',
+  },
+  live: {
+    label: 'Live',
+    icon: 'public',
+    cls: 'bg-tertiary-fixed text-on-tertiary-fixed',
+  },
+  failed: {
+    label: 'Failed',
+    icon: 'error',
+    cls: 'bg-error-container text-on-error-container',
+  },
+  attention: {
+    label: 'Needs attention',
+    icon: 'warning',
+    cls: 'bg-error-container text-on-error-container',
+  },
+  info: {
+    label: 'Info',
+    icon: 'info',
+    cls: 'bg-secondary-container text-on-secondary-container',
+  },
+  unavailable: {
+    label: 'Not connected',
+    icon: 'cloud_off',
+    cls: 'bg-surface-container text-secondary',
+  },
+};
+
+const s = styles[status];
+const classes = `inline-flex items-center gap-1.5 min-h-[26px] px-2.5 py-0.5 rounded-chip font-label-sm text-label-sm whitespace-nowrap ${s.cls} ${className ?? ''}`;
+---
+
+<span class={classes}>
+  <span class="material-symbols-outlined text-[16px]" aria-hidden="true">{s.icon}</span>
+  <span>{label ?? s.label}</span>
+</span>

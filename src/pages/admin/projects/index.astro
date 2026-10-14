@@ -1,0 +1,19 @@
+---
+/** Admin — Projects route stub (Phase 11, A11.1). Built out in Step A11.5. */
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import AdminPageHeader from '../../../components/admin/AdminPageHeader.astro';
+import AdminNotice from '../../../components/admin/AdminNotice.astro';
+---
+
+<AdminLayout title="Projects" pageLabel="Projects">
+  <div class="space-y-6">
+    <AdminPageHeader
+      title="Projects"
+      description="Manage the portfolio records shown on the public site."
+    />
+    <AdminNotice tone="unavailable" title="Not connected">
+      The projects table, thumbnail fallback, filters, and archive actions are implemented in a
+      later step. No live records are loaded here yet.
+    </AdminNotice>
+  </div>
+</AdminLayout>

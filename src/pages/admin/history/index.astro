@@ -1,0 +1,19 @@
+---
+/** Admin — Publishing History route stub (Phase 11, A11.1). Built out in Step A11.10. */
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import AdminPageHeader from '../../../components/admin/AdminPageHeader.astro';
+import AdminNotice from '../../../components/admin/AdminNotice.astro';
+---
+
+<AdminLayout title="Publishing History" pageLabel="Publishing History">
+  <div class="space-y-6">
+    <AdminPageHeader
+      title="Publishing History"
+      description="Review past releases and restore a previous published snapshot."
+    />
+    <AdminNotice tone="unavailable" title="Not connected">
+      No publishing pipeline is connected, so there is no release history to show and no rollback
+      to perform. These surfaces are implemented as clearly illustrative states in a later step.
+    </AdminNotice>
+  </div>
+</AdminLayout>

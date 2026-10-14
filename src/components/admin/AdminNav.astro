@@ -1,0 +1,90 @@
+---
+/**
+ * Admin navigation rail (Phase 11, A11.1).
+ *
+ * Renders the approved information architecture as a dark `inverse-surface`
+ * rail, per DESIGN.md ("use the dark inverse surface selectively for a
+ * navigation rail"). Active state pairs a red marker with a text-colour
+ * change so selection is never colour-only.
+ *
+ * The same list is reused inside the mobile drawer in AdminLayout, so there
+ * is exactly one source of truth for admin destinations.
+ */
+import Logo from '../Logo.astro';
+import { ADMIN_NAV, isAdminNavActive } from '../../lib/adminNav';
+
+interface Props {
+  /** `rail` fills the desktop sidebar; `drawer` is the mobile variant. */
+  variant?: 'rail' | 'drawer';
+  class?: string;
+}
+
+const { variant = 'rail', class: className } = Astro.props;
+
+const path = Astro.url.pathname;
+
+const focusRing =
+  'focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-fixed';
+
+const linkBase =
+  'flex items-center gap-3 rounded-control px-3 py-2.5 font-title-md text-title-md transition-colors';
+
+const activeCls = 'bg-primary-container text-on-primary shadow-sm';
+const idleCls = 'text-inverse-on-surface/70 hover:bg-white/10 hover:text-inverse-on-surface';
+---
+
+<nav
+  aria-label="Admin"
+  class={`flex h-full flex-col bg-inverse-surface text-inverse-on-surface ${className ?? ''}`}
+>
+  <div class="flex items-center gap-3 px-4 py-5">
+    <a href="/admin" class={`flex items-center gap-3 ${focusRing}`}>
+      <Logo variant="dark" class="h-8 w-auto" />
+    </a>
+  </div>
+
+  <div class="px-4 pb-3">
+    <p class="font-label-caps text-label-caps uppercase tracking-widest text-inverse-on-surface/50">
+      Content Console
+    </p>
+  </div>
+
+  <ul class="flex-1 space-y-1 overflow-y-auto px-3 pb-4">
+    {
+      ADMIN_NAV.map((item) => {
+        const active = isAdminNavActive(item.href, path);
+        return (
+          <li>
+            <a
+              href={item.href}
+              class:list={[linkBase, focusRing, active ? activeCls : idleCls]}
+              aria-current={active ? 'page' : undefined}
+            >
+              <span class="material-symbols-outlined text-[20px]" aria-hidden="true">
+                {item.icon}
+              </span>
+              <span class="truncate">{item.label}</span>
+            </a>
+          </li>
+        );
+      })
+    }
+  </ul>
+
+  <div class="border-t border-white/10 px-4 py-4">
+    <p class="font-body-sm text-body-sm text-inverse-on-surface/60">
+      Frontend preview — not connected to live content.
+    </p>
+    {
+      variant === 'drawer' && (
+        <a
+          href="/"
+          class={`mt-3 inline-flex items-center gap-2 font-label-md text-label-md text-inverse-on-surface/80 hover:text-inverse-on-surface ${focusRing}`}
+        >
+          <span class="material-symbols-outlined text-[18px]" aria-hidden="true">public</span>
+          View public site
+        </a>
+      )
+    }
+  </div>
+</nav>

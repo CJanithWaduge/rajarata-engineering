@@ -1,0 +1,19 @@
+---
+/** Admin — Site Content route stub (Phase 11, A11.1). Built out in Step A11.7. */
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import AdminPageHeader from '../../../components/admin/AdminPageHeader.astro';
+import AdminNotice from '../../../components/admin/AdminNotice.astro';
+---
+
+<AdminLayout title="Site Content" pageLabel="Site Content">
+  <div class="space-y-6">
+    <AdminPageHeader
+      title="Site Content"
+      description="Home, About Us, Contact, Business Details, and SEO metadata."
+    />
+    <AdminNotice tone="unavailable" title="Not connected">
+      These editors are implemented in a later step. Routes, layout, security policy, and the
+      contact form remain code-controlled.
+    </AdminNotice>
+  </div>
+</AdminLayout>

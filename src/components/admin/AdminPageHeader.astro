@@ -1,0 +1,30 @@
+---
+/**
+ * Admin page header (Phase 11, A11.1).
+ *
+ * One `<h1>` per admin screen plus optional supporting copy and an actions
+ * slot. DESIGN.md reserves page-level headings for `headline-md` in the
+ * admin frame (the marketing `headline-lg` is too large for a console).
+ */
+interface Props {
+  title: string;
+  description?: string;
+  class?: string;
+}
+
+const { title, description, class: className } = Astro.props;
+---
+
+<div class={`flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between ${className ?? ''}`}>
+  <div class="min-w-0 max-w-2xl">
+    <h1 class="font-headline-md text-headline-md text-on-surface">{title}</h1>
+    {
+      description && (
+        <p class="mt-1 font-body-md text-body-md text-secondary">{description}</p>
+      )
+    }
+  </div>
+  <div class="flex flex-wrap items-center gap-2 sm:shrink-0">
+    <slot name="actions" />
+  </div>
+</div>
