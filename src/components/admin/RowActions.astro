@@ -1,0 +1,120 @@
+---
+/**
+ * Admin row actions menu (Phase 11, A11.4).
+ *
+ * A `<details>`-based disclosure rather than an absolutely-positioned
+ * dropdown, so it is never clipped by a card's `overflow-hidden` and works
+ * without JavaScript. Actions that are not implemented render as disabled
+ * buttons with a visible reason line instead of pretending to work.
+ *
+ * Anchors are used for navigation; buttons are used for actions
+ * (DESIGN.md control rules).
+ */
+export interface RowAction {
+  label: string;
+  icon: string;
+  /** Navigation target. Mutually exclusive with a disabled action. */
+  href?: string;
+  disabled?: boolean;
+  /** Shown under a disabled item to explain why it is unavailable. */
+  reason?: string;
+  /** Renders the item in the error/red family (e.g. archive). */
+  danger?: boolean;
+}
+
+interface Props {
+  actions: RowAction[];
+  /** Accessible name for the disclosure control. */
+  label?: string;
+  class?: string;
+}
+
+const { actions, label = 'Row actions', class: className } = Astro.props;
+
+const itemBase =
+  'flex w-full items-start gap-2.5 rounded-chip px-3 py-2 text-left font-label-md text-label-md';
+---
+
+<details class={`group inline-block text-left ${className ?? ''}`} data-row-actions>
+  <summary
+    aria-label={label}
+    class="inline-flex h-9 cursor-pointer list-none items-center gap-1 rounded-control border-[1.5px] border-outline-variant px-3 font-label-sm text-label-sm text-on-surface hover:bg-surface-container-high focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-container [&::-webkit-details-marker]:hidden"
+  >
+    <span class="material-symbols-outlined text-[18px]" aria-hidden="true">more_horiz</span>
+    <span class="sr-only sm:not-sr-only">{label}</span>
+    <span
+      class="material-symbols-outlined text-[18px] transition-transform duration-150 group-open:rotate-180"
+      aria-hidden="true">expand_more</span
+    >
+  </summary>
+
+  <div
+    class="mt-1 w-60 rounded-control border border-outline-variant bg-surface-container-lowest p-1 shadow-overlay"
+  >
+    <ul>
+      {
+        actions.map((action) => (
+          <li>
+            {action.href && !action.disabled ? (
+              <a
+                href={action.href}
+                class={`${itemBase} text-on-surface hover:bg-surface-container-high focus:outline-none focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-primary-container`}
+              >
+                <span class="material-symbols-outlined text-[18px] text-secondary" aria-hidden="true">
+                  {action.icon}
+                </span>
+                {action.label}
+              </a>
+            ) : (
+              <div>
+                <button
+                  type="button"
+                  disabled
+                  class={`${itemBase} cursor-not-allowed ${
+                    action.danger ? 'text-primary-container' : 'text-on-surface-variant'
+                  } opacity-60`}
+                >
+                  <span class="material-symbols-outlined text-[18px]" aria-hidden="true">
+                    {action.icon}
+                  </span>
+                  {action.label}
+                </button>
+                {action.reason && (
+                  <p class="px-3 pb-2 pl-10 font-body-sm text-body-sm text-secondary">
+                    {action.reason}
+                  </p>
+                )}
+              </div>
+            )}
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+</details>
+
+<script>
+  // Keep only one row-actions menu open at a time and close on Escape.
+  // Written defensively so it is harmless if no menus are present.
+  const allMenus = () => Array.from(document.querySelectorAll<HTMLDetailsElement>('[data-row-actions]'));
+
+  document.addEventListener('toggle', (event) => {
+    const target = event.target as HTMLElement | null;
+    if (!target || target.tagName !== 'DETAILS') return;
+    const details = target as HTMLDetailsElement;
+    if (!details.open) return;
+    allMenus().forEach((menu) => {
+      if (menu !== details) menu.open = false;
+    });
+  }, true);
+
+  document.addEventListener('keydown', (event) => {
+    if (event.key !== 'Escape') return;
+    allMenus().forEach((menu) => {
+      if (menu.open) {
+        menu.open = false;
+        menu.querySelector<HTMLElement>('summary')?.focus();
+      }
+    });
+  });
+</script>
