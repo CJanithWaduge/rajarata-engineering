@@ -1,0 +1,56 @@
+---
+/**
+ * Admin authentication shell (Phase 11, Step A11.2).
+ *
+ * A focused, standalone frame for sign-in: centered content on the neutral
+ * `background` canvas, with the same head, brand font, and `noindex` policy as
+ * the admin shell. It intentionally omits navigation — nothing behind the
+ * login is reachable before authentication exists.
+ */
+import '../styles/global.css';
+
+interface Props {
+  title: string;
+}
+
+const { title } = Astro.props;
+const documentTitle = `${title} · Rajarata Engineering Admin`;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex, nofollow" />
+
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" href="/favicon.ico" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap"
+      rel="stylesheet"
+    />
+
+    <title>{documentTitle}</title>
+
+    <meta name="generator" content={Astro.generator} />
+  </head>
+  <body
+    class="flex min-h-screen flex-col items-center justify-center bg-background px-4 py-10 font-sans text-on-surface antialiased"
+  >
+    <main class="w-full max-w-md">
+      <slot />
+    </main>
+    <p class="mt-8 max-w-md text-center font-body-sm text-body-sm text-secondary">
+      This is a frontend preview. It does not authenticate anyone and no credentials are stored or
+      sent.
+    </p>
+  </body>
+</html>

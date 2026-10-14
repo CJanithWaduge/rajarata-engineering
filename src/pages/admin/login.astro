@@ -1,0 +1,249 @@
+---
+/**
+ * Admin sign-in (Phase 11, Step A11.2).
+ *
+ * Branded, accessible sign-in UI with labeled fields, a password visibility
+ * control, inline validation, and a submitting state. Firebase Auth is not
+ * implemented, so the form deliberately does NOT authenticate: a valid-looking
+ * submission resolves to an explicit "authentication not connected" message
+ * and never routes into protected content or reports success.
+ *
+ * Because the form is inert by design, it uses `novalidate` and handles
+ * messaging in a small script so error/loading/unavailable states are
+ * consistent and announced through a live region.
+ */
+import AdminAuthLayout from '../../layouts/AdminAuthLayout.astro';
+import AdminNotice from '../../components/admin/AdminNotice.astro';
+import Logo from '../../components/Logo.astro';
+
+const focusRing =
+  'focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-container';
+
+const inputBase =
+  'w-full h-12 px-4 rounded-control bg-surface-container-lowest text-on-surface ' +
+  'placeholder:text-secondary/60 border-[1.5px] border-outline-variant shadow-sm ' +
+  'transition-colors focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 ' +
+  'focus-visible:outline-primary-container disabled:opacity-60 disabled:cursor-not-allowed';
+---
+
+<AdminAuthLayout title="Sign in">
+  <div
+    class="rounded-card border border-outline-variant bg-surface-container-lowest p-6 shadow-card sm:p-8"
+  >
+    <a href="/admin/login" class={`inline-flex items-center gap-3 rounded-control ${focusRing}`}>
+      <Logo class="h-9 w-auto" />
+    </a>
+
+    <h1 class="mt-6 font-headline-md text-headline-md text-on-surface">Admin sign in</h1>
+    <p class="mt-1 font-body-md text-body-md text-secondary">
+      Sign in with the administrator account provisioned for you.
+    </p>
+
+    <form class="mt-6 space-y-5" novalidate data-login-form>
+      <div class="space-y-1.5">
+        <label
+          for="login-email"
+          class="font-label-sm text-label-sm font-semibold text-on-surface">Email address</label
+        >
+        <input
+          id="login-email"
+          name="email"
+          type="email"
+          inputmode="email"
+          autocomplete="username"
+          spellcheck="false"
+          placeholder="name@example.com"
+          required
+          aria-describedby="login-email-error"
+          class={inputBase}
+        />
+        <p
+          id="login-email-error"
+          class="hidden font-body-sm text-body-sm text-primary-container"
+        >
+        </p>
+      </div>
+
+      <div class="space-y-1.5">
+        <label
+          for="login-password"
+          class="font-label-sm text-label-sm font-semibold text-on-surface">Password</label
+        >
+        <div class="relative">
+          <input
+            id="login-password"
+            name="password"
+            type="password"
+            autocomplete="current-password"
+            placeholder="Enter your password"
+            required
+            aria-describedby="login-password-error"
+            class={`${inputBase} pr-12`}
+          />
+          <button
+            type="button"
+            data-password-toggle
+            aria-label="Show password"
+            aria-pressed="false"
+            class={`absolute right-2 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-control text-secondary hover:bg-surface-container-high ${focusRing}`}
+          >
+            <span class="material-symbols-outlined text-[20px]" aria-hidden="true"
+              >visibility</span
+            >
+          </button>
+        </div>
+        <p
+          id="login-password-error"
+          class="hidden font-body-sm text-body-sm text-primary-container"
+        >
+        </p>
+      </div>
+
+      <div
+        id="login-form-message"
+        role="alert"
+        aria-live="assertive"
+        class="hidden rounded-control border p-3 font-body-sm text-body-sm"
+      >
+      </div>
+
+      <button
+        type="submit"
+        class={`inline-flex h-12 w-full items-center justify-center gap-2 rounded-control bg-primary-container px-7 font-label-md text-label-md text-on-primary shadow-sm transition-all duration-150 hover:bg-primary hover:shadow-md active:translate-y-[1px] disabled:cursor-not-allowed disabled:opacity-60 ${focusRing}`}
+      >
+        <span class="material-symbols-outlined text-[20px]" aria-hidden="true">login</span>
+        <span data-login-submit-label>Sign in</span>
+      </button>
+    </form>
+
+    <div class="mt-6 space-y-2 border-t border-outline-variant pt-4">
+      <p class="font-body-sm text-body-sm text-secondary">
+        Forgot your password? Password reset is unavailable until authentication is connected.
+      </p>
+      <p class="font-body-sm text-body-sm text-secondary">
+        Administrator accounts are provisioned by an authorised process — there is no public
+        registration.
+      </p>
+    </div>
+  </div>
+
+  <AdminNotice tone="unavailable" title="Authentication not connected" class="mt-4">
+    Firebase Authentication is not implemented, so a sign-in cannot succeed here. This screen
+    represents the intended states and never accepts credentials as valid.
+  </AdminNotice>
+
+  <p class="mt-6 text-center">
+    <a
+      href="/"
+      class={`inline-flex items-center gap-1.5 font-label-md text-label-md text-secondary hover:text-on-surface ${focusRing}`}
+    >
+      <span class="material-symbols-outlined text-[18px]" aria-hidden="true">arrow_back</span>
+      Back to public site
+    </a>
+  </p>
+</AdminAuthLayout>
+
+<script>
+  const form = document.querySelector<HTMLFormElement>('[data-login-form]');
+
+  if (form) {
+    const email = form.querySelector<HTMLInputElement>('#login-email');
+    const password = form.querySelector<HTMLInputElement>('#login-password');
+    const submit = form.querySelector<HTMLButtonElement>('button[type="submit"]');
+    const submitLabel = form.querySelector<HTMLElement>('[data-login-submit-label]');
+    const message = form.querySelector<HTMLElement>('#login-form-message');
+    const toggle = form.querySelector<HTMLButtonElement>('[data-password-toggle]');
+
+    const setFieldError = (input: HTMLInputElement | null, text: string) => {
+      if (!input) return;
+      const error = document.getElementById(`${input.id}-error`);
+      input.setAttribute('aria-invalid', text ? 'true' : 'false');
+      if (error) {
+        error.textContent = text;
+        error.classList.toggle('hidden', !text);
+      }
+    };
+
+    const clearMessage = () => {
+      if (!message) return;
+      message.textContent = '';
+      message.classList.add('hidden');
+      message.classList.remove(
+        'border-primary-container',
+        'bg-error-container',
+        'text-on-error-container',
+        'bg-surface-container',
+        'text-on-surface',
+        'border-outline-variant'
+      );
+    };
+
+    const showMessage = (text: string, tone: 'error' | 'unavailable') => {
+      if (!message) return;
+      message.textContent = text;
+      message.classList.remove('hidden');
+      if (tone === 'error') {
+        message.classList.add('border-primary-container', 'bg-error-container', 'text-on-error-container');
+      } else {
+        message.classList.add('border-outline-variant', 'bg-surface-container', 'text-on-surface');
+      }
+    };
+
+    const setBusy = (busy: boolean) => {
+      if (!submit) return;
+      submit.disabled = busy;
+      submit.setAttribute('aria-busy', String(busy));
+      form.setAttribute('aria-busy', String(busy));
+      if (submitLabel) submitLabel.textContent = busy ? 'Signing in…' : 'Sign in';
+    };
+
+    // Password visibility toggle — keeps the control labelled and pressed-state
+    // accurate so screen readers announce the current mode.
+    toggle?.addEventListener('click', () => {
+      if (!password) return;
+      const reveal = password.type === 'password';
+      password.type = reveal ? 'text' : 'password';
+      toggle.setAttribute('aria-pressed', String(reveal));
+      toggle.setAttribute('aria-label', reveal ? 'Hide password' : 'Show password');
+      const icon = toggle.querySelector('.material-symbols-outlined');
+      if (icon) icon.textContent = reveal ? 'visibility_off' : 'visibility';
+    });
+
+    form.addEventListener('submit', (event) => {
+      event.preventDefault();
+      clearMessage();
+
+      const emailValue = email?.value.trim() ?? '';
+      const passwordValue = password?.value ?? '';
+      // Deliberately generic messages — never reveal whether an account exists.
+      const emailError = !emailValue
+        ? 'Enter your email address.'
+        : !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailValue)
+          ? 'Enter a valid email address.'
+          : '';
+      const passwordError = !passwordValue ? 'Enter your password.' : '';
+
+      setFieldError(email, emailError);
+      setFieldError(password, passwordError);
+
+      if (emailError || passwordError) {
+        const firstInvalid = emailError ? email : password;
+        firstInvalid?.focus();
+        return;
+      }
+
+      // No authentication backend exists. Show the submitting state briefly,
+      // then resolve to an explicit "not connected" result — never success.
+      setBusy(true);
+      window.setTimeout(() => {
+        setBusy(false);
+        showMessage(
+          'Sign-in is unavailable. Authentication is not connected in this preview, so your credentials cannot be verified. No data was sent or stored.',
+          'unavailable'
+        );
+        message?.setAttribute('tabindex', '-1');
+        message?.focus();
+      }, 600);
+    });
+  }
+</script>
