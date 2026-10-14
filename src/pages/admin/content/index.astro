@@ -1,19 +1,404 @@
 ---
-/** Admin — Site Content route stub (Phase 11, A11.1). Built out in Step A11.7. */
+/**
+ * Admin — Site content editors (Phase 11, Step A11.7).
+ *
+ * Frontend sections for Home, About Us, Contact, Business Details, and SEO
+ * metadata, using the Phase 10 editable-content inventory and the shared
+ * field/validation/status/preview patterns from the service and project
+ * editors.
+ *
+ * Everything here is a single illustrative working copy, because Phase 10
+ * decided a build publishes all CMS-managed content with no hybrid. Routes,
+ * layout, actions, the security policy, and contact-form behavior stay
+ * code-controlled and are not editable on this screen. Values are placeholders
+ * for layout review; nothing is read from or written to storage.
+ */
 import AdminLayout from '../../../layouts/AdminLayout.astro';
 import AdminPageHeader from '../../../components/admin/AdminPageHeader.astro';
 import AdminNotice from '../../../components/admin/AdminNotice.astro';
+import StatusChip from '../../../components/admin/StatusChip.astro';
+import FormSection from '../../../components/admin/FormSection.astro';
+import AdminField from '../../../components/admin/AdminField.astro';
+import TagInput from '../../../components/admin/TagInput.astro';
+import AssetThumb from '../../../components/admin/AssetThumb.astro';
+import EditorActionBar from '../../../components/admin/EditorActionBar.astro';
+
+const focusRing =
+  'focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-container';
+
+const sections = [
+  { id: 'home', label: 'Home' },
+  { id: 'about', label: 'About Us' },
+  { id: 'contact', label: 'Contact' },
+  { id: 'business', label: 'Business Details' },
+  { id: 'seo', label: 'SEO' },
+];
+
+const seoRoutes = [
+  { key: 'home', path: '/', label: 'Home' },
+  { key: 'services', path: '/services', label: 'Services' },
+  { key: 'projects', path: '/projects', label: 'Projects' },
+  { key: 'about', path: '/about-us', label: 'About Us' },
+  { key: 'contact', path: '/contact', label: 'Contact' },
+];
+
+const home = {
+  heroHeading: 'Electrical engineering and contracting you can verify',
+  heroIntro:
+    'Illustrative introduction — one or two sentences describing MV/LV distribution, industrial installation, testing and commissioning, and ELV work.',
+  heroCta: 'Request a quotation',
+  trustStrip: ['Illustrative trust item', 'Second illustrative item'],
+};
+
+const about = {
+  intro: 'Illustrative introduction to the company for the About page.',
+  story: 'Illustrative heritage and company-story text. Requires owner verification before publishing.',
+  vision: 'Illustrative vision statement.',
+  mission: 'Illustrative mission statement.',
+  industries: ['Illustrative industry', 'Second illustrative industry'],
+  pillars: ['Illustrative pillar', 'Second illustrative pillar'],
+  process: 'Illustrative description of the engineering process or methodology.',
+  ctaCopy: 'Illustrative call-to-action copy.',
+};
+
+const contact = {
+  deskLabel: 'Operational desk',
+  deskDetails: 'Illustrative operational desk details.',
+  supportCopy: 'Illustrative support copy.',
+  visitorInfo: 'Illustrative visitor information.',
+};
+
+// Existing placeholder values already baked into the site footer — not
+// inventions. They must not become active contact links until confirmed.
+const business = {
+  address: 'Rajarata Engineering, Anuradhapura',
+  phone: '+94 77 XXX XXXX',
+  email: 'contact@rajarata.lk',
+  hours: 'Mon – Fri, 8:00 – 17:30',
+  whatsapp: '',
+};
 ---
 
 <AdminLayout title="Site Content" pageLabel="Site Content">
-  <div class="space-y-6">
+  <div class="space-y-6 pb-4" data-editor-root>
     <AdminPageHeader
       title="Site Content"
       description="Home, About Us, Contact, Business Details, and SEO metadata."
-    />
-    <AdminNotice tone="unavailable" title="Not connected">
-      These editors are implemented in a later step. Routes, layout, security policy, and the
-      contact form remain code-controlled.
+    >
+      <Fragment slot="actions">
+        <StatusChip status="draft" label="Working copy" />
+        <button
+          type="button"
+          disabled
+          title="Draft preview is not connected."
+          class={`inline-flex h-10 items-center gap-2 rounded-control border-[1.5px] border-outline-variant px-4 font-label-md text-label-md text-on-surface-variant opacity-60 ${focusRing}`}
+        >
+          <span class="material-symbols-outlined text-[18px]" aria-hidden="true">visibility</span>
+          Preview draft
+        </button>
+      </Fragment>
+    </AdminPageHeader>
+
+    <AdminNotice tone="unavailable" title="Not connected — nothing here is saved">
+      This is a single illustrative working copy for layout review. Validation, counters, and the
+      unsaved-change indicator work locally, but Save draft and Publish are unavailable and no value
+      is written to the public site. Routes, layout, actions, the security policy, and the contact
+      form stay code-controlled.
     </AdminNotice>
+
+    <!-- Section sub-navigation -->
+    <nav
+      aria-label="Site content sections"
+      class="sticky top-16 z-10 overflow-x-auto rounded-control border border-outline-variant bg-surface-container-lowest p-1 shadow-card"
+    >
+      <ul class="flex gap-1">
+        {
+          sections.map((section) => (
+            <li>
+              <a
+                href={`#${section.id}`}
+                class={`inline-flex h-9 items-center whitespace-nowrap rounded-control px-3 font-label-md text-label-md text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface ${focusRing}`}
+              >
+                {section.label}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
+
+    <form novalidate data-editor-form class="space-y-6">
+      <!-- Home -->
+      <div id="home" class="scroll-mt-36">
+        <FormSection title="Home page" description="Content for the public landing route.">
+          <AdminField
+            name="home-heroHeading"
+            label="Hero heading"
+            required
+            requiredMessage="Enter the hero heading."
+            maxlength={90}
+            counter
+            value={home.heroHeading}
+            helper="The primary statement at the top of the home page."
+          />
+          <AdminField
+            name="home-heroIntro"
+            type="textarea"
+            label="Hero introduction"
+            required
+            requiredMessage="Enter the hero introduction."
+            rows={3}
+            maxlength={240}
+            counter
+            value={home.heroIntro}
+            helper="One or two sentences of supporting copy under the heading."
+          />
+          <AdminField
+            name="home-heroCta"
+            label="Primary CTA label"
+            required
+            requiredMessage="Enter the CTA label."
+            maxlength={30}
+            counter
+            value={home.heroCta}
+            helper="Destination is code-controlled (/contact) and cannot be edited here."
+          />
+          <TagInput
+            name="home-trustStrip"
+            label="Trust-strip items"
+            values={home.trustStrip}
+            placeholder="Add a trust-strip item"
+            helper="Short supporting labels shown beneath the hero."
+          />
+          <AdminNotice tone="warning" title="Claims need owner verification">
+            Safety, certification, response-time, performance, and client or project claims must be
+            confirmed by the business before publishing. Do not enter unverified claims.
+          </AdminNotice>
+        </FormSection>
+      </div>
+
+      <!-- About Us -->
+      <div id="about" class="scroll-mt-36">
+        <FormSection title="About Us" description="Content for the public About route.">
+          <AdminField
+            name="about-intro"
+            type="textarea"
+            label="Introduction"
+            required
+            requiredMessage="Enter the About introduction."
+            rows={3}
+            value={about.intro}
+          />
+          <AdminField
+            name="about-story"
+            type="textarea"
+            label="Company story / heritage"
+            rows={6}
+            value={about.story}
+            helper="Factual history and expertise require verification before publishing."
+          />
+          <div class="grid gap-5 sm:grid-cols-2">
+            <AdminField name="about-vision" type="textarea" label="Vision" rows={4} value={about.vision} />
+            <AdminField name="about-mission" type="textarea" label="Mission" rows={4} value={about.mission} />
+          </div>
+          <TagInput
+            name="about-industries"
+            label="Industries served"
+            values={about.industries}
+            placeholder="Add an industry"
+          />
+          <TagInput
+            name="about-pillars"
+            label="Core pillars"
+            values={about.pillars}
+            placeholder="Add a pillar"
+          />
+          <AdminField
+            name="about-process"
+            type="textarea"
+            label="Process / methodology"
+            rows={5}
+            value={about.process}
+          />
+          <AdminField name="about-cta" label="CTA copy" maxlength={80} counter value={about.ctaCopy} />
+          <AdminNotice tone="warning" title="Claims need owner verification">
+            All factual history, expertise, safety, compliance, and quality assertions require owner
+            verification. Section anchors remain code-controlled.
+          </AdminNotice>
+        </FormSection>
+      </div>
+
+      <!-- Contact -->
+      <div id="contact" class="scroll-mt-36">
+        <FormSection title="Contact page" description="Copy and locations for the public Contact route.">
+          <AdminField
+            name="contact-deskLabel"
+            label="Operational desk label"
+            maxlength={60}
+            counter
+            value={contact.deskLabel}
+          />
+          <AdminField
+            name="contact-deskDetails"
+            type="textarea"
+            label="Operational desk details"
+            rows={3}
+            value={contact.deskDetails}
+          />
+          <AdminField
+            name="contact-support"
+            type="textarea"
+            label="Support copy"
+            rows={3}
+            value={contact.supportCopy}
+          />
+          <AdminField
+            name="contact-visitor"
+            type="textarea"
+            label="Visitor information"
+            rows={3}
+            value={contact.visitorInfo}
+          />
+          <AdminNotice tone="info" title="Contact details are shared">
+            Address, phone, email, and hours come from <a class={`font-label-md text-label-md text-primary hover:underline ${focusRing}`} href="#business">Business Details</a
+            >. Contact actions only become links after verified values are supplied. Form field
+            semantics and submission behavior are code-controlled and are not edited here.
+          </AdminNotice>
+        </FormSection>
+      </div>
+
+      <!-- Business Details -->
+      <div id="business" class="scroll-mt-36">
+        <FormSection
+          title="Business Details"
+          description="Shared contact details shown in the footer on every route."
+        >
+          <AdminField
+            name="business-address"
+            label="Address"
+            required
+            requiredMessage="Enter the business address."
+            value={business.address}
+          />
+          <div class="grid gap-5 sm:grid-cols-2">
+            <AdminField
+              name="business-phone"
+              label="Phone"
+              required
+              requiredMessage="Enter the business phone number."
+              value={business.phone}
+              helper="Shown as a tap-to-call link on public surfaces."
+            />
+            <AdminField
+              name="business-email"
+              label="Email"
+              type="email"
+              required
+              requiredMessage="Enter the business email address."
+              value={business.email}
+              helper="Shown as a mail link on public surfaces."
+            />
+          </div>
+          <div class="grid gap-5 sm:grid-cols-2">
+            <AdminField
+              name="business-hours"
+              label="Business hours"
+              value={business.hours}
+              placeholder="e.g. Mon – Fri, 8:00 – 17:30"
+            />
+            <AdminField
+              name="business-whatsapp"
+              label="WhatsApp number"
+              optional
+              value={business.whatsapp}
+              placeholder="94771234567"
+              helper="Digits only, no + or spaces. Leave blank to hide the WhatsApp action."
+            />
+          </div>
+          <AdminNotice tone="warning" title="Confirm every value with the business">
+            Default placeholder values must never become active contact links. Verify each detail
+            before it is published.
+          </AdminNotice>
+        </FormSection>
+      </div>
+
+      <!-- SEO -->
+      <div id="seo" class="scroll-mt-36">
+        <FormSection
+          title="SEO metadata"
+          description="Per-route title and description, present in the generated document."
+        >
+          <div class="flex flex-wrap items-center gap-4">
+            <AssetThumb variant="missing" class="w-24" />
+            <div class="space-y-2">
+              <button
+                type="button"
+                disabled
+                title="Media selection is not connected."
+                class={`inline-flex h-10 items-center gap-2 rounded-control border-[1.5px] border-outline-variant px-4 font-label-md text-label-md text-on-surface-variant opacity-60 ${focusRing}`}
+              >
+                <span class="material-symbols-outlined text-[18px]" aria-hidden="true">perm_media</span>
+                Choose share image
+              </button>
+              <p class="font-body-sm text-body-sm text-secondary">
+                Optional social preview image. No asset is assigned in this preview.
+              </p>
+            </div>
+          </div>
+
+          {
+            seoRoutes.map((route) => (
+              <div class="space-y-5 rounded-control border border-outline-variant bg-surface-container-low p-4">
+                <p class="font-label-md text-label-md text-on-surface">
+                  {route.label} <span class="font-mono text-body-sm text-body-sm text-secondary">{route.path}</span>
+                </p>
+                <AdminField
+                  name={`seo-title-${route.key}`}
+                  label="SEO title"
+                  optional
+                  maxlength={60}
+                  counter
+                  placeholder={`Leave blank to use the ${route.label} page heading`}
+                />
+                <AdminField
+                  name={`seo-description-${route.key}`}
+                  type="textarea"
+                  label="Meta description"
+                  optional
+                  rows={2}
+                  maxlength={160}
+                  counter
+                  placeholder="Summarise the page for search results"
+                />
+              </div>
+            ))
+          }
+
+          <AdminNotice tone="warning" title="Do not invent metadata">
+            Metadata and social profiles must reflect real content. No metadata value or social
+            profile should be invented to fill these fields.
+          </AdminNotice>
+        </FormSection>
+      </div>
+
+      <div
+        data-editor-message
+        role="alert"
+        aria-live="assertive"
+        class="hidden rounded-control border border-outline-variant bg-surface-container p-4 font-body-sm text-body-sm text-on-surface"
+      >
+      </div>
+
+      <EditorActionBar savedNote="Not saved — a single publish updates all site content (no hybrid)." />
+    </form>
+
+    <p class="font-body-sm text-body-sm text-secondary">
+      Validation, counters, and unsaved-change tracking are local only. Leaving with unsaved changes
+      prompts a browser confirmation; no data leaves this page.
+    </p>
   </div>
 </AdminLayout>
+
+<script>
+  import '../../../lib/adminEditor';
+</script>
