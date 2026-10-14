@@ -1,19 +1,400 @@
 ---
-/** Admin — Projects route stub (Phase 11, A11.1). Built out in Step A11.5. */
+/**
+ * Admin — Projects list (Phase 11, Step A11.5).
+ *
+ * Mirrors the Services-list interaction and styling pattern so the controls
+ * feel familiar: search, type/state filters, status labels, row actions, and
+ * a responsive stacked-card treatment.
+ *
+ * All rows are illustrative placeholders. No project title, client, location,
+ * or year fact is invented; titles are generic and reference identifiers are
+ * synthetic. Thumbnails never render a real or hotlinked image — the missing
+ * image treatment is shown explicitly and preserves the slot dimensions.
+ */
 import AdminLayout from '../../../layouts/AdminLayout.astro';
 import AdminPageHeader from '../../../components/admin/AdminPageHeader.astro';
 import AdminNotice from '../../../components/admin/AdminNotice.astro';
+import StatusChip from '../../../components/admin/StatusChip.astro';
+import RowActions from '../../../components/admin/RowActions.astro';
+import EmptyState from '../../../components/admin/EmptyState.astro';
+import AssetThumb from '../../../components/admin/AssetThumb.astro';
+import Skeleton from '../../../components/admin/Skeleton.astro';
+
+type ProjectState = 'published' | 'draft' | 'archived';
+
+interface ProjectRecord {
+  id: string;
+  title: string;
+  type: string;
+  state: ProjectState;
+  updated: string;
+  image: boolean;
+}
+
+const projects: ProjectRecord[] = [
+  { id: 'project-01', title: 'Sample project 01', type: 'LV Distribution', state: 'published', updated: 'Sample · 12 Oct', image: true },
+  { id: 'project-02', title: 'Sample project 02', type: 'Industrial Grade', state: 'published', updated: 'Sample · 11 Oct', image: true },
+  { id: 'project-03', title: 'Sample project 03', type: 'Switchgear & Enclosures', state: 'draft', updated: 'Sample · 10 Oct', image: false },
+  { id: 'project-04', title: 'Sample project 04', type: 'Containment & Pulling', state: 'published', updated: 'Sample · 09 Oct', image: true },
+  { id: 'project-05', title: 'Sample project 05', type: 'ELV & Automation', state: 'draft', updated: 'Sample · 08 Oct', image: false },
+  { id: 'project-06', title: 'Sample project 06', type: 'Surge & Transient Defense', state: 'archived', updated: 'Sample · 02 Oct', image: true },
+];
+
+const types = [...new Set(projects.map((p) => p.type))];
+
+const chipStatus: Record<ProjectState, 'published' | 'draft' | 'archived'> = {
+  published: 'published',
+  draft: 'draft',
+  archived: 'archived',
+};
+
+/** Archive and restore are mutually exclusive, matching the intended semantics. */
+const actionsFor = (state: ProjectState) => [
+  { label: 'Edit project', icon: 'edit', disabled: true, reason: 'The editor screen arrives in a later step.' },
+  { label: 'Preview draft', icon: 'visibility', disabled: true, reason: 'Draft preview is not connected.' },
+  { label: 'Publish', icon: 'rocket_launch', disabled: true, reason: 'Publishing is not connected.' },
+  state === 'archived'
+    ? { label: 'Restore', icon: 'unarchive', disabled: true, reason: 'Restoring is not connected.' }
+    : { label: 'Archive', icon: 'inventory_2', disabled: true, reason: 'Archiving is not connected.', danger: true },
+];
+
+const views = [
+  { key: 'records', label: 'Illustrative records' },
+  { key: 'empty', label: 'No records' },
+  { key: 'loading', label: 'Loading' },
+  { key: 'error', label: 'Couldn’t load' },
+];
+
+const focusRing =
+  'focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-container';
+
+const controlCls =
+  'h-12 w-full rounded-control border-[1.5px] border-outline-variant bg-surface-container-lowest px-3 font-body-md text-body-md text-on-surface placeholder:text-secondary/60 focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-container';
+
+const thCls = 'px-4 py-3 text-left font-label-md text-label-md text-secondary whitespace-nowrap';
 ---
 
 <AdminLayout title="Projects" pageLabel="Projects">
-  <div class="space-y-6">
+  <div class="space-y-6" data-projects-root>
     <AdminPageHeader
       title="Projects"
       description="Manage the portfolio records shown on the public site."
-    />
-    <AdminNotice tone="unavailable" title="Not connected">
-      The projects table, thumbnail fallback, filters, and archive actions are implemented in a
-      later step. No live records are loaded here yet.
+    >
+      <Fragment slot="actions">
+        <button
+          type="button"
+          disabled
+          title="Adding projects is unavailable until content storage is connected."
+          class={`inline-flex h-10 items-center gap-2 rounded-control bg-primary-container px-5 font-label-md text-label-md text-on-primary opacity-60 ${focusRing}`}
+        >
+          <span class="material-symbols-outlined text-[18px]" aria-hidden="true">add</span>
+          Add project
+        </button>
+      </Fragment>
+    </AdminPageHeader>
+
+    <AdminNotice tone="unavailable" title="Illustrative records — not connected">
+      These rows are sample data for reviewing the layout. Titles, references, and thumbnails are
+      placeholders; no client, location, or year information is shown, and no row action changes
+      published content.
     </AdminNotice>
+
+    <!-- State preview (frontend only) -->
+    <div
+      class="flex flex-col gap-3 rounded-control border border-outline-variant bg-surface-container-low px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
+    >
+      <div class="flex flex-wrap items-center gap-2">
+        <span id="prj-view-label" class="font-label-sm text-label-sm font-semibold text-secondary">
+          State preview
+        </span>
+        <div role="group" aria-labelledby="prj-view-label" class="flex flex-wrap gap-1.5">
+          {
+            views.map((v) => (
+              <button
+                type="button"
+                data-prj-view-btn={v.key}
+                aria-pressed={v.key === 'records' ? 'true' : 'false'}
+                class="rounded-chip border border-outline-variant bg-surface-container-lowest px-2.5 py-1 font-label-sm text-label-sm text-on-surface-variant hover:border-outline aria-pressed:border-primary-container aria-pressed:bg-primary-fixed aria-pressed:text-on-primary-fixed"
+              >
+                {v.label}
+              </button>
+            ))
+          }
+        </div>
+      </div>
+      <p class="font-body-sm text-body-sm text-secondary">Local layout preview — nothing is fetched.</p>
+    </div>
+
+    <section class="rounded-card border border-outline-variant bg-surface-container-lowest shadow-card">
+      <!-- Records view -->
+      <div data-prj-view="records">
+        <!-- Toolbar -->
+        <div class="border-b border-outline-variant p-4 sm:p-5">
+          <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <div class="space-y-1.5">
+              <label for="prj-search" class="font-label-sm text-label-sm font-semibold text-on-surface">
+                Search projects
+              </label>
+              <input
+                id="prj-search"
+                type="search"
+                placeholder="Title or reference"
+                autocomplete="off"
+                class={controlCls}
+              />
+            </div>
+            <div class="space-y-1.5">
+              <label for="prj-type" class="font-label-sm text-label-sm font-semibold text-on-surface">
+                Type
+              </label>
+              <select id="prj-type" class={controlCls}>
+                <option value="all">All types</option>
+                {types.map((t) => <option value={t}>{t}</option>)}
+              </select>
+            </div>
+            <div class="space-y-1.5">
+              <label for="prj-state" class="font-label-sm text-label-sm font-semibold text-on-surface">
+                Publication state
+              </label>
+              <select id="prj-state" class={controlCls}>
+                <option value="all">All states</option>
+                <option value="published">Published</option>
+                <option value="draft">Draft</option>
+                <option value="archived">Archived</option>
+              </select>
+            </div>
+          </div>
+          <div class="mt-3 flex flex-wrap items-center justify-between gap-3">
+            <p class="font-body-sm text-body-sm text-secondary" aria-live="polite">
+              Showing <span id="prj-count" class="font-label-md text-label-md text-on-surface">{projects.length}</span>
+              of <span class="font-label-md text-label-md text-on-surface">{projects.length}</span> projects
+            </p>
+            <button
+              type="button"
+              data-prj-clear
+              class={`inline-flex h-10 items-center gap-2 rounded-control border-[1.5px] border-outline-variant px-4 font-label-md text-label-md text-on-surface hover:bg-surface-container-high ${focusRing}`}
+            >
+              <span class="material-symbols-outlined text-[18px]" aria-hidden="true">filter_alt_off</span>
+              Clear filters
+            </button>
+          </div>
+        </div>
+
+        <!-- Desktop table -->
+        <div class="hidden md:block">
+          <table class="w-full border-collapse">
+            <caption class="sr-only">
+              Projects, with thumbnail, type, publication state, last updated, and row actions.
+            </caption>
+            <thead>
+              <tr class="border-b border-outline-variant bg-surface-container-low">
+                <th scope="col" class={`${thCls} w-20`}>Image</th>
+                <th scope="col" class={thCls}>Project</th>
+                <th scope="col" class={thCls}>Type</th>
+                <th scope="col" class={thCls}>State</th>
+                <th scope="col" class={thCls}>Last updated</th>
+                <th scope="col" class={`${thCls} text-right`}>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {
+                projects.map((p) => (
+                  <tr
+                    data-project-row
+                    data-id={p.id}
+                    data-name={p.title.toLowerCase()}
+                    data-type={p.type}
+                    data-state={p.state}
+                    class="border-b border-outline-variant last:border-b-0 hover:bg-surface-container-low"
+                  >
+                    <td class="px-4 py-3 align-middle">
+                      <AssetThumb variant={p.image ? 'assigned' : 'missing'} />
+                    </td>
+                    <td class="px-4 py-3 align-middle">
+                      <p class="font-title-md text-title-md text-on-surface">{p.title}</p>
+                      <p class="font-mono text-body-sm text-body-sm text-secondary">{p.id}</p>
+                      {!p.image && (
+                        <p class="font-body-sm text-body-sm text-primary-container">Image unavailable</p>
+                      )}
+                    </td>
+                    <td class="px-4 py-3 align-middle font-body-md text-body-md text-secondary">
+                      {p.type}
+                    </td>
+                    <td class="px-4 py-3 align-middle">
+                      <StatusChip status={chipStatus[p.state]} />
+                    </td>
+                    <td class="px-4 py-3 align-middle font-body-sm text-body-sm text-secondary whitespace-nowrap">
+                      {p.updated}
+                    </td>
+                    <td class="px-4 py-3 align-middle text-right">
+                      <RowActions actions={actionsFor(p.state)} label={`Actions for ${p.title}`} />
+                    </td>
+                  </tr>
+                ))
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Mobile stacked cards -->
+        <ul class="divide-y divide-outline-variant md:hidden">
+          {
+            projects.map((p) => (
+              <li
+                data-project-card
+                data-id={p.id}
+                data-name={p.title.toLowerCase()}
+                data-type={p.type}
+                data-state={p.state}
+                class="space-y-3 p-4"
+              >
+                <div class="flex items-start gap-3">
+                  <AssetThumb variant={p.image ? 'assigned' : 'missing'} />
+                  <div class="min-w-0 flex-1">
+                    <div class="flex items-start justify-between gap-3">
+                      <div class="min-w-0">
+                        <p class="font-title-md text-title-md text-on-surface">{p.title}</p>
+                        <p class="font-mono text-body-sm text-body-sm text-secondary">{p.id}</p>
+                      </div>
+                      <StatusChip status={chipStatus[p.state]} />
+                    </div>
+                    <p class="mt-1 font-body-sm text-body-sm text-secondary">{p.type}</p>
+                    {!p.image && (
+                      <p class="font-body-sm text-body-sm text-primary-container">Image unavailable</p>
+                    )}
+                  </div>
+                </div>
+                <div class="flex items-center justify-between gap-3">
+                  <p class="font-body-sm text-body-sm text-secondary">Updated {p.updated}</p>
+                  <RowActions actions={actionsFor(p.state)} label={`Actions for ${p.title}`} />
+                </div>
+              </li>
+            ))
+          }
+        </ul>
+
+        <!-- No search results -->
+        <div id="prj-noresults" hidden>
+          <EmptyState icon="search_off" title="No projects match your filters">
+            <p>Adjust the search or clear the filters to see all illustrative records.</p>
+            <button
+              type="button"
+              data-prj-clear
+              class={`mt-3 inline-flex h-10 items-center gap-2 rounded-control border-[1.5px] border-outline-variant px-4 font-label-md text-label-md text-on-surface hover:bg-surface-container-high ${focusRing}`}
+            >
+              <span class="material-symbols-outlined text-[18px]" aria-hidden="true">filter_alt_off</span>
+              Clear filters
+            </button>
+          </EmptyState>
+        </div>
+      </div>
+
+      <!-- Empty view -->
+      <div data-prj-view="empty" hidden>
+        <EmptyState icon="engineering" title="No projects yet">
+          <p>Projects will be listed here once content storage is connected. This state is illustrative.</p>
+        </EmptyState>
+      </div>
+
+      <!-- Loading view -->
+      <div data-prj-view="loading" hidden class="p-5">
+        <p class="sr-only" role="status">Loading projects…</p>
+        <div class="space-y-4">
+          {
+            Array.from({ length: 5 }).map(() => (
+              <div class="flex items-center gap-4">
+                <Skeleton class="h-12 w-16 rounded-control" />
+                <Skeleton class="h-4 w-1/4" />
+                <Skeleton class="h-6 w-24 rounded-chip" />
+                <Skeleton class="ml-auto h-8 w-28" />
+              </div>
+            ))
+          }
+        </div>
+      </div>
+
+      <!-- Error view -->
+      <div data-prj-view="error" hidden class="p-5">
+        <AdminNotice tone="error" title="Couldn’t load projects">
+          The content service did not respond. This is a visual state preview — no request was made.
+        </AdminNotice>
+      </div>
+    </section>
+
+    <p class="font-body-sm text-body-sm text-secondary">
+      Row actions are deliberately unavailable: this phase is frontend only and no content is
+      persisted or published.
+    </p>
   </div>
 </AdminLayout>
+
+<script>
+  const root = document.querySelector<HTMLElement>('[data-projects-root]');
+
+  if (root) {
+    const search = root.querySelector<HTMLInputElement>('#prj-search');
+    const type = root.querySelector<HTMLSelectElement>('#prj-type');
+    const state = root.querySelector<HTMLSelectElement>('#prj-state');
+    const count = root.querySelector<HTMLElement>('#prj-count');
+    const noResults = root.querySelector<HTMLElement>('#prj-noresults');
+    const rows = Array.from(root.querySelectorAll<HTMLElement>('[data-project-row]'));
+    const cards = Array.from(root.querySelectorAll<HTMLElement>('[data-project-card]'));
+    const total = rows.length;
+
+    const matches = (el: HTMLElement, q: string, ty: string, st: string) => {
+      const name = el.dataset.name ?? '';
+      const id = (el.dataset.id ?? '').toLowerCase();
+      return (
+        (!q || name.includes(q) || id.includes(q)) &&
+        (ty === 'all' || el.dataset.type === ty) &&
+        (st === 'all' || el.dataset.state === st)
+      );
+    };
+
+    const applyFilters = () => {
+      const q = (search?.value ?? '').trim().toLowerCase();
+      const ty = type?.value ?? 'all';
+      const st = state?.value ?? 'all';
+
+      let visible = 0;
+      rows.forEach((row) => {
+        const show = matches(row, q, ty, st);
+        row.hidden = !show;
+        if (show) visible += 1;
+      });
+      const visibleIds = new Set(rows.filter((r) => !r.hidden).map((r) => r.dataset.id));
+      cards.forEach((card) => {
+        card.hidden = !visibleIds.has(card.dataset.id);
+      });
+
+      if (count) count.textContent = String(visible);
+      if (noResults) noResults.hidden = !(visible === 0 && total > 0);
+    };
+
+    const clearFilters = () => {
+      if (search) search.value = '';
+      if (type) type.value = 'all';
+      if (state) state.value = 'all';
+      applyFilters();
+    };
+
+    search?.addEventListener('input', applyFilters);
+    type?.addEventListener('change', applyFilters);
+    state?.addEventListener('change', applyFilters);
+    root.querySelectorAll('[data-prj-clear]').forEach((btn) =>
+      btn.addEventListener('click', clearFilters)
+    );
+
+    const viewButtons = Array.from(root.querySelectorAll<HTMLButtonElement>('[data-prj-view-btn]'));
+    const panels = Array.from(root.querySelectorAll<HTMLElement>('[data-prj-view]'));
+    viewButtons.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const key = btn.dataset.prjViewBtn;
+        viewButtons.forEach((b) => b.setAttribute('aria-pressed', String(b === btn)));
+        panels.forEach((panel) => {
+          panel.hidden = panel.dataset.prjView !== key;
+        });
+      });
+    });
+  }
+</script>

@@ -1,0 +1,34 @@
+---
+/**
+ * Admin asset thumbnail (Phase 11, A11.5).
+ *
+ * A fixed-aspect placeholder that preserves card/table dimensions whether or
+ * not an image is available. No real or hotlinked image is ever rendered on
+ * these static admin routes; `assigned` marks a slot whose asset has not been
+ * sourced, and `missing` is the explicit unavailable treatment. The element
+ * carries an accessible label so the state is not conveyed by colour alone.
+ */
+interface Props {
+  variant?: 'assigned' | 'missing';
+  class?: string;
+}
+
+const { variant = 'assigned', class: className } = Astro.props;
+
+const isMissing = variant === 'missing';
+const label = isMissing ? 'Image unavailable' : 'Illustrative image placeholder';
+---
+
+<span
+  role="img"
+  aria-label={label}
+  class={`inline-flex aspect-[4/3] w-16 shrink-0 items-center justify-center rounded-control border ${
+    isMissing
+      ? 'border-dashed border-outline bg-surface-container-low'
+      : 'border-outline-variant bg-surface-container-high'
+  } ${className ?? ''}`}
+>
+  <span class="material-symbols-outlined text-[20px] text-secondary" aria-hidden="true">
+    {isMissing ? 'image_not_supported' : 'image'}
+  </span>
+</span>
