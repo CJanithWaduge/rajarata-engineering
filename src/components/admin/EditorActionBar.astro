@@ -17,6 +17,14 @@ const { savedNote = 'Not saved — this preview does not persist changes.', clas
 
 const focusRing =
   'focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-container';
+
+/**
+ * "Preview draft" navigates to the preview frame. The return destination is
+ * derived from this editor's own path so the preview can offer an accurate
+ * "Return to editor" link; the preview validates it against a fixed allowlist,
+ * keeping destinations code-controlled rather than free-form.
+ */
+const previewHref = `/admin/preview?from=${encodeURIComponent(Astro.url.pathname)}`;
 ---
 
 <div
@@ -49,6 +57,14 @@ const focusRing =
         <span class="material-symbols-outlined text-[18px]" aria-hidden="true">undo</span>
         Discard changes
       </button>
+
+      <a
+        href={previewHref}
+        class={`inline-flex h-10 items-center gap-2 rounded-control border-[1.5px] border-outline-variant px-4 font-label-md text-label-md text-on-surface hover:bg-surface-container-high ${focusRing}`}
+      >
+        <span class="material-symbols-outlined text-[18px]" aria-hidden="true">visibility</span>
+        Preview draft
+      </a>
 
       <button
         type="button"
