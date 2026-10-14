@@ -67,15 +67,6 @@ const record = {
           <span class="material-symbols-outlined text-[18px]" aria-hidden="true">arrow_back</span>
           Back to services
         </a>
-        <button
-          type="button"
-          disabled
-          title="Draft preview is not connected."
-          class={`inline-flex h-10 items-center gap-2 rounded-control border-[1.5px] border-outline-variant px-4 font-label-md text-label-md text-on-surface-variant opacity-60 ${focusRing}`}
-        >
-          <span class="material-symbols-outlined text-[18px]" aria-hidden="true">visibility</span>
-          Preview draft
-        </button>
       </Fragment>
     </AdminPageHeader>
 
@@ -176,17 +167,27 @@ const record = {
         <div class="flex flex-wrap items-center gap-4">
           <AssetThumb variant="missing" class="w-24" />
           <div class="space-y-2">
-            <button
-              type="button"
-              disabled
-              title="Media selection is not connected."
-              class={`inline-flex h-10 items-center gap-2 rounded-control border-[1.5px] border-outline-variant px-4 font-label-md text-label-md text-on-surface-variant opacity-60 ${focusRing}`}
-            >
-              <span class="material-symbols-outlined text-[18px]" aria-hidden="true">perm_media</span>
-              Choose image
-            </button>
+            <div class="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                disabled
+                title="Assigning an asset to this field is not connected."
+                class={`inline-flex h-10 items-center gap-2 rounded-control border-[1.5px] border-outline-variant px-4 font-label-md text-label-md text-on-surface-variant opacity-60 ${focusRing}`}
+              >
+                <span class="material-symbols-outlined text-[18px]" aria-hidden="true">perm_media</span>
+                Choose image
+              </button>
+              <a
+                href="/admin/media"
+                class={`inline-flex h-10 items-center gap-2 rounded-control border-[1.5px] border-outline-variant px-4 font-label-md text-label-md text-on-surface hover:bg-surface-container-high ${focusRing}`}
+              >
+                <span class="material-symbols-outlined text-[18px]" aria-hidden="true">folder_open</span>
+                Open media library
+              </a>
+            </div>
             <p class="font-body-sm text-body-sm text-secondary">
-              No asset is assigned in this preview. The media library arrives in a later step.
+              No asset is assigned in this preview. The media library is browsable, but selecting an
+              asset for this field is not connected yet.
             </p>
           </div>
         </div>

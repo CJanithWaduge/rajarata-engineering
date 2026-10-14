@@ -41,10 +41,10 @@ const services: ServiceRecord[] = [
 
 const categories = [...new Set(services.map((s) => s.category))];
 
-/** Edit navigates to the editor; the remaining actions are not implemented yet. */
+/** Edit and preview are functional navigation; publish and archive are not implemented yet. */
 const actionsFor = (s: { id: string }) => [
   { label: 'Edit service', icon: 'edit', href: `/admin/services/edit?id=${s.id}` },
-  { label: 'Preview draft', icon: 'visibility', disabled: true, reason: 'Draft preview is not connected.' },
+  { label: 'Preview draft', icon: 'visibility', href: '/admin/preview?from=%2Fadmin%2Fservices%2Fedit' },
   { label: 'Publish', icon: 'rocket_launch', disabled: true, reason: 'Publishing is not connected.' },
   { label: 'Archive', icon: 'inventory_2', disabled: true, reason: 'Archiving is not connected.', danger: true },
 ];
@@ -93,7 +93,8 @@ const thCls =
 
     <AdminNotice tone="unavailable" title="Illustrative records — not connected">
       These rows are sample data for reviewing the layout. Nothing here is read from or written to
-      the public site, and edit, preview, publish, and archive are unavailable.
+      the public site. Edit and draft preview open the corresponding screens; publish and archive
+      are unavailable.
     </AdminNotice>
 
     <!-- State preview (frontend only) -->
@@ -111,7 +112,7 @@ const thCls =
                 type="button"
                 data-svc-view-btn={v.key}
                 aria-pressed={v.key === 'records' ? 'true' : 'false'}
-                class="rounded-chip border border-outline-variant bg-surface-container-lowest px-2.5 py-1 font-label-sm text-label-sm text-on-surface-variant hover:border-outline aria-pressed:border-primary-container aria-pressed:bg-primary-fixed aria-pressed:text-on-primary-fixed"
+                class="inline-flex min-h-10 items-center rounded-chip border border-outline-variant bg-surface-container-lowest px-2.5 py-1 font-label-sm text-label-sm text-on-surface-variant hover:border-outline aria-pressed:border-primary-container aria-pressed:bg-primary-fixed aria-pressed:text-on-primary-fixed focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-container sm:min-h-9"
               >
                 {v.label}
               </button>

@@ -69,7 +69,7 @@ const focusRing =
                 type="button"
                 data-dash-state={s.key}
                 aria-pressed={s.key === 'unavailable' ? 'true' : 'false'}
-                class="rounded-chip border border-outline-variant bg-surface-container-lowest px-2.5 py-1 font-label-sm text-label-sm text-on-surface-variant hover:border-outline aria-pressed:border-primary-container aria-pressed:bg-primary-fixed aria-pressed:text-on-primary-fixed"
+                class="inline-flex min-h-10 items-center rounded-chip border border-outline-variant bg-surface-container-lowest px-2.5 py-1 font-label-sm text-label-sm text-on-surface-variant hover:border-outline aria-pressed:border-primary-container aria-pressed:bg-primary-fixed aria-pressed:text-on-primary-fixed focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-container sm:min-h-9"
               >
                 {s.label}
               </button>
@@ -275,24 +275,20 @@ const focusRing =
           Typical publication takes 2–5 minutes. No live status is reported here.
         </p>
         <div class="flex flex-col gap-2 pt-1">
-          <button
-            type="button"
-            disabled
-            title="Preview requires authenticated draft delivery."
-            class="inline-flex h-10 items-center justify-center gap-2 rounded-control border-[1.5px] border-outline-variant px-4 font-label-md text-label-md text-on-surface-variant opacity-60"
+          <a
+            href="/admin/preview"
+            class="inline-flex h-10 items-center justify-center gap-2 rounded-control border-[1.5px] border-outline-variant px-4 font-label-md text-label-md text-on-surface hover:bg-surface-container-high focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-container"
           >
             <span class="material-symbols-outlined text-[18px]" aria-hidden="true">visibility</span>
             Preview draft
-          </button>
-          <button
-            type="button"
-            disabled
-            title="Rollback requires a connected publishing pipeline."
-            class="inline-flex h-10 items-center justify-center gap-2 rounded-control border-[1.5px] border-outline-variant px-4 font-label-md text-label-md text-on-surface-variant opacity-60"
+          </a>
+          <a
+            href="/admin/history"
+            class="inline-flex h-10 items-center justify-center gap-2 rounded-control border-[1.5px] border-outline-variant px-4 font-label-md text-label-md text-on-surface hover:bg-surface-container-high focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-container"
           >
             <span class="material-symbols-outlined text-[18px]" aria-hidden="true">history</span>
             Roll back
-          </button>
+          </a>
         </div>
       </div>
     </Panel>

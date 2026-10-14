@@ -48,10 +48,10 @@ const chipStatus: Record<ProjectState, 'published' | 'draft' | 'archived'> = {
   archived: 'archived',
 };
 
-/** Archive and restore are mutually exclusive, matching the intended semantics. Edit navigates to the editor. */
+/** Archive and restore are mutually exclusive, matching the intended semantics. Edit and preview are functional navigation. */
 const actionsFor = (p: { id: string; state: ProjectState }) => [
   { label: 'Edit project', icon: 'edit', href: `/admin/projects/edit?id=${p.id}` },
-  { label: 'Preview draft', icon: 'visibility', disabled: true, reason: 'Draft preview is not connected.' },
+  { label: 'Preview draft', icon: 'visibility', href: '/admin/preview?from=%2Fadmin%2Fprojects%2Fedit' },
   { label: 'Publish', icon: 'rocket_launch', disabled: true, reason: 'Publishing is not connected.' },
   p.state === 'archived'
     ? { label: 'Restore', icon: 'unarchive', disabled: true, reason: 'Restoring is not connected.' }
@@ -114,7 +114,7 @@ const thCls = 'px-4 py-3 text-left font-label-md text-label-md text-secondary wh
                 type="button"
                 data-prj-view-btn={v.key}
                 aria-pressed={v.key === 'records' ? 'true' : 'false'}
-                class="rounded-chip border border-outline-variant bg-surface-container-lowest px-2.5 py-1 font-label-sm text-label-sm text-on-surface-variant hover:border-outline aria-pressed:border-primary-container aria-pressed:bg-primary-fixed aria-pressed:text-on-primary-fixed"
+                class="inline-flex min-h-10 items-center rounded-chip border border-outline-variant bg-surface-container-lowest px-2.5 py-1 font-label-sm text-label-sm text-on-surface-variant hover:border-outline aria-pressed:border-primary-container aria-pressed:bg-primary-fixed aria-pressed:text-on-primary-fixed focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-container sm:min-h-9"
               >
                 {v.label}
               </button>

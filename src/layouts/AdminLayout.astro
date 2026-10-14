@@ -179,7 +179,7 @@ const focusRing =
       data-state="closed"
       aria-hidden="true"
       inert
-      class="fixed inset-0 z-40 bg-inverse-surface/60 transition-opacity duration-200 opacity-0 pointer-events-none data-[state=open]:opacity-100 data-[state=open]:pointer-events-auto lg:hidden"
+      class="fixed inset-0 z-40 bg-inverse-surface/60 transition-opacity duration-200 opacity-0 pointer-events-none data-[state=open]:opacity-100 data-[state=open]:pointer-events-auto motion-reduce:transition-none lg:hidden"
     >
     </div>
 
@@ -192,7 +192,7 @@ const focusRing =
       role="dialog"
       aria-modal="true"
       aria-label="Admin navigation"
-      class="fixed inset-y-0 left-0 z-50 flex w-[280px] max-w-[85vw] flex-col bg-inverse-surface transition-transform duration-200 ease-[cubic-bezier(0.2,0,0,1)] -translate-x-full lg:hidden data-[state=open]:translate-x-0"
+      class="fixed inset-y-0 left-0 z-50 flex w-[280px] max-w-[85vw] flex-col bg-inverse-surface transition-transform duration-200 ease-[cubic-bezier(0.2,0,0,1)] -translate-x-full lg:hidden data-[state=open]:translate-x-0 motion-reduce:transition-none"
     >
       <div class="flex items-center justify-end px-3 pt-3">
         <button
