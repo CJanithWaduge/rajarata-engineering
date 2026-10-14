@@ -1,0 +1,23 @@
+---
+/**
+ * Admin empty state (Phase 11, A11.3).
+ *
+ * Centred icon + title + optional guidance, used when a region has no
+ * records. The copy guides the administrator without making business claims.
+ */
+interface Props {
+  icon?: string;
+  title: string;
+  class?: string;
+}
+
+const { icon = 'inbox', title, class: className } = Astro.props;
+---
+
+<div class={`flex flex-col items-center gap-2 py-8 text-center ${className ?? ''}`}>
+  <span class="material-symbols-outlined text-[28px] text-secondary" aria-hidden="true">{icon}</span>
+  <p class="font-title-md text-title-md text-on-surface">{title}</p>
+  <div class="max-w-md font-body-sm text-body-sm text-secondary">
+    <slot />
+  </div>
+</div>

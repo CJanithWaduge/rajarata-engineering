@@ -1,0 +1,68 @@
+---
+/**
+ * Dashboard overview grid (Phase 11, A11.3).
+ *
+ * Four compact count cards. In every state except the explicitly labelled
+ * illustrative sample, values are placeholders ("—" / "0") and never
+ * fabricated business metrics, per DESIGN.md.
+ */
+import StatusChip from './StatusChip.astro';
+import Skeleton from './Skeleton.astro';
+
+interface Props {
+  state: 'unavailable' | 'loading' | 'empty' | 'sample' | 'error';
+}
+
+const { state } = Astro.props;
+
+const cards = [
+  { key: 'services', label: 'Published services', icon: 'electrical_services' },
+  { key: 'projects', label: 'Published projects', icon: 'engineering' },
+  { key: 'drafts', label: 'Drafts awaiting review', icon: 'edit_note' },
+  { key: 'media', label: 'Media missing alt text', icon: 'image_not_supported' },
+];
+
+const values: Record<string, Record<string, string>> = {
+  unavailable: { services: '—', projects: '—', drafts: '—', media: '—' },
+  empty: { services: '0', projects: '0', drafts: '0', media: '0' },
+  sample: { services: '8', projects: '12', drafts: '3', media: '2' },
+  error: { services: '—', projects: '—', drafts: '—', media: '—' },
+};
+
+const subs: Record<string, string> = {
+  unavailable: 'Not connected',
+  empty: 'No records yet',
+  error: 'Unavailable',
+};
+---
+
+<div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+  {
+    cards.map((card) => (
+      <div class="rounded-card border border-outline-variant bg-surface-container-lowest p-4 shadow-card">
+        <div class="flex items-start justify-between gap-2">
+          <span class="font-label-md text-label-md text-secondary">{card.label}</span>
+          <span class="material-symbols-outlined text-[20px] text-secondary" aria-hidden="true">
+            {card.icon}
+          </span>
+        </div>
+        <div class="mt-3">
+          {state === 'loading' ? (
+            <Skeleton class="h-8 w-16" />
+          ) : (
+            <p class="font-headline-md text-headline-md text-on-surface">
+              {values[state][card.key]}
+            </p>
+          )}
+        </div>
+        {state === 'sample' ? (
+          <div class="mt-2">
+            <StatusChip status="info" label="Illustrative" />
+          </div>
+        ) : (
+          <p class="mt-1 font-body-sm text-body-sm text-secondary">{subs[state] ?? ''}</p>
+        )}
+      </div>
+    ))
+  }
+</div>

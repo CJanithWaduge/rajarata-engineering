@@ -1,0 +1,20 @@
+---
+/**
+ * Admin skeleton bar (Phase 11, A11.3).
+ *
+ * A static neutral placeholder for loading states. It deliberately does not
+ * animate — DESIGN.md asks to avoid unnecessary motion and pulsing
+ * indicators — so the surrounding region carries a visible "Loading" label
+ * and this stays `aria-hidden`.
+ */
+interface Props {
+  /** Tailwind sizing utilities, e.g. `h-4 w-32`. */
+  class?: string;
+}
+
+const { class: className } = Astro.props;
+---
+
+<span
+  class={`block rounded-chip bg-surface-container-high ${className ?? 'h-4 w-full'}`}
+  aria-hidden="true"></span>

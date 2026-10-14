@@ -1,0 +1,42 @@
+---
+/**
+ * Admin panel (Phase 11, A11.3).
+ *
+ * A titled white card section: 18px radius, hairline border, shallow shadow,
+ * with a header rule separating the title area from the body. Used to group
+ * dashboard and list content so screens do not read as one undifferentiated
+ * block (DESIGN.md).
+ */
+interface Props {
+  title: string;
+  description?: string;
+  /** Heading level for the section title; keeps heading order correct. */
+  as?: 'h2' | 'h3';
+  class?: string;
+}
+
+const { title, description, as: Heading = 'h2', class: className } = Astro.props;
+---
+
+<section
+  class={`overflow-hidden rounded-card border border-outline-variant bg-surface-container-lowest shadow-card ${className ?? ''}`}
+>
+  <header
+    class="flex flex-col gap-2 border-b border-outline-variant px-5 py-4 sm:flex-row sm:items-start sm:justify-between"
+  >
+    <div class="min-w-0">
+      <Heading class="font-title-md text-title-md text-on-surface">{title}</Heading>
+      {
+        description && (
+          <p class="mt-0.5 font-body-sm text-body-sm text-secondary">{description}</p>
+        )
+      }
+    </div>
+    <div class="flex shrink-0 items-center gap-2">
+      <slot name="actions" />
+    </div>
+  </header>
+  <div class="p-5">
+    <slot />
+  </div>
+</section>

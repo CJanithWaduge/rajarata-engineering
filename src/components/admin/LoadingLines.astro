@@ -1,0 +1,20 @@
+---
+/**
+ * Admin loading lines (Phase 11, A11.3).
+ *
+ * Purely visual skeleton rows. Not a live region — the surrounding loading
+ * template announces "Loading" once, so multiple regions do not each fire an
+ * announcement.
+ */
+import Skeleton from './Skeleton.astro';
+
+interface Props {
+  lines?: number;
+}
+
+const { lines = 3 } = Astro.props;
+---
+
+<div class="space-y-3" aria-hidden="true">
+  {Array.from({ length: lines }).map((_, i) => <Skeleton class={`h-4 ${i % 2 === 1 ? 'w-2/3' : 'w-full'}`} />)}
+</div>

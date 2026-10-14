@@ -1,76 +1,355 @@
 ---
 /**
- * Admin — route frame (Phase 11, Step A11.1).
+ * Admin dashboard (Phase 11, Step A11.3).
  *
- * Establishes `/admin` and proves the shell: navigation rail, context bar,
- * content canvas, and status presentation. The real dashboard overview is
- * built in Step A11.3; for now this renders the frame with an explicit
- * frontend-only notice so nothing reads as live content.
+ * Answers "what needs attention, and what is live?" without pretending to
+ * fetch anything. The default state is explicitly not-connected; a clearly
+ * labelled "visual state preview" switches the illustrative layout between
+ * loading, empty, sample, and failure so every state is designed and
+ * reviewable. No counts or release details are presented as real business
+ * data.
  */
 import AdminLayout from '../../layouts/AdminLayout.astro';
 import AdminPageHeader from '../../components/admin/AdminPageHeader.astro';
 import AdminNotice from '../../components/admin/AdminNotice.astro';
+import Panel from '../../components/admin/Panel.astro';
+import OverviewGrid from '../../components/admin/OverviewGrid.astro';
+import EmptyState from '../../components/admin/EmptyState.astro';
+import LoadingLines from '../../components/admin/LoadingLines.astro';
 import StatusChip from '../../components/admin/StatusChip.astro';
+
+const states = [
+  { key: 'unavailable', label: 'Not connected' },
+  { key: 'loading', label: 'Loading' },
+  { key: 'empty', label: 'Empty' },
+  { key: 'sample', label: 'Illustrative data' },
+  { key: 'error', label: 'Failure' },
+];
+
+const focusRing =
+  'focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-container';
 ---
 
 <AdminLayout title="Dashboard" pageLabel="Dashboard">
   <div class="space-y-6">
     <AdminPageHeader
-      title="Admin console"
-      description="Manage the approved public-site content, review a draft, and publish a release."
-    />
+      title="Dashboard"
+      description="Review what needs attention and what is currently live."
+    >
+      <Fragment slot="actions">
+        <button
+          type="button"
+          disabled
+          title="Publishing is unavailable until the deployment pipeline is connected."
+          class={`inline-flex h-10 items-center gap-2 rounded-control bg-primary-container px-5 font-label-md text-label-md text-on-primary opacity-60 ${focusRing}`}
+        >
+          <span class="material-symbols-outlined text-[18px]" aria-hidden="true">rocket_launch</span>
+          Publish release
+        </button>
+      </Fragment>
+    </AdminPageHeader>
 
     <AdminNotice tone="unavailable" title="Frontend preview — backend not connected">
-      This console shows the approved admin layout and states. Authentication, content storage,
-      media uploads, draft preview delivery, and publishing are not connected yet, so no control
-      here saves or publishes real content.
+      Nothing on this console is loaded, saved, or published. Overview counts, activity, and
+      release details stay unavailable until the CMS backend exists.
     </AdminNotice>
 
-    <section
-      aria-labelledby="frame-heading"
-      class="rounded-card border border-outline-variant bg-surface-container-lowest p-6 shadow-card"
+    <!-- Visual state preview (frontend only) -->
+    <div
+      class="flex flex-col gap-3 rounded-control border border-outline-variant bg-surface-container-low px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
     >
-      <h2 id="frame-heading" class="font-headline-sm text-headline-sm text-on-surface">
-        Shell frame
-      </h2>
-      <p class="mt-1 font-body-md text-body-md text-secondary">
-        Responsive navigation, page context, administrator identity, and status presentation are
-        in place. Content screens are added in the following steps.
-      </p>
-
-      <div class="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <div class="rounded-control border border-outline-variant bg-surface-container-low p-4">
-          <p class="font-label-caps text-label-caps uppercase tracking-widest text-secondary">
-            Publication states
-          </p>
-          <div class="mt-3 flex flex-wrap gap-2">
-            <StatusChip status="draft" />
-            <StatusChip status="published" />
-            <StatusChip status="archived" />
-          </div>
-        </div>
-        <div class="rounded-control border border-outline-variant bg-surface-container-low p-4">
-          <p class="font-label-caps text-label-caps uppercase tracking-widest text-secondary">
-            Pipeline states
-          </p>
-          <div class="mt-3 flex flex-wrap gap-2">
-            <StatusChip status="queued" />
-            <StatusChip status="building" />
-            <StatusChip status="deploying" />
-            <StatusChip status="live" />
-            <StatusChip status="failed" />
-          </div>
-        </div>
-        <div class="rounded-control border border-outline-variant bg-surface-container-low p-4">
-          <p class="font-label-caps text-label-caps uppercase tracking-widest text-secondary">
-            Backend boundary
-          </p>
-          <div class="mt-3 flex flex-wrap gap-2">
-            <StatusChip status="unavailable" />
-            <StatusChip status="attention" />
-          </div>
+      <div class="flex flex-wrap items-center gap-2">
+        <span id="dash-state-label" class="font-label-sm text-label-sm font-semibold text-secondary">
+          Visual state preview
+        </span>
+        <div role="group" aria-labelledby="dash-state-label" class="flex flex-wrap gap-1.5">
+          {
+            states.map((s) => (
+              <button
+                type="button"
+                data-dash-state={s.key}
+                aria-pressed={s.key === 'unavailable' ? 'true' : 'false'}
+                class="rounded-chip border border-outline-variant bg-surface-container-lowest px-2.5 py-1 font-label-sm text-label-sm text-on-surface-variant hover:border-outline aria-pressed:border-primary-container aria-pressed:bg-primary-fixed aria-pressed:text-on-primary-fixed"
+              >
+                {s.label}
+              </button>
+            ))
+          }
         </div>
       </div>
-    </section>
+      <p class="font-body-sm text-body-sm text-secondary">
+        Switches the illustrative layout only — nothing is fetched.
+      </p>
+    </div>
+
+    <div id="dashboard-body" class="space-y-6">
+      <!-- Default: not connected -->
+      <OverviewGrid state="unavailable" />
+
+      <div class="grid grid-cols-1 gap-6 xl:grid-cols-3">
+        <div class="space-y-6 xl:col-span-2">
+          <Panel title="Needs attention" description="Drafts, missing media, and failed releases.">
+            <p class="font-body-md text-body-md text-secondary">
+              Connect the CMS backend to see the content that needs attention.
+            </p>
+          </Panel>
+
+          <Panel title="Recent publishing activity" description="Latest releases and their result.">
+            <p class="font-body-md text-body-md text-secondary">
+              Publishing activity is unavailable until the deployment pipeline is connected.
+            </p>
+          </Panel>
+        </div>
+
+        <Panel title="Current live release" description="What the public site is serving.">
+          <p class="font-body-md text-body-md text-secondary">
+            No release information. Publishing is not connected.
+          </p>
+        </Panel>
+      </div>
+    </div>
   </div>
 </AdminLayout>
+
+<!-- Illustrative state templates (frontend preview only) -->
+<template data-dash-template="loading">
+  <p class="sr-only" role="status">Loading dashboard…</p>
+  <OverviewGrid state="loading" />
+  <div class="grid grid-cols-1 gap-6 xl:grid-cols-3">
+    <div class="space-y-6 xl:col-span-2">
+      <Panel title="Needs attention"><LoadingLines lines={3} /></Panel>
+      <Panel title="Recent publishing activity"><LoadingLines lines={3} /></Panel>
+    </div>
+    <Panel title="Current live release"><LoadingLines lines={2} /></Panel>
+  </div>
+</template>
+
+<template data-dash-template="empty">
+  <OverviewGrid state="empty" />
+  <div class="grid grid-cols-1 gap-6 xl:grid-cols-3">
+    <div class="space-y-6 xl:col-span-2">
+      <Panel title="Needs attention">
+        <EmptyState icon="task_alt" title="Nothing needs attention">
+          Drafts and missing media will be listed here once content is connected.
+        </EmptyState>
+      </Panel>
+      <Panel title="Recent publishing activity">
+        <EmptyState icon="history" title="No releases yet">
+          Publishing history appears here after the first connected release.
+        </EmptyState>
+      </Panel>
+    </div>
+    <Panel title="Current live release">
+      <EmptyState icon="public" title="No recorded release">
+        The public site has no release recorded from this console.
+      </EmptyState>
+    </Panel>
+  </div>
+</template>
+
+<template data-dash-template="sample">
+  <OverviewGrid state="sample" />
+  <div class="grid grid-cols-1 gap-6 xl:grid-cols-3">
+    <div class="space-y-6 xl:col-span-2">
+      <Panel title="Needs attention" description="Drafts, missing media, and failed releases.">
+        <ul class="divide-y divide-outline-variant">
+          <li class="flex items-start justify-between gap-3 py-3 first:pt-0 last:pb-0">
+            <div class="flex min-w-0 items-start gap-3">
+              <span class="material-symbols-outlined text-[20px] text-secondary" aria-hidden="true"
+                >edit_note</span
+              >
+              <div class="min-w-0">
+                <p class="truncate font-title-md text-title-md text-on-surface">
+                  Residential &amp; Commercial Wiring
+                </p>
+                <p class="font-body-sm text-body-sm text-secondary">
+                  Service · Draft · Sample update 09:12
+                </p>
+              </div>
+            </div>
+            <StatusChip status="attention" label="Draft not published" />
+          </li>
+          <li class="flex items-start justify-between gap-3 py-3 first:pt-0 last:pb-0">
+            <div class="flex min-w-0 items-start gap-3">
+              <span class="material-symbols-outlined text-[20px] text-secondary" aria-hidden="true"
+                >image_not_supported</span
+              >
+              <div class="min-w-0">
+                <p class="truncate font-title-md text-title-md text-on-surface">
+                  Industrial Electrical Installations
+                </p>
+                <p class="font-body-sm text-body-sm text-secondary">
+                  Service · Image missing alt text
+                </p>
+              </div>
+            </div>
+            <StatusChip status="attention" label="Media" />
+          </li>
+          <li class="flex items-start justify-between gap-3 py-3 first:pt-0 last:pb-0">
+            <div class="flex min-w-0 items-start gap-3">
+              <span class="material-symbols-outlined text-[20px] text-secondary" aria-hidden="true"
+                >error</span
+              >
+              <div class="min-w-0">
+                <p class="truncate font-title-md text-title-md text-on-surface">
+                  Release 2026.10.13-2
+                </p>
+                <p class="font-body-sm text-body-sm text-secondary">Build failed · Sample 08:40</p>
+              </div>
+            </div>
+            <StatusChip status="failed" />
+          </li>
+        </ul>
+      </Panel>
+
+      <Panel title="Recent publishing activity" description="Latest releases and their result.">
+        <ul class="divide-y divide-outline-variant">
+          <li class="flex flex-wrap items-center justify-between gap-2 py-3 first:pt-0 last:pb-0">
+            <div class="min-w-0">
+              <p class="font-title-md text-title-md text-on-surface">v2026.10.14-2</p>
+              <p class="font-body-sm text-body-sm text-secondary">
+                Administrator · Sample 09:45
+              </p>
+            </div>
+            <div class="flex items-center gap-3">
+              <StatusChip status="live" />
+              <a
+                href="/admin/history"
+                class={`font-label-md text-label-md text-primary hover:underline ${focusRing}`}
+                >Details</a
+              >
+            </div>
+          </li>
+          <li class="flex flex-wrap items-center justify-between gap-2 py-3 first:pt-0 last:pb-0">
+            <div class="min-w-0">
+              <p class="font-title-md text-title-md text-on-surface">v2026.10.13-2</p>
+              <p class="font-body-sm text-body-sm text-secondary">
+                Administrator · Sample 08:40
+              </p>
+            </div>
+            <div class="flex items-center gap-3">
+              <StatusChip status="failed" />
+              <a
+                href="/admin/history"
+                class={`font-label-md text-label-md text-primary hover:underline ${focusRing}`}
+                >Details</a
+              >
+            </div>
+          </li>
+          <li class="flex flex-wrap items-center justify-between gap-2 py-3 first:pt-0 last:pb-0">
+            <div class="min-w-0">
+              <p class="font-title-md text-title-md text-on-surface">v2026.10.12-1</p>
+              <p class="font-body-sm text-body-sm text-secondary">
+                Administrator · Sample 17:05
+              </p>
+            </div>
+            <div class="flex items-center gap-3">
+              <StatusChip status="live" />
+              <a
+                href="/admin/history"
+                class={`font-label-md text-label-md text-primary hover:underline ${focusRing}`}
+                >Details</a
+              >
+            </div>
+          </li>
+        </ul>
+      </Panel>
+    </div>
+
+    <Panel title="Current live release" description="Illustrative example.">
+      <div class="space-y-4">
+        <div>
+          <p class="font-label-caps text-label-caps uppercase tracking-widest text-secondary">
+            Release
+          </p>
+          <p class="font-title-lg text-title-lg text-on-surface">v2026.10.14-2</p>
+        </div>
+        <div>
+          <p class="font-label-caps text-label-caps uppercase tracking-widest text-secondary">
+            Published
+          </p>
+          <p class="font-body-md text-body-md text-on-surface">Sample 09:47</p>
+        </div>
+        <StatusChip status="info" label="Illustrative example" />
+        <p class="font-body-sm text-body-sm text-secondary">
+          Typical publication takes 2–5 minutes. No live status is reported here.
+        </p>
+        <div class="flex flex-col gap-2 pt-1">
+          <button
+            type="button"
+            disabled
+            title="Preview requires authenticated draft delivery."
+            class="inline-flex h-10 items-center justify-center gap-2 rounded-control border-[1.5px] border-outline-variant px-4 font-label-md text-label-md text-on-surface-variant opacity-60"
+          >
+            <span class="material-symbols-outlined text-[18px]" aria-hidden="true">visibility</span>
+            Preview draft
+          </button>
+          <button
+            type="button"
+            disabled
+            title="Rollback requires a connected publishing pipeline."
+            class="inline-flex h-10 items-center justify-center gap-2 rounded-control border-[1.5px] border-outline-variant px-4 font-label-md text-label-md text-on-surface-variant opacity-60"
+          >
+            <span class="material-symbols-outlined text-[18px]" aria-hidden="true">history</span>
+            Roll back
+          </button>
+        </div>
+      </div>
+    </Panel>
+  </div>
+</template>
+
+<template data-dash-template="error">
+  <AdminNotice tone="error" title="Couldn't load dashboard data">
+    The content service did not respond. This is a visual state preview — no request was made.
+  </AdminNotice>
+  <OverviewGrid state="error" />
+  <div class="grid grid-cols-1 gap-6 xl:grid-cols-3">
+    <div class="space-y-6 xl:col-span-2">
+      <Panel title="Needs attention">
+        <p class="font-body-sm text-body-sm text-primary-container">
+          This section could not be loaded. Retry once the connection is restored.
+        </p>
+      </Panel>
+      <Panel title="Recent publishing activity">
+        <p class="font-body-sm text-body-sm text-primary-container">
+          This section could not be loaded.
+        </p>
+      </Panel>
+    </div>
+    <Panel title="Current live release">
+      <p class="font-body-sm text-body-sm text-primary-container">
+        This section could not be loaded.
+      </p>
+    </Panel>
+  </div>
+</template>
+
+<script>
+  const body = document.getElementById('dashboard-body');
+  const buttons = Array.from(
+    document.querySelectorAll<HTMLButtonElement>('[data-dash-state]')
+  );
+
+  if (body && buttons.length > 0) {
+    const initial = body.innerHTML;
+
+    const apply = (key: string) => {
+      if (key === 'unavailable') {
+        body.innerHTML = initial;
+        return;
+      }
+      const tpl = document.querySelector<HTMLTemplateElement>(
+        `template[data-dash-template="${key}"]`
+      );
+      body.innerHTML = tpl ? tpl.innerHTML : initial;
+    };
+
+    buttons.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        buttons.forEach((b) => b.setAttribute('aria-pressed', String(b === btn)));
+        apply(btn.dataset.dashState ?? 'unavailable');
+      });
+    });
+  }
+</script>
