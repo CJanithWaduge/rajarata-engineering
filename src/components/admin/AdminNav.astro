@@ -2,9 +2,8 @@
 /**
  * Admin navigation rail (Phase 11, A11.1).
  *
- * Renders the approved information architecture as a dark `inverse-surface`
- * rail, per DESIGN.md ("use the dark inverse surface selectively for a
- * navigation rail"). Active state pairs a red marker with a text-colour
+ * Renders the approved information architecture on a light surface, matching
+ * the public-site theme. Active state pairs a red surface with a text-colour
  * change so selection is never colour-only.
  *
  * The same list is reused inside the mobile drawer in AdminLayout, so there
@@ -24,27 +23,27 @@ const { variant = 'rail', class: className } = Astro.props;
 const path = Astro.url.pathname;
 
 const focusRing =
-  'focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-fixed';
+  'focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-container';
 
 const linkBase =
   'flex items-center gap-3 rounded-control px-3 py-2.5 font-title-md text-title-md transition-colors';
 
 const activeCls = 'bg-primary-container text-on-primary shadow-sm';
-const idleCls = 'text-inverse-on-surface/70 hover:bg-white/10 hover:text-inverse-on-surface';
+const idleCls = 'text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface';
 ---
 
 <nav
   aria-label="Admin"
-  class={`flex h-full flex-col bg-inverse-surface text-inverse-on-surface ${className ?? ''}`}
+  class={`flex h-full flex-col bg-surface-container-lowest text-on-surface ${className ?? ''}`}
 >
   <div class="flex items-center gap-3 px-4 py-5">
     <a href="/admin" class={`flex items-center gap-3 ${focusRing}`}>
-      <Logo variant="dark" class="h-8 w-auto" />
+      <Logo class="h-8 w-auto" />
     </a>
   </div>
 
   <div class="px-4 pb-3">
-    <p class="font-label-caps text-label-caps uppercase tracking-widest text-inverse-on-surface/60">
+    <p class="font-label-caps text-label-caps uppercase tracking-widest text-secondary">
       Content Console
     </p>
   </div>
@@ -71,15 +70,15 @@ const idleCls = 'text-inverse-on-surface/70 hover:bg-white/10 hover:text-inverse
     }
   </ul>
 
-  <div class="border-t border-white/10 px-4 py-4">
-    <p class="font-body-sm text-body-sm text-inverse-on-surface/60">
+  <div class="border-t border-outline-variant px-4 py-4">
+    <p class="font-body-sm text-body-sm text-secondary">
       Frontend preview — not connected to live content.
     </p>
     {
       variant === 'drawer' && (
         <a
           href="/"
-          class={`mt-3 inline-flex items-center gap-2 font-label-md text-label-md text-inverse-on-surface/80 hover:text-inverse-on-surface ${focusRing}`}
+          class={`mt-3 inline-flex items-center gap-2 font-label-md text-label-md text-on-surface-variant hover:text-on-surface ${focusRing}`}
         >
           <span class="material-symbols-outlined text-[18px]" aria-hidden="true">public</span>
           View public site

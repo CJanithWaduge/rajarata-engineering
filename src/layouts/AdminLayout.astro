@@ -72,7 +72,7 @@ const focusRing =
     <div class="lg:flex lg:min-h-screen">
       <!-- Desktop navigation rail -->
       <aside
-        class="hidden lg:sticky lg:top-0 lg:flex lg:h-screen lg:w-[264px] lg:shrink-0 lg:flex-col"
+        class="relative z-10 hidden border-r border-outline-variant bg-surface-container-lowest shadow-card lg:sticky lg:top-0 lg:flex lg:h-screen lg:w-[264px] lg:shrink-0 lg:flex-col"
       >
         <AdminNav />
       </aside>
@@ -192,14 +192,14 @@ const focusRing =
       role="dialog"
       aria-modal="true"
       aria-label="Admin navigation"
-      class="fixed inset-y-0 left-0 z-50 flex w-[280px] max-w-[85vw] flex-col bg-inverse-surface transition-transform duration-200 ease-[cubic-bezier(0.2,0,0,1)] -translate-x-full lg:hidden data-[state=open]:translate-x-0 motion-reduce:transition-none"
+      class="fixed inset-y-0 left-0 z-50 flex w-[280px] max-w-[85vw] flex-col border-r border-outline-variant bg-surface-container-lowest transition-transform duration-200 ease-[cubic-bezier(0.2,0,0,1)] -translate-x-full lg:hidden data-[state=open]:translate-x-0 motion-reduce:transition-none"
     >
       <div class="flex items-center justify-end px-3 pt-3">
         <button
           type="button"
           data-admin-menu-close
           aria-label="Close navigation menu"
-          class="flex h-10 w-10 items-center justify-center rounded-control text-inverse-on-surface hover:bg-white/10 focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-fixed"
+          class="flex h-10 w-10 items-center justify-center rounded-control text-on-surface hover:bg-surface-container-high focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-container"
         >
           <span class="material-symbols-outlined text-2xl" aria-hidden="true">close</span>
         </button>

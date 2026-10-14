@@ -17,7 +17,7 @@ const { icon = 'inbox', title, class: className } = Astro.props;
 <div class={`flex flex-col items-center gap-2 py-8 text-center ${className ?? ''}`}>
   <span class="material-symbols-outlined text-[28px] text-secondary" aria-hidden="true">{icon}</span>
   <p class="font-title-md text-title-md text-on-surface">{title}</p>
-  <div class="max-w-md font-body-sm text-body-sm text-secondary">
+  <div class="max-w-[28rem] font-body-sm text-body-sm text-secondary">
     <slot />
   </div>
 </div>
