@@ -9,26 +9,32 @@
  * carries an accessible label so the state is not conveyed by colour alone.
  */
 interface Props {
-  variant?: 'assigned' | 'missing';
+  variant?: 'assigned' | 'missing' | 'unavailable';
+  /** Tailwind sizing utilities; defaults to the table/card thumbnail width. */
   class?: string;
 }
 
-const { variant = 'assigned', class: className } = Astro.props;
+const { variant = 'assigned', class: className = 'w-16' } = Astro.props;
 
-const isMissing = variant === 'missing';
-const label = isMissing ? 'Image unavailable' : 'Illustrative image placeholder';
+const state = {
+  assigned: { icon: 'image', label: 'Illustrative image placeholder' },
+  missing: { icon: 'image_not_supported', label: 'Image unavailable' },
+  unavailable: { icon: 'broken_image', label: 'Preview unavailable' },
+}[variant];
+
+const isDashed = variant !== 'assigned';
 ---
 
 <span
   role="img"
-  aria-label={label}
-  class={`inline-flex aspect-[4/3] w-16 shrink-0 items-center justify-center rounded-control border ${
-    isMissing
+  aria-label={state.label}
+  class={`inline-flex aspect-[4/3] shrink-0 items-center justify-center rounded-control border ${
+    isDashed
       ? 'border-dashed border-outline bg-surface-container-low'
       : 'border-outline-variant bg-surface-container-high'
-  } ${className ?? ''}`}
+  } ${className}`}
 >
   <span class="material-symbols-outlined text-[20px] text-secondary" aria-hidden="true">
-    {isMissing ? 'image_not_supported' : 'image'}
+    {state.icon}
   </span>
 </span>

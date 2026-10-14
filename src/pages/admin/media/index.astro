@@ -1,19 +1,557 @@
 ---
-/** Admin — Media Library route stub (Phase 11, A11.1). Built out in Step A11.8. */
+/**
+ * Admin — Media library and upload UI (Phase 11, Step A11.8).
+ *
+ * An accessible upload/drop zone that also works without drag-and-drop, a
+ * local (browser-only) preview of the chosen file, required alt text, an
+ * illustrative asset grid with archive state and usage context, and clearly
+ * labelled progress/success/failure/invalid/cancelled state previews.
+ *
+ * Nothing is uploaded. No file reaches Firebase Storage, no asset is created,
+ * and the assets shown are illustrative placeholders. A static admin route
+ * never serves a private draft asset.
+ */
 import AdminLayout from '../../../layouts/AdminLayout.astro';
 import AdminPageHeader from '../../../components/admin/AdminPageHeader.astro';
 import AdminNotice from '../../../components/admin/AdminNotice.astro';
+import StatusChip from '../../../components/admin/StatusChip.astro';
+import RowActions from '../../../components/admin/RowActions.astro';
+import EmptyState from '../../../components/admin/EmptyState.astro';
+import AssetThumb from '../../../components/admin/AssetThumb.astro';
+import Skeleton from '../../../components/admin/Skeleton.astro';
+
+type AssetState = 'published' | 'draft' | 'archived';
+
+interface Asset {
+  id: string;
+  name: string;
+  description: string;
+  used: string;
+  state: AssetState;
+  missing: boolean;
+}
+
+const assets: Asset[] = [
+  { id: 'asset-01', name: 'hero-lighting.jpg', description: 'Illustrative hero image', used: 'Home · hero', state: 'published', missing: false },
+  { id: 'asset-02', name: 'service-distribution.jpg', description: 'Illustrative service image', used: 'Services · service-01', state: 'published', missing: false },
+  { id: 'asset-03', name: 'project-panel.jpg', description: '', used: 'Projects · project-02', state: 'draft', missing: false },
+  { id: 'asset-04', name: 'team-portrait.jpg', description: 'Illustrative portrait', used: 'About Us · intro', state: 'archived', missing: true },
+];
+
+const chipStatus: Record<AssetState, 'published' | 'draft' | 'archived'> = {
+  published: 'published',
+  draft: 'draft',
+  archived: 'archived',
+};
+
+/** Archive is soft-delete only; permanent deletion is deliberately not offered. */
+const actionsFor = (a: Asset) => [
+  { label: 'Edit alt text', icon: 'edit', disabled: true, reason: 'The media editor is not connected.' },
+  { label: 'Replace', icon: 'swap_horiz', disabled: true, reason: 'Replacing a referenced asset warns before overwrite and is not connected.' },
+  a.state === 'archived'
+    ? { label: 'Restore', icon: 'unarchive', disabled: true, reason: 'Restoring is not connected.' }
+    : { label: 'Archive', icon: 'inventory_2', disabled: true, reason: 'Archiving is not connected. Permanent deletion is not offered.' },
+];
+
+const uploadStates = [
+  { key: 'idle', label: 'Idle' },
+  { key: 'uploading', label: 'Uploading' },
+  { key: 'success', label: 'Success' },
+  { key: 'failed', label: 'Failed' },
+  { key: 'invalid', label: 'Invalid' },
+  { key: 'cancelled', label: 'Cancelled' },
+];
+
+const libraryViews = [
+  { key: 'assets', label: 'Illustrative assets' },
+  { key: 'empty', label: 'No assets' },
+  { key: 'loading', label: 'Loading' },
+  { key: 'error', label: 'Couldn’t load' },
+];
+
+const focusRing =
+  'focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-container';
+
+const secondaryBtn = `inline-flex h-10 items-center gap-2 rounded-control border-[1.5px] border-outline-variant px-4 font-label-md text-label-md text-on-surface hover:bg-surface-container-high ${focusRing}`;
+
+const previewBtn =
+  'rounded-chip border border-outline-variant bg-surface-container-lowest px-2.5 py-1 font-label-sm text-label-sm text-on-surface-variant hover:border-outline aria-pressed:border-primary-container aria-pressed:bg-primary-fixed aria-pressed:text-on-primary-fixed';
 ---
 
 <AdminLayout title="Media Library" pageLabel="Media Library">
-  <div class="space-y-6">
+  <div class="space-y-6" data-media-root>
     <AdminPageHeader
       title="Media Library"
       description="Select, upload, and archive the images used across the public site."
     />
-    <AdminNotice tone="unavailable" title="Not connected">
-      Upload and storage are not connected. The asset picker, upload zone, and fallback previews
-      are implemented in a later step, without persisting any files.
+
+    <AdminNotice tone="unavailable" title="Storage not connected — nothing is uploaded">
+      A file chosen here is previewed locally in your browser only. It is not uploaded to Firebase
+      Storage, no asset is created, and the assets listed below are illustrative placeholders. A
+      static admin route never serves a private draft asset.
     </AdminNotice>
+
+    <!-- Upload panel -->
+    <section class="rounded-card border border-outline-variant bg-surface-container-lowest shadow-card">
+      <header
+        class="flex flex-col gap-3 border-b border-outline-variant px-5 py-4 sm:flex-row sm:items-center sm:justify-between"
+      >
+        <div>
+          <h2 class="font-title-lg text-title-lg text-on-surface">Upload an image</h2>
+          <p class="mt-0.5 font-body-sm text-body-sm text-secondary">
+            Choose a file, review the local preview, and enter alt text.
+          </p>
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+          <span id="media-upload-label" class="font-label-sm text-label-sm font-semibold text-secondary">
+            Upload state preview
+          </span>
+          <div role="group" aria-labelledby="media-upload-label" class="flex flex-wrap gap-1.5">
+            {
+              uploadStates.map((s) => (
+                <button type="button" data-media-upload-btn={s.key} aria-pressed={s.key === 'idle' ? 'true' : 'false'} class={previewBtn}>
+                  {s.label}
+                </button>
+              ))
+            }
+          </div>
+        </div>
+      </header>
+
+      <div class="space-y-5 p-5">
+        <!-- Idle -->
+        <div data-media-upload-state="idle" class="space-y-5">
+          <div
+            data-dropzone
+            class="rounded-control border-[1.5px] border-dashed border-outline bg-surface-container-low p-6 text-center transition-colors data-[drag=true]:border-primary-container data-[drag=true]:bg-primary-fixed/40"
+          >
+            <span class="material-symbols-outlined text-[32px] text-secondary" aria-hidden="true">upload</span>
+            <p class="mt-2 font-title-md text-title-md text-on-surface">Choose an image to upload</p>
+            <p class="mx-auto mt-1 max-w-md font-body-sm text-body-sm text-secondary">
+              Drag and drop a file here, or use the button below. Alt text is entered after a file is
+              selected.
+            </p>
+            <input id="media-file" type="file" accept="image/*" hidden />
+            <button type="button" data-file-trigger class={`mt-4 ${secondaryBtn}`}>
+              <span class="material-symbols-outlined text-[18px]" aria-hidden="true">folder_open</span>
+              Choose file
+            </button>
+            <p class="mx-auto mt-3 max-w-md font-body-sm text-body-sm text-secondary">
+              Accepted formats and maximum size are not yet defined by the product, so no limit is
+              stated here. Only files the browser can decode as an image will preview.
+            </p>
+          </div>
+
+          <!-- Selected file (local preview only) -->
+          <div data-selected hidden class="grid gap-5 lg:grid-cols-[260px_1fr]">
+            <div class="space-y-2">
+              <div class="overflow-hidden rounded-control border border-outline-variant bg-surface-container-low">
+                <img data-selected-img alt="" aria-hidden="true" class="hidden aspect-[4/3] w-full object-contain" />
+                <div data-selected-placeholder class="flex aspect-[4/3] w-full items-center justify-center">
+                  <AssetThumb variant="unavailable" class="w-16" />
+                </div>
+              </div>
+              <p data-selected-meta class="font-body-sm text-body-sm text-secondary"></p>
+            </div>
+
+            <div class="space-y-4">
+              <div class="flex items-start justify-between gap-3">
+                <p data-selected-name class="font-title-md text-title-md break-all text-on-surface"></p>
+                <button
+                  type="button"
+                  data-selected-clear
+                  class={`rounded-chip px-1.5 py-0.5 font-label-md text-label-md text-primary hover:underline ${focusRing}`}
+                >
+                  Remove
+                </button>
+              </div>
+
+              <p data-selected-error role="alert" class="hidden font-body-sm text-body-sm text-primary-container"></p>
+
+              <div class="space-y-1.5" data-field>
+                <label for="media-alt" class="flex flex-wrap items-center gap-1.5">
+                  <span class="font-label-sm text-label-sm font-semibold text-on-surface">Alt text</span>
+                  <span class="text-primary-container" aria-hidden="true">*</span>
+                  <span class="sr-only">(required)</span>
+                </label>
+                <textarea
+                  id="media-alt"
+                  rows="3"
+                  maxlength="150"
+                  aria-describedby="media-alt-helper media-alt-error"
+                  placeholder="Describe the image’s content and purpose"
+                  class="w-full rounded-control border-[1.5px] border-outline-variant bg-surface-container-lowest px-3 py-3 font-body-md text-body-md text-on-surface placeholder:text-secondary/60 focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-container"></textarea>
+                <p id="media-alt-helper" class="font-body-sm text-body-sm text-secondary">
+                  Describe content and purpose, not the file. The file name is never used as alt text
+                  automatically.
+                </p>
+                <p id="media-alt-error" class="hidden font-body-sm text-body-sm text-primary-container"></p>
+              </div>
+
+              <div class="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  disabled
+                  aria-describedby="media-upload-note"
+                  class={`inline-flex h-10 items-center gap-2 rounded-control bg-primary-container px-4 font-label-md text-label-md text-on-primary opacity-60 ${focusRing}`}
+                >
+                  <span class="material-symbols-outlined text-[18px]" aria-hidden="true">cloud_upload</span>
+                  Upload to library
+                </button>
+                <button type="button" data-selected-clear class={secondaryBtn}>Remove</button>
+              </div>
+              <p id="media-upload-note" class="font-body-sm text-body-sm text-secondary">
+                This file stays in your browser. Upload is unavailable until Storage and its rules are
+                connected, so no asset is created.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Uploading -->
+        <div data-media-upload-state="uploading" hidden class="space-y-3">
+          <p class="sr-only" role="status">Illustrative upload in progress</p>
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <p class="font-title-md text-title-md text-on-surface">Uploading illustrative-asset.jpg…</p>
+            <StatusChip status="building" label="Illustrative" />
+          </div>
+          <div
+            role="progressbar"
+            aria-valuemin="0"
+            aria-valuemax="100"
+            aria-valuenow="42"
+            aria-label="Illustrative upload progress"
+            class="h-2 w-full overflow-hidden rounded-chip bg-surface-container-high"
+          >
+            <div class="h-full w-[42%] rounded-chip bg-primary-container"></div>
+          </div>
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <p class="font-body-sm text-body-sm text-secondary">42% · Illustrative progress</p>
+            <button type="button" data-media-upload-cancel class={secondaryBtn}>
+              <span class="material-symbols-outlined text-[18px]" aria-hidden="true">close</span>
+              Cancel
+            </button>
+          </div>
+          <AdminNotice tone="unavailable" title="Illustrative state — no upload occurs">
+            This progress bar is a design preview. Nothing is transferred to storage.
+          </AdminNotice>
+        </div>
+
+        <!-- Success -->
+        <div data-media-upload-state="success" hidden class="space-y-3">
+          <div class="flex items-center gap-3">
+            <span class="material-symbols-outlined text-[24px] text-tertiary" aria-hidden="true">check_circle</span>
+            <p class="font-title-md text-title-md text-on-surface">Upload complete</p>
+            <StatusChip status="info" label="Illustrative" />
+          </div>
+          <AdminNotice tone="unavailable" title="Illustrative state — nothing was stored">
+            A real success state appears only once Firebase Storage and its rules are connected and the
+            upload is confirmed.
+          </AdminNotice>
+        </div>
+
+        <!-- Failed -->
+        <div data-media-upload-state="failed" hidden class="space-y-3">
+          <AdminNotice tone="error" title="Upload failed (illustrative)">
+            The transfer was interrupted. Retry becomes available in the connected product; here the
+            state is a preview only.
+          </AdminNotice>
+          <div class="flex flex-wrap gap-2">
+            <button type="button" data-media-upload-goto="idle" class={secondaryBtn}>Retry</button>
+            <button type="button" data-media-upload-goto="idle" class={secondaryBtn}>
+              Choose a different file
+            </button>
+          </div>
+        </div>
+
+        <!-- Invalid -->
+        <div data-media-upload-state="invalid" hidden class="space-y-3">
+          <AdminNotice tone="error" title="That file can’t be previewed as an image">
+            Accepted formats and maximum size are not yet defined by the product, so this state only
+            reflects files the browser cannot decode as an image.
+          </AdminNotice>
+          <button type="button" data-media-upload-goto="idle" class={secondaryBtn}>
+            Choose a different file
+          </button>
+        </div>
+
+        <!-- Cancelled -->
+        <div data-media-upload-state="cancelled" hidden class="space-y-3">
+          <div class="flex items-center gap-3">
+            <span class="material-symbols-outlined text-[24px] text-secondary" aria-hidden="true">cancel</span>
+            <p class="font-title-md text-title-md text-on-surface">Upload cancelled</p>
+          </div>
+          <button type="button" data-media-upload-goto="idle" class={secondaryBtn}>Choose file</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Library -->
+    <section class="rounded-card border border-outline-variant bg-surface-container-lowest shadow-card">
+      <header
+        class="flex flex-col gap-3 border-b border-outline-variant px-5 py-4 sm:flex-row sm:items-center sm:justify-between"
+      >
+        <div>
+          <h2 class="font-title-lg text-title-lg text-on-surface">Library assets</h2>
+          <p class="mt-0.5 font-body-sm text-body-sm text-secondary">
+            Illustrative placeholders — no private draft asset is exposed.
+          </p>
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+          <span id="media-library-label" class="font-label-sm text-label-sm font-semibold text-secondary">
+            Library state preview
+          </span>
+          <div role="group" aria-labelledby="media-library-label" class="flex flex-wrap gap-1.5">
+            {
+              libraryViews.map((v) => (
+                <button type="button" data-media-view-btn={v.key} aria-pressed={v.key === 'assets' ? 'true' : 'false'} class={previewBtn}>
+                  {v.label}
+                </button>
+              ))
+            }
+          </div>
+        </div>
+      </header>
+
+      <div class="space-y-5 p-5">
+        <AdminNotice tone="warning" title="Replacing or removing a referenced asset">
+          Assets referenced by a published or previous snapshot must warn before replacement, and
+          permanent deletion is not offered — archive (soft delete) is preferred so rollback sources
+          stay intact.
+        </AdminNotice>
+
+        <!-- Assets -->
+        <div data-media-view="assets">
+          <ul class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            {
+              assets.map((a) => (
+                <li class="space-y-3 rounded-control border border-outline-variant bg-surface-container-low p-3">
+                  <AssetThumb variant={a.missing ? 'missing' : 'assigned'} class="w-full" />
+                  <div class="space-y-1">
+                    <p class="font-title-md text-title-md break-all text-on-surface">{a.name}</p>
+                    <p class="font-body-sm text-body-sm text-secondary">
+                      {a.description || 'No description'}
+                    </p>
+                  </div>
+                  <p class="font-body-sm text-body-sm text-secondary">Used: {a.used}</p>
+                  <div class="flex items-center justify-between gap-2">
+                    <StatusChip status={chipStatus[a.state]} />
+                    <RowActions actions={actionsFor(a)} label={`Actions for ${a.name}`} />
+                  </div>
+                  {a.missing && (
+                    <p class="font-body-sm text-body-sm text-primary-container">
+                      File unavailable — publish stays blocked until this is replaced.
+                    </p>
+                  )}
+                </li>
+              ))
+            }
+          </ul>
+        </div>
+
+        <!-- Empty -->
+        <div data-media-view="empty" hidden>
+          <EmptyState icon="perm_media" title="No media yet">
+            <p>Assets will appear here once Firebase Storage and its rules are connected. This state is illustrative.</p>
+          </EmptyState>
+        </div>
+
+        <!-- Loading -->
+        <div data-media-view="loading" hidden>
+          <p class="sr-only" role="status">Loading media…</p>
+          <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            {
+              Array.from({ length: 6 }).map(() => (
+                <div class="space-y-3 rounded-control border border-outline-variant bg-surface-container-low p-3">
+                  <Skeleton class="aspect-[4/3] w-full rounded-control" />
+                  <Skeleton class="h-4 w-2/3" />
+                  <Skeleton class="h-4 w-1/2" />
+                </div>
+              ))
+            }
+          </div>
+        </div>
+
+        <!-- Error -->
+        <div data-media-view="error" hidden>
+          <AdminNotice tone="error" title="Couldn’t load media">
+            The storage service did not respond. This is a visual state preview — no request was made.
+          </AdminNotice>
+        </div>
+      </div>
+    </section>
   </div>
 </AdminLayout>
+
+<script>
+  const root = document.querySelector<HTMLElement>('[data-media-root]');
+
+  if (root) {
+    // ---- Upload state preview ------------------------------------------
+    const uploadButtons = Array.from(
+      root.querySelectorAll<HTMLButtonElement>('[data-media-upload-btn]')
+    );
+    const uploadPanels = Array.from(
+      root.querySelectorAll<HTMLElement>('[data-media-upload-state]')
+    );
+
+    const setUploadState = (key: string) => {
+      uploadButtons.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.mediaUploadBtn === key)));
+      uploadPanels.forEach((panel) => {
+        panel.hidden = panel.dataset.mediaUploadState !== key;
+      });
+    };
+
+    uploadButtons.forEach((btn) =>
+      btn.addEventListener('click', () => setUploadState(btn.dataset.mediaUploadBtn ?? 'idle'))
+    );
+    root.querySelectorAll<HTMLElement>('[data-media-upload-goto]').forEach((btn) =>
+      btn.addEventListener('click', () => setUploadState(btn.dataset.mediaUploadGoto ?? 'idle'))
+    );
+    root.querySelector('[data-media-upload-cancel]')?.addEventListener('click', () => setUploadState('cancelled'));
+
+    // ---- Local file selection (never uploaded) -------------------------
+    const fileInput = root.querySelector<HTMLInputElement>('#media-file');
+    const trigger = root.querySelector<HTMLElement>('[data-file-trigger]');
+    const dropzone = root.querySelector<HTMLElement>('[data-dropzone]');
+    const selected = root.querySelector<HTMLElement>('[data-selected]');
+    const img = root.querySelector<HTMLImageElement>('[data-selected-img]');
+    const placeholder = root.querySelector<HTMLElement>('[data-selected-placeholder]');
+    const nameEl = root.querySelector<HTMLElement>('[data-selected-name]');
+    const metaEl = root.querySelector<HTMLElement>('[data-selected-meta]');
+    const errorEl = root.querySelector<HTMLElement>('[data-selected-error]');
+    const altField = root.querySelector<HTMLTextAreaElement>('#media-alt');
+    const altError = root.querySelector<HTMLElement>('#media-alt-error');
+
+    let objectUrl: string | null = null;
+
+    const revoke = () => {
+      if (objectUrl) {
+        URL.revokeObjectURL(objectUrl);
+        objectUrl = null;
+      }
+    };
+
+    const resetSelection = () => {
+      revoke();
+      if (fileInput) fileInput.value = '';
+      if (altField) {
+        altField.value = '';
+        altField.setAttribute('aria-invalid', 'false');
+      }
+      if (altError) {
+        altError.textContent = '';
+        altError.classList.add('hidden');
+      }
+      if (errorEl) errorEl.classList.add('hidden');
+      if (selected) selected.hidden = true;
+    };
+
+    const formatSize = (bytes: number) => {
+      if (bytes >= 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+      return `${Math.max(1, Math.round(bytes / 1024))} KB`;
+    };
+
+    const showPreviewFailure = (message: string) => {
+      if (img) {
+        img.classList.add('hidden');
+        img.removeAttribute('src');
+      }
+      if (placeholder) placeholder.classList.remove('hidden');
+      if (errorEl) {
+        errorEl.textContent = message;
+        errorEl.classList.remove('hidden');
+      }
+    };
+
+    const handleFile = (file: File) => {
+      revoke();
+      objectUrl = URL.createObjectURL(file);
+
+      if (selected) selected.hidden = false;
+      if (nameEl) nameEl.textContent = file.name;
+      if (metaEl) metaEl.textContent = `${file.type || 'unknown type'} · ${formatSize(file.size)}`;
+
+      if (placeholder) placeholder.classList.add('hidden');
+      if (errorEl) errorEl.classList.add('hidden');
+      if (img) {
+        img.classList.remove('hidden');
+        img.onload = () => {
+          if (metaEl) {
+            metaEl.textContent = `${file.type || 'unknown type'} · ${formatSize(file.size)} · ${img.naturalWidth}×${img.naturalHeight}`;
+          }
+        };
+        img.onerror = () => {
+          showPreviewFailure(
+            'This file could not be previewed as an image. Choose a different file — no upload has occurred.'
+          );
+        };
+        img.src = objectUrl;
+      }
+
+      // Alt text is never pre-filled from the file name.
+      altField?.focus();
+    };
+
+    trigger?.addEventListener('click', () => fileInput?.click());
+    fileInput?.addEventListener('change', () => {
+      const file = fileInput.files?.[0];
+      if (file) handleFile(file);
+    });
+    root.querySelectorAll<HTMLElement>('[data-selected-clear]').forEach((btn) =>
+      btn.addEventListener('click', resetSelection)
+    );
+
+    // Drag and drop is an enhancement; the Choose file control is the
+    // keyboard-and-pointer path and works on its own.
+    ['dragenter', 'dragover'].forEach((type) =>
+      dropzone?.addEventListener(type, (event) => {
+        event.preventDefault();
+        dropzone.dataset.drag = 'true';
+      })
+    );
+    ['dragleave', 'dragend'].forEach((type) =>
+      dropzone?.addEventListener(type, () => {
+        if (dropzone) dropzone.dataset.drag = 'false';
+      })
+    );
+    dropzone?.addEventListener('drop', (event) => {
+      event.preventDefault();
+      if (dropzone) dropzone.dataset.drag = 'false';
+      const file = (event as DragEvent).dataTransfer?.files?.[0];
+      if (file) handleFile(file);
+    });
+
+    // Minimal inline validation for the required alt field.
+    altField?.addEventListener('blur', () => {
+      const invalid = altField.value.trim().length === 0;
+      altField.setAttribute('aria-invalid', String(invalid));
+      if (altError) {
+        altError.textContent = invalid ? 'Describe the image for assistive technology.' : '';
+        altError.classList.toggle('hidden', !invalid);
+      }
+    });
+    altField?.addEventListener('input', () => {
+      if (altField.getAttribute('aria-invalid') === 'true' && altField.value.trim()) {
+        altField.setAttribute('aria-invalid', 'false');
+        if (altError) {
+          altError.textContent = '';
+          altError.classList.add('hidden');
+        }
+      }
+    });
+
+    // ---- Library view preview -----------------------------------------
+    const viewButtons = Array.from(root.querySelectorAll<HTMLButtonElement>('[data-media-view-btn]'));
+    const views = Array.from(root.querySelectorAll<HTMLElement>('[data-media-view]'));
+    viewButtons.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const key = btn.dataset.mediaViewBtn;
+        viewButtons.forEach((b) => b.setAttribute('aria-pressed', String(b === btn)));
+        views.forEach((panel) => {
+          panel.hidden = panel.dataset.mediaView !== key;
+        });
+      });
+    });
+  }
+</script>
