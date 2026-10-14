@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+/* Tailwind's `backdrop-*` utilities target backdrop-filter. Modal dialogs need
+   the `::backdrop` pseudo-element, so expose it as the `backdrop:` variant. */
+@custom-variant backdrop (&::backdrop);
+
 @theme {
   /* ---------------------------------------------------------------------
      Fonts
