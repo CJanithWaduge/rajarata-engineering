@@ -41,8 +41,9 @@ const services: ServiceRecord[] = [
 
 const categories = [...new Set(services.map((s) => s.category))];
 
-const rowActions = [
-  { label: 'Edit service', icon: 'edit', disabled: true, reason: 'The editor screen arrives in a later step.' },
+/** Edit navigates to the editor; the remaining actions are not implemented yet. */
+const actionsFor = (s: { id: string }) => [
+  { label: 'Edit service', icon: 'edit', href: `/admin/services/edit?id=${s.id}` },
   { label: 'Preview draft', icon: 'visibility', disabled: true, reason: 'Draft preview is not connected.' },
   { label: 'Publish', icon: 'rocket_launch', disabled: true, reason: 'Publishing is not connected.' },
   { label: 'Archive', icon: 'inventory_2', disabled: true, reason: 'Archiving is not connected.', danger: true },
@@ -216,7 +217,7 @@ const thCls =
                       {s.updated}
                     </td>
                     <td class="px-4 py-3 align-top text-right">
-                      <RowActions actions={rowActions} label={`Actions for ${s.name}`} />
+                      <RowActions actions={actionsFor(s)} label={`Actions for ${s.name}`} />
                     </td>
                   </tr>
                 ))
@@ -254,7 +255,7 @@ const thCls =
                     <dd class="text-on-surface">{s.updated}</dd>
                   </div>
                 </dl>
-                <RowActions actions={rowActions} label={`Actions for ${s.name}`} />
+                <RowActions actions={actionsFor(s)} label={`Actions for ${s.name}`} />
               </li>
             ))
           }

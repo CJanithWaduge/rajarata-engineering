@@ -1,0 +1,301 @@
+---
+/**
+ * Admin — Project editor (Phase 11, Step A11.6).
+ *
+ * Mirrors the service editor's field, validation, status, and unsaved-state
+ * patterns. Covers the project fields in DESIGN.md: title/reference, type,
+ * summary, detailed description/specification, image alt text and caption,
+ * display order, featured status, and SEO.
+ *
+ * Location, year, and client inputs are present but empty and explicitly
+ * marked as verified-business-data only — no portfolio fact is invented.
+ * Save draft and Publish remain unavailable.
+ */
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import AdminPageHeader from '../../../components/admin/AdminPageHeader.astro';
+import AdminNotice from '../../../components/admin/AdminNotice.astro';
+import StatusChip from '../../../components/admin/StatusChip.astro';
+import FormSection from '../../../components/admin/FormSection.astro';
+import AdminField from '../../../components/admin/AdminField.astro';
+import AssetThumb from '../../../components/admin/AssetThumb.astro';
+import EditorActionBar from '../../../components/admin/EditorActionBar.astro';
+
+const focusRing =
+  'focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-container';
+
+const types = [
+  'LV Distribution',
+  'Industrial Grade',
+  'Switchgear & Enclosures',
+  'Containment & Pulling',
+  'Statutory Compliance',
+  'Operations & SLA',
+  'ELV & Automation',
+  'Surge & Transient Defense',
+];
+
+// Illustrative record for layout review. No client, location, or year fact is
+// invented; those inputs are intentionally left empty for the owner to supply.
+const record = {
+  id: 'project-01',
+  title: 'Sample project 01',
+  type: 'LV Distribution',
+  summary: 'Illustrative summary — a short description of the project for the portfolio card.',
+  description:
+    'Illustrative specification — a detailed account of the works delivered. Placeholder text for layout review only.',
+  alt: 'Illustrative alt text describing the project image',
+  caption: '',
+  location: '',
+  year: '',
+  client: '',
+  order: 1,
+  featured: false,
+  seoTitle: '',
+  seoDescription: '',
+};
+---
+
+<AdminLayout title="Edit project" pageLabel="Edit project">
+  <div class="space-y-6 pb-4" data-editor-root>
+    <AdminPageHeader title="Edit project" description="Update the project's public content and metadata.">
+      <Fragment slot="actions">
+        <StatusChip status="published" />
+        <a
+          href="/admin/projects"
+          class={`inline-flex h-10 items-center gap-2 rounded-control border-[1.5px] border-outline-variant px-4 font-label-md text-label-md text-on-surface hover:bg-surface-container-high ${focusRing}`}
+        >
+          <span class="material-symbols-outlined text-[18px]" aria-hidden="true">arrow_back</span>
+          Back to projects
+        </a>
+        <button
+          type="button"
+          disabled
+          title="Draft preview is not connected."
+          class={`inline-flex h-10 items-center gap-2 rounded-control border-[1.5px] border-outline-variant px-4 font-label-md text-label-md text-on-surface-variant opacity-60 ${focusRing}`}
+        >
+          <span class="material-symbols-outlined text-[18px]" aria-hidden="true">visibility</span>
+          Preview draft
+        </button>
+      </Fragment>
+    </AdminPageHeader>
+
+    <AdminNotice tone="unavailable" title="Not connected — nothing here is saved">
+      This editor is a frontend preview. Validation and the unsaved-change indicator work locally,
+      but Save draft and Publish are unavailable and no value is written to the public site. Fields
+      shown are illustrative placeholders; verified business details must be supplied by the owner.
+    </AdminNotice>
+
+    <form novalidate data-editor-form class="space-y-6">
+      <FormSection
+        title="Identity"
+        description="How the project is named and addressed. The reference is stable and anchors the public link."
+      >
+        <AdminField
+          name="title"
+          label="Project title"
+          required
+          requiredMessage="Enter a project title."
+          value={record.title}
+          helper="Shown as the portfolio card and page heading."
+        />
+        <AdminField
+          name="reference"
+          label="Stable reference"
+          value={record.id}
+          readonly
+          mono
+          helper="Read-only: it anchors the public URL and cannot be edited after creation."
+        />
+        <AdminField
+          name="type"
+          type="select"
+          label="Type / category"
+          required
+          requiredMessage="Choose a project type."
+          value={record.type}
+          options={types.map((t) => ({ value: t, label: t }))}
+          helper="Groups the project on the public portfolio."
+        />
+      </FormSection>
+
+      <FormSection title="Summary and specification" description="Short and long copy for the project.">
+        <AdminField
+          name="summary"
+          type="textarea"
+          label="Short summary"
+          required
+          requiredMessage="Enter a short summary."
+          rows={3}
+          maxlength={180}
+          counter
+          value={record.summary}
+          helper="Used on the portfolio card. Keep it to a single sentence."
+        />
+        <AdminField
+          name="description"
+          type="textarea"
+          label="Detailed description / specification"
+          rows={8}
+          value={record.description}
+          helper="Plain text only. Formatted text is not enabled and arbitrary HTML, scripts, or embeds are not accepted."
+        />
+      </FormSection>
+
+      <FormSection
+        title="Image, alt text, and caption"
+        description="The project image with descriptive alt text. Alt text is required for accessibility."
+      >
+        <div class="flex flex-wrap items-center gap-4">
+          <AssetThumb variant="missing" class="w-24" />
+          <div class="space-y-2">
+            <button
+              type="button"
+              disabled
+              title="Media selection is not connected."
+              class={`inline-flex h-10 items-center gap-2 rounded-control border-[1.5px] border-outline-variant px-4 font-label-md text-label-md text-on-surface-variant opacity-60 ${focusRing}`}
+            >
+              <span class="material-symbols-outlined text-[18px]" aria-hidden="true">perm_media</span>
+              Choose image
+            </button>
+            <p class="font-body-sm text-body-sm text-secondary">
+              No asset is assigned in this preview. Cropping and focal-point controls are not part of
+              the confirmed asset model.
+            </p>
+          </div>
+        </div>
+
+        <AdminField
+          name="alt"
+          label="Image alt text"
+          required
+          requiredMessage="Describe the image for assistive technology."
+          value={record.alt}
+          maxlength={150}
+          counter
+          helper="Describe the content and purpose of the image, not the file name."
+        />
+        <AdminField
+          name="caption"
+          label="Caption"
+          optional
+          maxlength={200}
+          counter
+          value={record.caption}
+          placeholder="Optional caption shown with the image"
+          helper="Use only if the caption adds information beyond the alt text."
+        />
+      </FormSection>
+
+      <FormSection
+        title="Portfolio details"
+        description="Optional labels shown on the public portfolio."
+      >
+        <AdminNotice tone="warning" title="Verified business data only">
+          Location, year, and client must come from confirmed records. Do not enter unverified
+          claims — leave a field blank instead.
+        </AdminNotice>
+
+        <div class="grid gap-5 sm:grid-cols-2">
+          <AdminField
+            name="location"
+            label="Location"
+            optional
+            value={record.location}
+            placeholder="e.g. Anuradhapura"
+            helper="Only from verified business data."
+          />
+          <AdminField
+            name="year"
+            label="Year"
+            optional
+            value={record.year}
+            placeholder="e.g. 2025"
+            helper="Only from verified business data."
+          />
+        </div>
+        <AdminField
+          name="client"
+          label="Client"
+          optional
+          value={record.client}
+          placeholder="Only if the client has approved being named"
+          helper="Only from verified business data. Never guess a client name."
+        />
+      </FormSection>
+
+      <FormSection title="Placement" description="Ordering and featured status.">
+        <AdminField
+          name="order"
+          type="number"
+          label="Display order"
+          value={record.order}
+          helper="Lower numbers appear first in the portfolio."
+        />
+
+        <div class="flex items-start gap-3" data-field>
+          <input
+            id="featured"
+            name="featured"
+            type="checkbox"
+            class="mt-0.5 h-5 w-5 shrink-0 rounded-chip border-[1.5px] border-outline-variant accent-primary-container focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-container"
+          />
+          <label for="featured" class="min-w-0">
+            <span class="block font-label-sm text-label-sm font-semibold text-on-surface">
+              Featured project
+            </span>
+            <span class="block font-body-sm text-body-sm text-secondary">
+              Surface this project near the top of the public portfolio.
+            </span>
+          </label>
+        </div>
+      </FormSection>
+
+      <FormSection
+        title="SEO"
+        description="Optional search metadata. Leave blank to fall back to the project title and summary."
+      >
+        <AdminField
+          name="seoTitle"
+          label="SEO title"
+          optional
+          maxlength={60}
+          counter
+          value={record.seoTitle}
+          placeholder="Leave blank to use the project title"
+          helper="Around 60 characters shows fully in search results."
+        />
+        <AdminField
+          name="seoDescription"
+          type="textarea"
+          label="Meta description"
+          optional
+          rows={3}
+          maxlength={160}
+          counter
+          value={record.seoDescription}
+          placeholder="Leave blank to use the short summary"
+          helper="Around 160 characters shows fully in search results."
+        />
+      </FormSection>
+
+      <div
+        data-editor-message
+        role="alert"
+        aria-live="assertive"
+        class="hidden rounded-control border border-outline-variant bg-surface-container p-4 font-body-sm text-body-sm text-on-surface"
+      >
+      </div>
+
+      <EditorActionBar />
+    </form>
+
+    <p class="font-body-sm text-body-sm text-secondary">
+      Validation, counters, and unsaved-change tracking are local only. Leaving with unsaved changes
+      prompts a browser confirmation; no data leaves this page.
+    </p>
+  </div>
+</AdminLayout>
+
+<script>
+  import '../../../lib/adminEditor';
+</script>

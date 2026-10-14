@@ -48,12 +48,12 @@ const chipStatus: Record<ProjectState, 'published' | 'draft' | 'archived'> = {
   archived: 'archived',
 };
 
-/** Archive and restore are mutually exclusive, matching the intended semantics. */
-const actionsFor = (state: ProjectState) => [
-  { label: 'Edit project', icon: 'edit', disabled: true, reason: 'The editor screen arrives in a later step.' },
+/** Archive and restore are mutually exclusive, matching the intended semantics. Edit navigates to the editor. */
+const actionsFor = (p: { id: string; state: ProjectState }) => [
+  { label: 'Edit project', icon: 'edit', href: `/admin/projects/edit?id=${p.id}` },
   { label: 'Preview draft', icon: 'visibility', disabled: true, reason: 'Draft preview is not connected.' },
   { label: 'Publish', icon: 'rocket_launch', disabled: true, reason: 'Publishing is not connected.' },
-  state === 'archived'
+  p.state === 'archived'
     ? { label: 'Restore', icon: 'unarchive', disabled: true, reason: 'Restoring is not connected.' }
     : { label: 'Archive', icon: 'inventory_2', disabled: true, reason: 'Archiving is not connected.', danger: true },
 ];
@@ -227,7 +227,7 @@ const thCls = 'px-4 py-3 text-left font-label-md text-label-md text-secondary wh
                       {p.updated}
                     </td>
                     <td class="px-4 py-3 align-middle text-right">
-                      <RowActions actions={actionsFor(p.state)} label={`Actions for ${p.title}`} />
+                      <RowActions actions={actionsFor(p)} label={`Actions for ${p.title}`} />
                     </td>
                   </tr>
                 ))
@@ -266,7 +266,7 @@ const thCls = 'px-4 py-3 text-left font-label-md text-label-md text-secondary wh
                 </div>
                 <div class="flex items-center justify-between gap-3">
                   <p class="font-body-sm text-body-sm text-secondary">Updated {p.updated}</p>
-                  <RowActions actions={actionsFor(p.state)} label={`Actions for ${p.title}`} />
+                  <RowActions actions={actionsFor(p)} label={`Actions for ${p.title}`} />
                 </div>
               </li>
             ))

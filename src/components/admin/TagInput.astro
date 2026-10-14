@@ -1,0 +1,136 @@
+---
+/**
+ * Admin tag input (Phase 11, A11.6).
+ *
+ * A repeated-value control for list fields such as "suitable for" items.
+ * Values are chips that can be added and removed locally; nothing is
+ * persisted. The list is announced politely, and each remove control has a
+ * distinct accessible name.
+ */
+interface Props {
+  name: string;
+  label: string;
+  values?: string[];
+  helper?: string;
+  placeholder?: string;
+  class?: string;
+}
+
+const { name, label, values = [], helper, placeholder = 'Add an item', class: className } = Astro.props;
+
+const focusRing =
+  'focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-container';
+---
+
+<div class={`space-y-1.5 ${className ?? ''}`} data-tag-input data-tag-name={name}>
+  <span id={`${name}-label`} class="block font-label-sm text-label-sm font-semibold text-on-surface">
+    {label}
+  </span>
+
+  <ul
+    data-tag-list
+    aria-labelledby={`${name}-label`}
+    aria-live="polite"
+    class="flex min-h-[44px] flex-wrap items-center gap-2 rounded-control border-[1.5px] border-outline-variant bg-surface-container-lowest p-2"
+  >
+    {
+      values.map((value) => (
+        <li class="inline-flex items-center gap-1 rounded-chip bg-surface-container-high px-2.5 py-1 font-label-sm text-label-sm text-on-surface">
+          <span>{value}</span>
+          <button
+            type="button"
+            data-tag-remove
+            aria-label={`Remove ${value}`}
+            class={`flex h-5 w-5 items-center justify-center rounded-chip text-secondary hover:bg-surface-container-highest hover:text-on-surface ${focusRing}`}
+          >
+            <span class="material-symbols-outlined text-[16px]" aria-hidden="true">close</span>
+          </button>
+        </li>
+      ))
+    }
+  </ul>
+
+  <div class="flex flex-col gap-2 sm:flex-row">
+    <input
+      id={name}
+      type="text"
+      data-tag-field
+      placeholder={placeholder}
+      aria-labelledby={`${name}-label`}
+      class={`h-12 w-full rounded-control border-[1.5px] border-outline-variant bg-surface-container-lowest px-3 font-body-md text-body-md text-on-surface placeholder:text-secondary/60 focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-container ${focusRing}`}
+    />
+    <button
+      type="button"
+      data-tag-add
+      class={`inline-flex h-12 shrink-0 items-center justify-center gap-2 rounded-control border-[1.5px] border-outline-variant px-5 font-label-md text-label-md text-on-surface hover:bg-surface-container-high ${focusRing}`}
+    >
+      <span class="material-symbols-outlined text-[18px]" aria-hidden="true">add</span>
+      Add
+    </button>
+  </div>
+
+  {helper && <p class="font-body-sm text-body-sm text-secondary">{helper}</p>}
+</div>
+
+<script>
+  const escapeHtml = (value: string) =>
+    value.replace(/[&<>"']/g, (char) =>
+      ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char] as string
+    );
+
+  const chipHtml = (value: string) => `
+    <li class="inline-flex items-center gap-1 rounded-chip bg-surface-container-high px-2.5 py-1 font-label-sm text-label-sm text-on-surface">
+      <span>${escapeHtml(value)}</span>
+      <button type="button" data-tag-remove aria-label="Remove ${escapeHtml(value)}"
+        class="flex h-5 w-5 items-center justify-center rounded-chip text-secondary hover:bg-surface-container-highest hover:text-on-surface focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-container">
+        <span class="material-symbols-outlined text-[16px]" aria-hidden="true">close</span>
+      </button>
+    </li>`;
+
+  document.querySelectorAll<HTMLElement>('[data-tag-input]').forEach((wrap) => {
+    const list = wrap.querySelector<HTMLUListElement>('[data-tag-list]');
+    const field = wrap.querySelector<HTMLInputElement>('[data-tag-field]');
+    if (!list || !field) return;
+
+    const initial = list.innerHTML;
+
+    const notify = () =>
+      wrap.dispatchEvent(new CustomEvent('taginput:change', { bubbles: true }));
+
+    const addTag = () => {
+      const value = field.value.trim();
+      if (!value) return;
+      // Cap duplicates and empty values locally.
+      const existing = Array.from(list.querySelectorAll('li span:first-child')).map(
+        (span) => span.textContent?.trim().toLowerCase() ?? ''
+      );
+      if (existing.includes(value.toLowerCase())) {
+        field.value = '';
+        return;
+      }
+      list.insertAdjacentHTML('beforeend', chipHtml(value));
+      field.value = '';
+      field.focus();
+      notify();
+    };
+
+    wrap.querySelector('[data-tag-add]')?.addEventListener('click', addTag);
+    field.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        addTag();
+      }
+    });
+
+    list.addEventListener('click', (event) => {
+      const remove = (event.target as HTMLElement).closest('[data-tag-remove]');
+      if (!remove) return;
+      remove.closest('li')?.remove();
+      notify();
+    });
+
+    wrap.addEventListener('taginput:reset', () => {
+      list.innerHTML = initial;
+    });
+  });
+</script>

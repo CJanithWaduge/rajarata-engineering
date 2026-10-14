@@ -1,0 +1,79 @@
+---
+/**
+ * Admin editor action bar (Phase 11, A11.6).
+ *
+ * A sticky footer for long editors. It clearly separates "Save draft" from
+ * "Publish" and keeps both visibly unavailable, because neither persistence
+ * nor a publishing pipeline exists yet. The unsaved-change indicator is
+ * driven by the editor runtime and announced politely.
+ */
+interface Props {
+  /** Supporting line under the change indicator. */
+  savedNote?: string;
+  class?: string;
+}
+
+const { savedNote = 'Not saved — this preview does not persist changes.', class: className } = Astro.props;
+
+const focusRing =
+  'focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-container';
+---
+
+<div
+  role="group"
+  aria-label="Editor actions"
+  class={`sticky bottom-0 z-20 rounded-card border border-outline-variant bg-surface-container-lowest/95 p-4 shadow-overlay backdrop-blur-md ${className ?? ''}`}
+>
+  <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+    <div class="min-w-0 space-y-0.5">
+      <p class="flex items-center gap-2 font-label-md text-label-md">
+        <span
+          data-editor-dirty-icon
+          class="material-symbols-outlined text-[18px] text-secondary"
+          aria-hidden="true">cloud_off</span
+        >
+        <span data-editor-dirty-label aria-live="polite" class="text-secondary">
+          No unsaved changes
+        </span>
+      </p>
+      <p class="font-body-sm text-body-sm text-secondary">{savedNote}</p>
+    </div>
+
+    <div class="flex flex-wrap items-center gap-2">
+      <button
+        type="button"
+        data-editor-discard
+        disabled
+        class={`inline-flex h-10 items-center gap-2 rounded-control border-[1.5px] border-outline-variant px-4 font-label-md text-label-md text-on-surface hover:bg-surface-container-high disabled:cursor-not-allowed disabled:opacity-50 ${focusRing}`}
+      >
+        <span class="material-symbols-outlined text-[18px]" aria-hidden="true">undo</span>
+        Discard changes
+      </button>
+
+      <button
+        type="button"
+        disabled
+        aria-describedby="editor-save-note"
+        class={`inline-flex h-10 items-center gap-2 rounded-control border-[1.5px] border-outline-variant bg-surface-container px-4 font-label-md text-label-md text-on-surface-variant opacity-60 ${focusRing}`}
+      >
+        <span class="material-symbols-outlined text-[18px]" aria-hidden="true">save</span>
+        Save draft
+      </button>
+
+      <button
+        type="button"
+        disabled
+        aria-describedby="editor-save-note"
+        class={`inline-flex h-10 items-center gap-2 rounded-control bg-primary-container px-4 font-label-md text-label-md text-on-primary opacity-60 ${focusRing}`}
+      >
+        <span class="material-symbols-outlined text-[18px]" aria-hidden="true">rocket_launch</span>
+        Publish
+      </button>
+    </div>
+  </div>
+
+  <p id="editor-save-note" class="sr-only">
+    Save draft and Publish are unavailable: content storage and the publishing pipeline are not
+    connected in this phase.
+  </p>
+</div>

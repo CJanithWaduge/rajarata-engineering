@@ -1,0 +1,254 @@
+---
+/**
+ * Admin — Service editor (Phase 11, Step A11.6).
+ *
+ * Grouped, labeled form sections covering the service fields in DESIGN.md:
+ * identity, summary/description, classification and scope, image alt text,
+ * and SEO. Validation, character counters, and unsaved-change states are
+ * real; persistence and publishing are not, so Save draft and Publish stay
+ * visibly unavailable.
+ *
+ * Values are illustrative placeholders for layout review. No capability is
+ * claimed and no markup is executed — rich text is intentionally not enabled.
+ */
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import AdminPageHeader from '../../../components/admin/AdminPageHeader.astro';
+import AdminNotice from '../../../components/admin/AdminNotice.astro';
+import StatusChip from '../../../components/admin/StatusChip.astro';
+import FormSection from '../../../components/admin/FormSection.astro';
+import AdminField from '../../../components/admin/AdminField.astro';
+import TagInput from '../../../components/admin/TagInput.astro';
+import AssetThumb from '../../../components/admin/AssetThumb.astro';
+import EditorActionBar from '../../../components/admin/EditorActionBar.astro';
+
+const focusRing =
+  'focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-container';
+
+const categories = [
+  'LV Distribution',
+  'Industrial Grade',
+  'Switchgear & Enclosures',
+  'Containment & Pulling',
+  'Statutory Compliance',
+  'Operations & SLA',
+  'ELV & Automation',
+  'Surge & Transient Defense',
+];
+
+// Illustrative record for layout review (identifier matches the record the
+// services list links from). Nothing here is read from or written to storage.
+const record = {
+  id: 'service-01',
+  title: 'Residential & Commercial Electrical Wiring',
+  category: 'LV Distribution',
+  summary:
+    'Illustrative summary — full architectural electrical infrastructure planning, rough-in, and final wiring.',
+  description:
+    'Illustrative description — a detailed account of how the service is planned, installed, and verified. This placeholder is for layout review only.',
+  scope:
+    'Illustrative scope — distribution boards, concealed conduit networks, architectural lighting fixtures, and load calculation checks.',
+  suitableFor: ['Residential complexes', 'Commercial buildings', 'Retail plazas'],
+  order: 1,
+  alt: 'Illustrative alt text describing the service image',
+  seoTitle: '',
+  seoDescription: '',
+};
+---
+
+<AdminLayout title="Edit service" pageLabel="Edit service">
+  <div class="space-y-6 pb-4" data-editor-root>
+    <AdminPageHeader title="Edit service" description="Update the service's public content and metadata.">
+      <Fragment slot="actions">
+        <StatusChip status="draft" />
+        <a
+          href="/admin/services"
+          class={`inline-flex h-10 items-center gap-2 rounded-control border-[1.5px] border-outline-variant px-4 font-label-md text-label-md text-on-surface hover:bg-surface-container-high ${focusRing}`}
+        >
+          <span class="material-symbols-outlined text-[18px]" aria-hidden="true">arrow_back</span>
+          Back to services
+        </a>
+        <button
+          type="button"
+          disabled
+          title="Draft preview is not connected."
+          class={`inline-flex h-10 items-center gap-2 rounded-control border-[1.5px] border-outline-variant px-4 font-label-md text-label-md text-on-surface-variant opacity-60 ${focusRing}`}
+        >
+          <span class="material-symbols-outlined text-[18px]" aria-hidden="true">visibility</span>
+          Preview draft
+        </button>
+      </Fragment>
+    </AdminPageHeader>
+
+    <AdminNotice tone="unavailable" title="Not connected — nothing here is saved">
+      This editor is a frontend preview. Validation, counters, and the unsaved-change indicator
+      work locally, but Save draft and Publish are unavailable and no value is written to the
+      public site. Fields shown are illustrative placeholders.
+    </AdminNotice>
+
+    <form novalidate data-editor-form class="space-y-6">
+      <FormSection
+        title="Identity"
+        description="How the service is named and addressed. The identifier is stable and anchors the public link."
+      >
+        <AdminField
+          name="title"
+          label="Service name"
+          required
+          requiredMessage="Enter a service name."
+          value={record.title}
+          helper="Shown as the card and page heading."
+        />
+        <AdminField
+          name="id"
+          label="Stable identifier"
+          value={record.id}
+          readonly
+          mono
+          helper="Read-only: it anchors the public URL and cannot be edited after creation."
+        />
+      </FormSection>
+
+      <FormSection title="Summary and description" description="Short and long copy for the service.">
+        <AdminField
+          name="summary"
+          type="textarea"
+          label="Short card summary"
+          required
+          requiredMessage="Enter a short summary."
+          rows={3}
+          maxlength={180}
+          counter
+          value={record.summary}
+          helper="Used on the directory card. Keep it to a single sentence."
+        />
+        <AdminField
+          name="description"
+          type="textarea"
+          label="Detailed description"
+          rows={8}
+          value={record.description}
+          helper="Plain text only. Formatted text is not enabled and arbitrary HTML, scripts, or embeds are not accepted."
+        />
+      </FormSection>
+
+      <FormSection title="Classification and scope" description="Category, scope of work, and audience.">
+        <AdminField
+          name="category"
+          type="select"
+          label="Category"
+          required
+          requiredMessage="Choose a category."
+          value={record.category}
+          options={categories.map((c) => ({ value: c, label: c }))}
+          helper="Determines the icon and grouping on the public site."
+        />
+
+        <AdminField
+          name="scope"
+          type="textarea"
+          label="Scope of work"
+          rows={5}
+          value={record.scope}
+          helper="Comma-separated systems and deliverables covered by this service."
+        />
+
+        <TagInput
+          name="suitableFor"
+          label="Suitable for"
+          values={record.suitableFor}
+          placeholder="e.g. Manufacturing plants"
+          helper="One audience or building type per entry."
+        />
+
+        <AdminField
+          name="order"
+          type="number"
+          label="Display order"
+          value={record.order}
+          helper="Lower numbers appear first in the directory."
+        />
+      </FormSection>
+
+      <FormSection
+        title="Image and alt text"
+        description="The approved image for this service. Descriptive alt text is required for accessibility."
+      >
+        <div class="flex flex-wrap items-center gap-4">
+          <AssetThumb variant="missing" class="w-24" />
+          <div class="space-y-2">
+            <button
+              type="button"
+              disabled
+              title="Media selection is not connected."
+              class={`inline-flex h-10 items-center gap-2 rounded-control border-[1.5px] border-outline-variant px-4 font-label-md text-label-md text-on-surface-variant opacity-60 ${focusRing}`}
+            >
+              <span class="material-symbols-outlined text-[18px]" aria-hidden="true">perm_media</span>
+              Choose image
+            </button>
+            <p class="font-body-sm text-body-sm text-secondary">
+              No asset is assigned in this preview. The media library arrives in a later step.
+            </p>
+          </div>
+        </div>
+
+        <AdminField
+          name="alt"
+          label="Image alt text"
+          required
+          requiredMessage="Describe the image for assistive technology."
+          value={record.alt}
+          maxlength={150}
+          counter
+          helper="Describe the content and purpose of the image, not the file name."
+        />
+      </FormSection>
+
+      <FormSection
+        title="SEO"
+        description="Optional search metadata. Leave blank to fall back to the service name and summary."
+      >
+        <AdminField
+          name="seoTitle"
+          label="SEO title"
+          optional
+          maxlength={60}
+          counter
+          value={record.seoTitle}
+          placeholder="Leave blank to use the service name"
+          helper="Around 60 characters shows fully in search results."
+        />
+        <AdminField
+          name="seoDescription"
+          type="textarea"
+          label="Meta description"
+          optional
+          rows={3}
+          maxlength={160}
+          counter
+          value={record.seoDescription}
+          placeholder="Leave blank to use the short summary"
+          helper="Around 160 characters shows fully in search results."
+        />
+      </FormSection>
+
+      <div
+        data-editor-message
+        role="alert"
+        aria-live="assertive"
+        class="hidden rounded-control border border-outline-variant bg-surface-container p-4 font-body-sm text-body-sm text-on-surface"
+      >
+      </div>
+
+      <EditorActionBar />
+    </form>
+
+    <p class="font-body-sm text-body-sm text-secondary">
+      Validation, counters, and unsaved-change tracking are local only. Leaving with unsaved changes
+      prompts a browser confirmation; no data leaves this page.
+    </p>
+  </div>
+</AdminLayout>
+
+<script>
+  import '../../../lib/adminEditor';
+</script>

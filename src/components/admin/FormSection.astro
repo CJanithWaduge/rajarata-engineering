@@ -1,0 +1,35 @@
+---
+/**
+ * Admin form section (Phase 11, A11.6).
+ *
+ * Groups related fields inside a white card with a heading and optional
+ * supporting text, so long editors do not read as one undifferentiated form
+ * (DESIGN.md). The section is wired to its heading via `aria-labelledby`.
+ */
+interface Props {
+  title: string;
+  description?: string;
+  as?: 'h2' | 'h3';
+  class?: string;
+}
+
+const { title, description, as: Heading = 'h2', class: className } = Astro.props;
+
+const headingId = `section-${title
+  .toLowerCase()
+  .replace(/[^a-z0-9]+/g, '-')
+  .replace(/^-+|-+$/g, '')}`;
+---
+
+<section
+  aria-labelledby={headingId}
+  class={`rounded-card border border-outline-variant bg-surface-container-lowest shadow-card ${className ?? ''}`}
+>
+  <header class="border-b border-outline-variant px-5 py-4">
+    <Heading id={headingId} class="font-title-lg text-title-lg text-on-surface">{title}</Heading>
+    {description && <p class="mt-0.5 font-body-sm text-body-sm text-secondary">{description}</p>}
+  </header>
+  <div class="space-y-5 p-5">
+    <slot />
+  </div>
+</section>
