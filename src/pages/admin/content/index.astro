@@ -7,11 +7,8 @@
  * field/validation/status/preview patterns from the service and project
  * editors.
  *
- * Everything here is a single illustrative working copy, because Phase 10
- * decided a build publishes all CMS-managed content with no hybrid. Routes,
- * layout, actions, the security policy, and contact-form behavior stay
- * code-controlled and are not editable on this screen. Values are placeholders
- * for layout review; nothing is read from or written to storage.
+ * This editor writes only validated drafts through the Admin SSR API. Draft
+ * changes do not affect the public static build.
  */
 import AdminLayout from '../../../layouts/AdminLayout.astro';
 import AdminPageHeader from '../../../components/admin/AdminPageHeader.astro';
@@ -22,6 +19,14 @@ import AdminField from '../../../components/admin/AdminField.astro';
 import TagInput from '../../../components/admin/TagInput.astro';
 import AssetThumb from '../../../components/admin/AssetThumb.astro';
 import EditorActionBar from '../../../components/admin/EditorActionBar.astro';
+import { CONTENT_SCHEMA_VERSION, type PageDraft, type PageSectionDraft, type SeoDraft } from '../../../lib/contentModel';
+import { getDraftFirestore } from '../../../lib/firebaseAdmin';
+import {
+  DraftNotFoundError,
+  getBusinessDetailsDraft,
+  getPageDraft,
+  getSeoDraft,
+} from '../../../lib/draftRepository';
 
 const focusRing =
   'focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-container';
@@ -42,41 +47,76 @@ const seoRoutes = [
   { key: 'contact', path: '/contact', label: 'Contact' },
 ];
 
-const home = {
-  heroHeading: 'Electrical engineering and contracting you can verify',
-  heroIntro:
-    'Illustrative introduction — one or two sentences describing MV/LV distribution, industrial installation, testing and commissioning, and ELV work.',
-  heroCta: 'Request a quotation',
-  trustStrip: ['Illustrative trust item', 'Second illustrative item'],
-};
-
-const about = {
-  intro: 'Illustrative introduction to the company for the About page.',
-  story: 'Illustrative heritage and company-story text. Requires owner verification before publishing.',
-  vision: 'Illustrative vision statement.',
-  mission: 'Illustrative mission statement.',
-  industries: ['Illustrative industry', 'Second illustrative industry'],
-  pillars: ['Illustrative pillar', 'Second illustrative pillar'],
-  process: 'Illustrative description of the engineering process or methodology.',
-  ctaCopy: 'Illustrative call-to-action copy.',
-};
-
-const contact = {
-  deskLabel: 'Operational desk',
-  deskDetails: 'Illustrative operational desk details.',
-  supportCopy: 'Illustrative support copy.',
-  visitorInfo: 'Illustrative visitor information.',
-};
-
-// Existing placeholder values already baked into the site footer — not
-// inventions. They must not become active contact links until confirmed.
-const business = {
-  address: 'Rajarata Engineering, Anuradhapura',
-  phone: '+94 77 XXX XXXX',
-  email: 'contact@rajarata.lk',
-  hours: 'Mon – Fri, 8:00 – 17:30',
+const now = new Date().toISOString();
+let loadError = '';
+const blankPage = (pageId: PageDraft['pageId']): PageDraft => ({
+  schemaVersion: CONTENT_SCHEMA_VERSION,
+  pageId,
+  sections: {},
+  updatedAt: now,
+});
+const blankBusiness = {
+  schemaVersion: CONTENT_SCHEMA_VERSION,
+  address: '',
+  phone: '',
+  email: '',
+  hours: '',
   whatsapp: '',
+  updatedAt: now,
 };
+const blankSeo: SeoDraft = {
+  schemaVersion: CONTENT_SCHEMA_VERSION,
+  routes: {},
+  updatedAt: now,
+};
+let homePage = blankPage('home');
+let aboutPage = blankPage('about');
+let contactPage = blankPage('contact');
+let business = blankBusiness;
+let seo = blankSeo;
+const expected = { home: 'null', about: 'null', contact: 'null', business: 'null', seo: 'null' };
+
+try {
+  const firestore = getDraftFirestore();
+  const actor = Astro.locals.authUser;
+  const readIfPresent = async <T,>(read: () => Promise<T>): Promise<T | undefined> => {
+    try {
+      return await read();
+    } catch (error) {
+      if (error instanceof DraftNotFoundError) return undefined;
+      throw error;
+    }
+  };
+  const [savedHome, savedAbout, savedContact, savedBusiness, savedSeo] = await Promise.all([
+    readIfPresent(() => getPageDraft(firestore, actor, 'home')),
+    readIfPresent(() => getPageDraft(firestore, actor, 'about')),
+    readIfPresent(() => getPageDraft(firestore, actor, 'contact')),
+    readIfPresent(() => getBusinessDetailsDraft(firestore, actor)),
+    readIfPresent(() => getSeoDraft(firestore, actor)),
+  ]);
+  if (savedHome) { homePage = savedHome; expected.home = savedHome.updatedAt; }
+  if (savedAbout) { aboutPage = savedAbout; expected.about = savedAbout.updatedAt; }
+  if (savedContact) { contactPage = savedContact; expected.contact = savedContact.updatedAt; }
+  if (savedBusiness) { business = savedBusiness; expected.business = savedBusiness.updatedAt; }
+  if (savedSeo) { seo = savedSeo; expected.seo = savedSeo.updatedAt; }
+} catch (error) {
+  loadError = error instanceof Error ? error.message : 'Draft storage is unavailable.';
+  console.error('Site content drafts could not be loaded.', error);
+}
+
+const section = (page: PageDraft, key: string): PageSectionDraft => page.sections[key] ?? {};
+const homeHero = section(homePage, 'hero');
+const homeTrust = section(homePage, 'trustStrip');
+const aboutHero = section(aboutPage, 'hero');
+const aboutHeritage = section(aboutPage, 'heritage');
+const aboutVisionMission = section(aboutPage, 'visionMission');
+const aboutIndustries = section(aboutPage, 'industries');
+const aboutPillars = section(aboutPage, 'pillars');
+const aboutMethodology = section(aboutPage, 'methodology');
+const aboutCta = section(aboutPage, 'cta');
+const contactDesks = section(contactPage, 'operationalDesks');
+const contactQuotation = section(contactPage, 'quotation');
+const contactVisitors = section(contactPage, 'visitorInformation');
 ---
 
 <AdminLayout title="Site Content" pageLabel="Site Content">
@@ -90,11 +130,8 @@ const business = {
       </Fragment>
     </AdminPageHeader>
 
-    <AdminNotice tone="unavailable" title="Not connected — nothing here is saved">
-      This is a single illustrative working copy for layout review. Validation, counters, and the
-      unsaved-change indicator work locally, but Save draft and Publish are unavailable and no value
-      is written to the public site. Routes, layout, actions, the security policy, and the contact
-      form stay code-controlled.
+    <AdminNotice tone={loadError ? 'error' : 'info'} title={loadError ? 'Couldn’t load content drafts' : 'Drafts only'}>
+      {loadError || 'Values load from the local Firestore emulator. Saving updates unpublished drafts only; it never changes the public site.'}
     </AdminNotice>
 
     <!-- Section sub-navigation -->
@@ -118,46 +155,53 @@ const business = {
       </ul>
     </nav>
 
-    <form novalidate data-editor-form class="space-y-6">
+    <form
+      novalidate
+      data-editor-form
+      data-draft-kind="siteContent"
+      data-expected-updated-at="null"
+      data-expected-home={expected.home}
+      data-expected-about={expected.about}
+      data-expected-contact={expected.contact}
+      data-expected-business={expected.business}
+      data-expected-seo={expected.seo}
+      hidden={Boolean(loadError)}
+      class="space-y-6"
+    >
+      <input type="hidden" name="business-schema-version" value={CONTENT_SCHEMA_VERSION} />
       <!-- Home -->
       <div id="home" class="scroll-mt-36">
         <FormSection title="Home page" description="Content for the public landing route.">
           <AdminField
             name="home-heroHeading"
             label="Hero heading"
-            required
-            requiredMessage="Enter the hero heading."
             maxlength={90}
             counter
-            value={home.heroHeading}
+            value={homeHero.heading ?? ''}
             helper="The primary statement at the top of the home page."
           />
           <AdminField
             name="home-heroIntro"
             type="textarea"
             label="Hero introduction"
-            required
-            requiredMessage="Enter the hero introduction."
             rows={3}
             maxlength={240}
             counter
-            value={home.heroIntro}
+            value={homeHero.intro ?? ''}
             helper="One or two sentences of supporting copy under the heading."
           />
           <AdminField
             name="home-heroCta"
             label="Primary CTA label"
-            required
-            requiredMessage="Enter the CTA label."
             maxlength={30}
             counter
-            value={home.heroCta}
+            value={homeHero.ctaLabel ?? ''}
             helper="Destination is code-controlled (/contact) and cannot be edited here."
           />
           <TagInput
             name="home-trustStrip"
             label="Trust-strip items"
-            values={home.trustStrip}
+            values={homeTrust.items ?? []}
             placeholder="Add a trust-strip item"
             helper="Short supporting labels shown beneath the hero."
           />
@@ -175,33 +219,31 @@ const business = {
             name="about-intro"
             type="textarea"
             label="Introduction"
-            required
-            requiredMessage="Enter the About introduction."
             rows={3}
-            value={about.intro}
+            value={aboutHero.intro ?? ''}
           />
           <AdminField
             name="about-story"
             type="textarea"
             label="Company story / heritage"
             rows={6}
-            value={about.story}
+            value={aboutHeritage.body ?? ''}
             helper="Factual history and expertise require verification before publishing."
           />
           <div class="grid gap-5 sm:grid-cols-2">
-            <AdminField name="about-vision" type="textarea" label="Vision" rows={4} value={about.vision} />
-            <AdminField name="about-mission" type="textarea" label="Mission" rows={4} value={about.mission} />
+            <AdminField name="about-vision" type="textarea" label="Vision" rows={4} value={aboutVisionMission.heading ?? ''} />
+            <AdminField name="about-mission" type="textarea" label="Mission" rows={4} value={aboutVisionMission.body ?? ''} />
           </div>
           <TagInput
             name="about-industries"
             label="Industries served"
-            values={about.industries}
+            values={aboutIndustries.items ?? []}
             placeholder="Add an industry"
           />
           <TagInput
             name="about-pillars"
             label="Core pillars"
-            values={about.pillars}
+            values={aboutPillars.items ?? []}
             placeholder="Add a pillar"
           />
           <AdminField
@@ -209,9 +251,9 @@ const business = {
             type="textarea"
             label="Process / methodology"
             rows={5}
-            value={about.process}
+            value={aboutMethodology.body ?? ''}
           />
-          <AdminField name="about-cta" label="CTA copy" maxlength={80} counter value={about.ctaCopy} />
+          <AdminField name="about-cta" label="CTA copy" maxlength={80} counter value={aboutCta.body ?? ''} />
           <AdminNotice tone="warning" title="Claims need owner verification">
             All factual history, expertise, safety, compliance, and quality assertions require owner
             verification. Section anchors remain code-controlled.
@@ -227,28 +269,28 @@ const business = {
             label="Operational desk label"
             maxlength={60}
             counter
-            value={contact.deskLabel}
+            value={contactDesks.label ?? ''}
           />
           <AdminField
             name="contact-deskDetails"
             type="textarea"
             label="Operational desk details"
             rows={3}
-            value={contact.deskDetails}
+            value={contactDesks.body ?? ''}
           />
           <AdminField
             name="contact-support"
             type="textarea"
             label="Support copy"
             rows={3}
-            value={contact.supportCopy}
+            value={contactQuotation.body ?? ''}
           />
           <AdminField
             name="contact-visitor"
             type="textarea"
             label="Visitor information"
             rows={3}
-            value={contact.visitorInfo}
+            value={contactVisitors.body ?? ''}
           />
           <AdminNotice tone="info" title="Contact details are shared">
             Address, phone, email, and hours come from <a class={`font-label-md text-label-md text-primary hover:underline ${focusRing}`} href="#business">Business Details</a
@@ -267,16 +309,12 @@ const business = {
           <AdminField
             name="business-address"
             label="Address"
-            required
-            requiredMessage="Enter the business address."
             value={business.address}
           />
           <div class="grid gap-5 sm:grid-cols-2">
             <AdminField
               name="business-phone"
               label="Phone"
-              required
-              requiredMessage="Enter the business phone number."
               value={business.phone}
               helper="Shown as a tap-to-call link on public surfaces."
             />
@@ -284,8 +322,6 @@ const business = {
               name="business-email"
               label="Email"
               type="email"
-              required
-              requiredMessage="Enter the business email address."
               value={business.email}
               helper="Shown as a mail link on public surfaces."
             />
@@ -353,12 +389,18 @@ const business = {
                 <p class="font-label-md text-label-md text-on-surface">
                   {route.label} <span class="font-mono text-body-sm text-body-sm text-secondary">{route.path}</span>
                 </p>
+                <input
+                  type="hidden"
+                  name={`seo-share-image-${route.key}`}
+                  value={seo.routes[route.key as keyof typeof seo.routes]?.shareImageRef ?? ''}
+                />
                 <AdminField
                   name={`seo-title-${route.key}`}
                   label="SEO title"
                   optional
                   maxlength={60}
                   counter
+                  value={seo.routes[route.key as keyof typeof seo.routes]?.title ?? ''}
                   placeholder={`Leave blank to use the ${route.label} page heading`}
                 />
                 <AdminField
@@ -369,6 +411,7 @@ const business = {
                   rows={2}
                   maxlength={160}
                   counter
+                  value={seo.routes[route.key as keyof typeof seo.routes]?.description ?? ''}
                   placeholder="Summarise the page for search results"
                 />
               </div>
@@ -390,12 +433,12 @@ const business = {
       >
       </div>
 
-      <EditorActionBar savedNote="Not saved — a single publish updates all site content (no hybrid)." />
+      <EditorActionBar savedNote="Saving stores drafts only; publishing is a separate, unavailable step." />
     </form>
 
     <p class="font-body-sm text-body-sm text-secondary">
-      Validation, counters, and unsaved-change tracking are local only. Leaving with unsaved changes
-      prompts a browser confirmation; no data leaves this page.
+      Saving writes structured drafts to the local Firestore emulator. No draft fields are included
+      in the public static output until the separate publishing phase.
     </p>
   </div>
 </AdminLayout>

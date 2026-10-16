@@ -3,17 +3,11 @@
  * Admin sign-in (Phase 11, Step A11.2).
  *
  * Branded, accessible sign-in UI with labeled fields, a password visibility
- * control, inline validation, and a submitting state. Firebase Auth is not
- * implemented, so the form deliberately does NOT authenticate: a valid-looking
- * submission resolves to an explicit "authentication not connected" message
- * and never routes into protected content or reports success.
- *
- * Because the form is inert by design, it uses `novalidate` and handles
- * messaging in a small script so error/loading/unavailable states are
- * consistent and announced through a live region.
+ * control, inline validation, and a submitting state. Firebase Authentication
+ * issues a short-lived ID token that the server exchanges for an HttpOnly
+ * session cookie only after verifying the administrator claim.
  */
 import AdminAuthLayout from '../../layouts/AdminAuthLayout.astro';
-import AdminNotice from '../../components/admin/AdminNotice.astro';
 import Logo from '../../components/Logo.astro';
 
 const focusRing =
@@ -118,7 +112,7 @@ const inputBase =
 
     <div class="mt-6 space-y-2 border-t border-outline-variant pt-4">
       <p class="font-body-sm text-body-sm text-secondary">
-        Forgot your password? Password reset is unavailable until authentication is connected.
+        Password reset is handled by the project custodian.
       </p>
       <p class="font-body-sm text-body-sm text-secondary">
         Administrator accounts are provisioned by an authorised process — there is no public
@@ -126,11 +120,6 @@ const inputBase =
       </p>
     </div>
   </div>
-
-  <AdminNotice tone="unavailable" title="Authentication not connected" class="mt-4">
-    Firebase Authentication is not implemented, so a sign-in cannot succeed here. This screen
-    represents the intended states and never accepts credentials as valid.
-  </AdminNotice>
 
   <p class="mt-6 text-center">
     <a
@@ -144,6 +133,9 @@ const inputBase =
 </AdminAuthLayout>
 
 <script>
+  import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
+  import { getFirebaseAuth } from '../../lib/firebaseClient';
+
   const form = document.querySelector<HTMLFormElement>('[data-login-form]');
 
   if (form) {
@@ -178,7 +170,7 @@ const inputBase =
       );
     };
 
-    const showMessage = (text: string, tone: 'error' | 'unavailable') => {
+    const showMessage = (text: string, tone: 'error' | 'info') => {
       if (!message) return;
       message.textContent = text;
       message.classList.remove('hidden');
@@ -187,6 +179,54 @@ const inputBase =
       } else {
         message.classList.add('border-outline-variant', 'bg-surface-container', 'text-on-surface');
       }
+      message.setAttribute('tabindex', '-1');
+      message.focus();
+    };
+
+    const getErrorMessage = (error: unknown): string => {
+      if (typeof error === 'object' && error !== null && 'code' in error) {
+        const code = error.code;
+        if (
+          code === 'auth/invalid-credential' ||
+          code === 'auth/user-not-found' ||
+          code === 'auth/wrong-password' ||
+          code === 'auth/invalid-email'
+        ) {
+          return 'The email address or password is incorrect.';
+        }
+        if (code === 'auth/too-many-requests') {
+          return 'Too many attempts. Please wait and try again.';
+        }
+      }
+
+      if (
+        error instanceof Error &&
+        error.message === 'Firebase web configuration is incomplete.'
+      ) {
+        return 'Authentication is not configured for this environment. Contact the project operator.';
+      }
+
+      return 'Sign-in could not be completed. Please try again.';
+    };
+
+    const getCsrfToken = async (): Promise<string> => {
+      const response = await fetch('/admin/session-csrf', {
+        method: 'GET',
+        credentials: 'same-origin',
+        cache: 'no-store',
+      });
+      if (!response.ok) throw new Error('Unable to verify the security token.');
+
+      const payload: unknown = await response.json();
+      if (
+        typeof payload !== 'object' ||
+        payload === null ||
+        !('csrfToken' in payload) ||
+        typeof payload.csrfToken !== 'string'
+      ) {
+        throw new Error('The security token response was invalid.');
+      }
+      return payload.csrfToken;
     };
 
     const setBusy = (busy: boolean) => {
@@ -209,7 +249,7 @@ const inputBase =
       if (icon) icon.textContent = reveal ? 'visibility_off' : 'visibility';
     });
 
-    form.addEventListener('submit', (event) => {
+    form.addEventListener('submit', async (event) => {
       event.preventDefault();
       clearMessage();
 
@@ -232,18 +272,62 @@ const inputBase =
         return;
       }
 
-      // No authentication backend exists. Show the submitting state briefly,
-      // then resolve to an explicit "not connected" result — never success.
       setBusy(true);
-      window.setTimeout(() => {
+      let auth: Awaited<ReturnType<typeof getFirebaseAuth>> | undefined;
+      try {
+        auth = await getFirebaseAuth();
+        const credential = await signInWithEmailAndPassword(auth, emailValue, passwordValue);
+        const idToken = await credential.user.getIdToken(true);
+        const csrfToken = await getCsrfToken();
+        const response = await fetch('/admin/session', {
+          method: 'POST',
+          credentials: 'same-origin',
+          cache: 'no-store',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-Token': csrfToken,
+          },
+          body: JSON.stringify({ idToken }),
+        });
+
+        await signOut(auth);
+        if (!response.ok) {
+          const text =
+            response.status === 403
+              ? 'This account is not authorized to use the Admin Console.'
+              : response.status === 503
+                ? 'Authentication is temporarily unavailable. Please try again.'
+                : 'Sign-in could not be completed. Please try again.';
+          showMessage(text, response.status === 503 ? 'info' : 'error');
+          return;
+        }
+
+        const requestedReturnTo = new URLSearchParams(window.location.search).get('returnTo');
+        const returnTo =
+          requestedReturnTo?.startsWith('/admin/') &&
+          !requestedReturnTo.startsWith('//') &&
+          !requestedReturnTo.startsWith('/admin/login')
+            ? requestedReturnTo
+            : '/admin/';
+        window.location.assign(returnTo);
+      } catch (error) {
+        if (auth?.currentUser) {
+          try {
+            await signOut(auth);
+          } catch (signOutError) {
+            console.error('Could not clear temporary Firebase Auth state.', signOutError);
+            showMessage(
+              'Sign-in could not be completed safely. Close this tab and contact the project operator.',
+              'error',
+            );
+            setBusy(false);
+            return;
+          }
+        }
+        showMessage(getErrorMessage(error), 'error');
+      } finally {
         setBusy(false);
-        showMessage(
-          'Sign-in is unavailable. Authentication is not connected in this preview, so your credentials cannot be verified. No data was sent or stored.',
-          'unavailable'
-        );
-        message?.setAttribute('tabindex', '-1');
-        message?.focus();
-      }, 600);
+      }
     });
   }
 </script>

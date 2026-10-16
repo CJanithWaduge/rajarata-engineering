@@ -10,11 +10,17 @@
     "build": "astro build",
     "preview": "astro preview",
     "check": "astro check",
+    "test:content": "node --experimental-strip-types --test tests/content-model.test.mjs",
+    "test:rules": "firebase emulators:exec --project demo-rajarata-engineering --only firestore,storage \"node --test tests/firebase-rules.test.mjs tests/draft-repository.test.mjs\"",
+    "test:phase14": "npm run build && npm run test:content && npm run test:rules",
     "astro": "astro"
   },
   "dependencies": {
+    "@astrojs/node": "^11.1.7",
     "@tailwindcss/vite": "^4.3.3",
     "astro": "^7.3.5",
+    "firebase": "^13.0.0",
+    "firebase-admin": "^14.5.0",
     "tailwindcss": "^4.3.3"
   },
   "allowScripts": {
@@ -22,6 +28,11 @@
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.10",
+    "@firebase/rules-unit-testing": "^6.0.0",
+    "firebase-tools": "^15.34.0",
     "typescript": "^6.0.3"
+  },
+  "overrides": {
+    "@grpc/grpc-js": "^1.14.6"
   }
 }

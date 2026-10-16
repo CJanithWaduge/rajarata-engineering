@@ -2,14 +2,8 @@
 /**
  * Admin — Service editor (Phase 11, Step A11.6).
  *
- * Grouped, labeled form sections covering the service fields in DESIGN.md:
- * identity, summary/description, classification and scope, image alt text,
- * and SEO. Validation, character counters, and unsaved-change states are
- * real; persistence and publishing are not, so Save draft and Publish stay
- * visibly unavailable.
- *
- * Values are illustrative placeholders for layout review. No capability is
- * claimed and no markup is executed — rich text is intentionally not enabled.
+ * Draft editing is emulator-only. Saving changes the working copy and never
+ * updates the statically generated public pages.
  */
 import AdminLayout from '../../../layouts/AdminLayout.astro';
 import AdminPageHeader from '../../../components/admin/AdminPageHeader.astro';
@@ -20,6 +14,9 @@ import AdminField from '../../../components/admin/AdminField.astro';
 import TagInput from '../../../components/admin/TagInput.astro';
 import AssetThumb from '../../../components/admin/AssetThumb.astro';
 import EditorActionBar from '../../../components/admin/EditorActionBar.astro';
+import { CONTENT_SCHEMA_VERSION, type ServiceDraft } from '../../../lib/contentModel';
+import { getDraftFirestore } from '../../../lib/firebaseAdmin';
+import { getServiceDraft } from '../../../lib/draftRepository';
 
 const focusRing =
   'focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-container';
@@ -35,29 +32,37 @@ const categories = [
   'Surge & Transient Defense',
 ];
 
-// Illustrative record for layout review (identifier matches the record the
-// services list links from). Nothing here is read from or written to storage.
-const record = {
-  id: 'service-01',
-  title: 'Residential & Commercial Electrical Wiring',
-  category: 'LV Distribution',
-  summary:
-    'Illustrative summary — full architectural electrical infrastructure planning, rough-in, and final wiring.',
-  description:
-    'Illustrative description — a detailed account of how the service is planned, installed, and verified. This placeholder is for layout review only.',
-  scope:
-    'Illustrative scope — distribution boards, concealed conduit networks, architectural lighting fixtures, and load calculation checks.',
-  suitableFor: ['Residential complexes', 'Commercial buildings', 'Retail plazas'],
-  order: 1,
-  alt: 'Illustrative alt text describing the service image',
-  seoTitle: '',
-  seoDescription: '',
+const id = Astro.url.searchParams.get('id');
+const now = new Date().toISOString();
+let loadError = '';
+let record: ServiceDraft = {
+  schemaVersion: CONTENT_SCHEMA_VERSION,
+  id: '',
+  order: 0,
+  category: '',
+  title: '',
+  summary: '',
+  body: '',
+  scope: '',
+  suitability: [],
+  imageRef: null,
+  archived: false,
+  updatedAt: now,
 };
+
+if (id) {
+  try {
+    record = await getServiceDraft(getDraftFirestore(), Astro.locals.authUser, id);
+  } catch (error) {
+    loadError = error instanceof Error ? error.message : 'The service draft could not be loaded.';
+    console.error('Service draft could not be loaded.', error);
+  }
+}
 ---
 
 <AdminLayout title="Edit service" pageLabel="Edit service">
   <div class="space-y-6 pb-4" data-editor-root>
-    <AdminPageHeader title="Edit service" description="Update the service's public content and metadata.">
+    <AdminPageHeader title={id ? 'Edit service draft' : 'Create service draft'} description="Update the unpublished working copy.">
       <Fragment slot="actions">
         <StatusChip status="draft" />
         <a
@@ -70,13 +75,19 @@ const record = {
       </Fragment>
     </AdminPageHeader>
 
-    <AdminNotice tone="unavailable" title="Not connected — nothing here is saved">
-      This editor is a frontend preview. Validation, counters, and the unsaved-change indicator
-      work locally, but Save draft and Publish are unavailable and no value is written to the
-      public site. Fields shown are illustrative placeholders.
-    </AdminNotice>
+    {loadError && <AdminNotice tone="error" title="Couldn’t load service draft">{loadError}</AdminNotice>}
 
-    <form novalidate data-editor-form class="space-y-6">
+    <form
+      novalidate
+      data-editor-form
+      data-draft-kind="services"
+      data-expected-updated-at={id ? record.updatedAt : 'null'}
+      data-draft-available={!loadError}
+      hidden={Boolean(loadError)}
+      class="space-y-6"
+    >
+      <input type="hidden" name="imageRef" value={record.imageRef ?? ''} />
+      <input type="hidden" name="archived" value={String(record.archived)} />
       <FormSection
         title="Identity"
         description="How the service is named and addressed. The identifier is stable and anchors the public link."
@@ -84,8 +95,6 @@ const record = {
         <AdminField
           name="title"
           label="Service name"
-          required
-          requiredMessage="Enter a service name."
           value={record.title}
           helper="Shown as the card and page heading."
         />
@@ -93,7 +102,9 @@ const record = {
           name="id"
           label="Stable identifier"
           value={record.id}
-          readonly
+          required
+          requiredMessage="Enter a stable lowercase identifier."
+          readonly={Boolean(id)}
           mono
           helper="Read-only: it anchors the public URL and cannot be edited after creation."
         />
@@ -104,8 +115,6 @@ const record = {
           name="summary"
           type="textarea"
           label="Short card summary"
-          required
-          requiredMessage="Enter a short summary."
           rows={3}
           maxlength={180}
           counter
@@ -117,7 +126,7 @@ const record = {
           type="textarea"
           label="Detailed description"
           rows={8}
-          value={record.description}
+          value={record.body}
           helper="Plain text only. Formatted text is not enabled and arbitrary HTML, scripts, or embeds are not accepted."
         />
       </FormSection>
@@ -127,8 +136,6 @@ const record = {
           name="category"
           type="select"
           label="Category"
-          required
-          requiredMessage="Choose a category."
           value={record.category}
           options={categories.map((c) => ({ value: c, label: c }))}
           helper="Determines the icon and grouping on the public site."
@@ -146,7 +153,7 @@ const record = {
         <TagInput
           name="suitableFor"
           label="Suitable for"
-          values={record.suitableFor}
+          values={record.suitability}
           placeholder="e.g. Manufacturing plants"
           helper="One audience or building type per entry."
         />
@@ -160,10 +167,7 @@ const record = {
         />
       </FormSection>
 
-      <FormSection
-        title="Image and alt text"
-        description="The approved image for this service. Descriptive alt text is required for accessibility."
-      >
+      <FormSection title="Image" description="Asset selection is handled in the media-management phase.">
         <div class="flex flex-wrap items-center gap-4">
           <AssetThumb variant="missing" class="w-24" />
           <div class="space-y-2">
@@ -171,7 +175,7 @@ const record = {
               <button
                 type="button"
                 disabled
-                title="Assigning an asset to this field is not connected."
+                title="Image selection is not part of Phase 14."
                 class={`inline-flex h-10 items-center gap-2 rounded-control border-[1.5px] border-outline-variant px-4 font-label-md text-label-md text-on-surface-variant opacity-60 ${focusRing}`}
               >
                 <span class="material-symbols-outlined text-[18px]" aria-hidden="true">perm_media</span>
@@ -186,50 +190,11 @@ const record = {
               </a>
             </div>
             <p class="font-body-sm text-body-sm text-secondary">
-              No asset is assigned in this preview. The media library is browsable, but selecting an
-              asset for this field is not connected yet.
+              {record.imageRef ? `Assigned media reference: ${record.imageRef}` : 'No media is assigned.'}
+              Draft media selection remains outside Phase 14.
             </p>
           </div>
         </div>
-
-        <AdminField
-          name="alt"
-          label="Image alt text"
-          required
-          requiredMessage="Describe the image for assistive technology."
-          value={record.alt}
-          maxlength={150}
-          counter
-          helper="Describe the content and purpose of the image, not the file name."
-        />
-      </FormSection>
-
-      <FormSection
-        title="SEO"
-        description="Optional search metadata. Leave blank to fall back to the service name and summary."
-      >
-        <AdminField
-          name="seoTitle"
-          label="SEO title"
-          optional
-          maxlength={60}
-          counter
-          value={record.seoTitle}
-          placeholder="Leave blank to use the service name"
-          helper="Around 60 characters shows fully in search results."
-        />
-        <AdminField
-          name="seoDescription"
-          type="textarea"
-          label="Meta description"
-          optional
-          rows={3}
-          maxlength={160}
-          counter
-          value={record.seoDescription}
-          placeholder="Leave blank to use the short summary"
-          helper="Around 160 characters shows fully in search results."
-        />
       </FormSection>
 
       <div
@@ -244,8 +209,8 @@ const record = {
     </form>
 
     <p class="font-body-sm text-body-sm text-secondary">
-      Validation, counters, and unsaved-change tracking are local only. Leaving with unsaved changes
-      prompts a browser confirmation; no data leaves this page.
+      Saving writes the validated working copy to the local Firestore emulator. It does not publish
+      content or modify the public build.
     </p>
   </div>
 </AdminLayout>

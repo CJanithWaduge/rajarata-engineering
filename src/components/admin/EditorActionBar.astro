@@ -2,10 +2,9 @@
 /**
  * Admin editor action bar (Phase 11, A11.6).
  *
- * A sticky footer for long editors. It clearly separates "Save draft" from
- * "Publish" and keeps both visibly unavailable, because neither persistence
- * nor a publishing pipeline exists yet. The unsaved-change indicator is
- * driven by the editor runtime and announced politely.
+ * A sticky footer for long editors. Draft saving persists only to the
+ * protected working copy; the separate Publish action remains unavailable.
+ * The unsaved-change indicator is driven by the editor runtime.
  */
 interface Props {
   /** Supporting line under the change indicator. */
@@ -13,7 +12,7 @@ interface Props {
   class?: string;
 }
 
-const { savedNote = 'Not saved — this preview does not persist changes.', class: className } = Astro.props;
+const { savedNote = 'Draft saves stay unpublished until a release is deployed.', class: className } = Astro.props;
 
 const focusRing =
   'focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-container';
@@ -68,9 +67,9 @@ const previewHref = `/admin/preview?from=${encodeURIComponent(Astro.url.pathname
 
       <button
         type="button"
-        disabled
+        data-editor-save
         aria-describedby="editor-save-note"
-        class={`inline-flex h-10 items-center gap-2 rounded-control border-[1.5px] border-outline-variant bg-surface-container px-4 font-label-md text-label-md text-on-surface-variant opacity-60 ${focusRing}`}
+        class={`inline-flex h-10 items-center gap-2 rounded-control border-[1.5px] border-outline-variant bg-surface-container px-4 font-label-md text-label-md text-on-surface hover:bg-surface-container-high disabled:cursor-not-allowed disabled:opacity-60 ${focusRing}`}
       >
         <span class="material-symbols-outlined text-[18px]" aria-hidden="true">save</span>
         Save draft
@@ -89,7 +88,7 @@ const previewHref = `/admin/preview?from=${encodeURIComponent(Astro.url.pathname
   </div>
 
   <p id="editor-save-note" class="sr-only">
-    Save draft and Publish are unavailable: content storage and the publishing pipeline are not
-    connected in this phase.
+    Save draft persists this working copy only. Publish is unavailable and saving will not change
+    public pages.
   </p>
 </div>

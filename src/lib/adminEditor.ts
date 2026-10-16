@@ -1,15 +1,15 @@
 /**
  * Admin editor runtime (Phase 11, Step A11.6).
  *
- * Shared, frontend-only behavior for the service and project editors:
+ * Shared behavior for the service and project editors:
  *
  *  - inline validation on blur (and live once a field is invalid),
  *  - character counters for fields with a real limit,
  *  - an unsaved-changes indicator and a leave guard,
- *  - local discard that restores initial values (including tag lists).
+ *  - discard that restores initial values (including tag lists),
+ *  - emulator-only draft persistence with optimistic concurrency.
  *
- * It never saves or publishes anything: the editor action bar keeps those
- * controls disabled. This module only makes the local states truthful.
+ * Draft writes never publish content or alter the static public site.
  */
 
 interface EditorForm extends HTMLFormElement {
@@ -63,7 +63,7 @@ const initEditor = (form: EditorForm) => {
 
   const initialValues = new Map<HTMLElement, string>();
   controls.forEach((control) => initialValues.set(control, valueOf(control)));
-  const initialTags = serializeTags(root);
+  let initialTags = serializeTags(root);
 
   const computeDirty = () => {
     const changedControl = controls.some((control) => valueOf(control) !== initialValues.get(control));
@@ -186,7 +186,286 @@ const initEditor = (form: EditorForm) => {
 
   discardBtn?.addEventListener('click', discard);
 
-  // ---- Submit is never a save -------------------------------------------
+  const saveDraft = async () => {
+    const kind = form.dataset.draftKind;
+    const message = root.querySelector<HTMLElement>('[data-editor-message]');
+    const saveButton = root.querySelector<HTMLButtonElement>('[data-editor-save]');
+    if (!kind || !message || !saveButton) return;
+
+    const fields = new FormData(form);
+    const stringField = (name: string) => String(fields.get(name) ?? '');
+    const tags = (name: string) => {
+      const list = root.querySelector<HTMLElement>(`[data-tag-name="${CSS.escape(name)}"] [data-tag-list]`);
+      return Array.from(list?.querySelectorAll('li span:first-child') ?? [])
+        .map((item) => item.textContent?.trim() ?? '')
+        .filter(Boolean);
+    };
+    const updatedAt = form.dataset.expectedUpdatedAt;
+    const expectedUpdatedAt = updatedAt === 'null' ? null : updatedAt;
+    if (expectedUpdatedAt === undefined) {
+      message.textContent = 'The draft version is missing. Reload this editor before saving.';
+      message.classList.remove('hidden');
+      message.focus();
+      return;
+    }
+
+    const expectedFor = (key: string): string | null | undefined => {
+      const value = form.dataset[key];
+      return value === 'null' ? null : value;
+    };
+    const draftForPage = (
+      pageId: string,
+      sections: Record<string, unknown>,
+      version: string | null,
+    ) => ({
+      schemaVersion: 1,
+      pageId,
+      sections,
+      updatedAt: version ?? now,
+    });
+    let draft: Record<string, unknown>;
+    const now = new Date().toISOString();
+    let siteTasks: Array<{
+      kind: string;
+      expectedUpdatedAt: string | null;
+      draft: Record<string, unknown>;
+    }> = [];
+    if (kind === 'services') {
+      draft = {
+        schemaVersion: 1,
+        id: stringField('id'),
+        order: Number(stringField('order')),
+        category: stringField('category'),
+        title: stringField('title'),
+        summary: stringField('summary'),
+        body: stringField('description'),
+        scope: stringField('scope'),
+        suitability: tags('suitableFor'),
+        imageRef: stringField('imageRef') || null,
+        archived: stringField('archived') === 'true',
+        updatedAt: expectedUpdatedAt ?? now,
+      };
+    } else if (kind === 'projects') {
+      const year = stringField('year').trim();
+      draft = {
+        schemaVersion: 1,
+        id: stringField('id'),
+        order: Number(stringField('order')),
+        category: stringField('type'),
+        title: stringField('title'),
+        summary: stringField('summary'),
+        specifications: stringField('description'),
+        location: stringField('location'),
+        year: year ? Number(year) : null,
+        reference: stringField('id'),
+        clientName: stringField('client').trim() || null,
+        imageRef: stringField('imageRef') || null,
+        altText: stringField('alt'),
+        featured: root.querySelector<HTMLInputElement>('[name="featured"]')?.checked ?? false,
+        archived: stringField('archived') === 'true',
+        updatedAt: expectedUpdatedAt ?? now,
+      };
+    } else if (kind === 'siteContent') {
+      const homeVersion = expectedFor('expectedHome');
+      const aboutVersion = expectedFor('expectedAbout');
+      const contactVersion = expectedFor('expectedContact');
+      const businessVersion = expectedFor('expectedBusiness');
+      const seoVersion = expectedFor('expectedSeo');
+      if (
+        homeVersion === undefined ||
+        aboutVersion === undefined ||
+        contactVersion === undefined ||
+        businessVersion === undefined ||
+        seoVersion === undefined
+      ) {
+        message.textContent = 'Draft versions are missing. Reload this editor before saving.';
+        message.classList.remove('hidden');
+        message.focus();
+        return;
+      }
+      const routes: Record<string, unknown> = {};
+      for (const route of ['home', 'services', 'projects', 'about', 'contact']) {
+        routes[route] = {
+          title: stringField(`seo-title-${route}`),
+          description: stringField(`seo-description-${route}`),
+          shareImageRef: stringField(`seo-share-image-${route}`) || null,
+        };
+      }
+      siteTasks = [
+        {
+          kind: 'pages',
+          expectedUpdatedAt: homeVersion,
+          draft: draftForPage('home', {
+            hero: {
+              heading: stringField('home-heroHeading'),
+              intro: stringField('home-heroIntro'),
+              ctaLabel: stringField('home-heroCta'),
+              ctaTarget: '/contact',
+            },
+            trustStrip: { items: tags('home-trustStrip') },
+          }, homeVersion),
+        },
+        {
+          kind: 'pages',
+          expectedUpdatedAt: aboutVersion,
+          draft: draftForPage('about', {
+            hero: { intro: stringField('about-intro') },
+            heritage: { body: stringField('about-story') },
+            visionMission: {
+              heading: stringField('about-vision'),
+              body: stringField('about-mission'),
+            },
+            industries: { items: tags('about-industries') },
+            pillars: { items: tags('about-pillars') },
+            methodology: { body: stringField('about-process') },
+            cta: { body: stringField('about-cta') },
+          }, aboutVersion),
+        },
+        {
+          kind: 'pages',
+          expectedUpdatedAt: contactVersion,
+          draft: draftForPage('contact', {
+            operationalDesks: {
+              label: stringField('contact-deskLabel'),
+              body: stringField('contact-deskDetails'),
+            },
+            quotation: { body: stringField('contact-support') },
+            visitorInformation: { body: stringField('contact-visitor') },
+          }, contactVersion),
+        },
+        {
+          kind: 'businessDetails',
+          expectedUpdatedAt: businessVersion,
+          draft: {
+            schemaVersion: 1,
+            address: stringField('business-address'),
+            phone: stringField('business-phone'),
+            email: stringField('business-email'),
+            hours: stringField('business-hours'),
+            whatsapp: stringField('business-whatsapp'),
+            updatedAt: businessVersion ?? now,
+          },
+        },
+        {
+          kind: 'seo',
+          expectedUpdatedAt: seoVersion,
+          draft: {
+            schemaVersion: 1,
+            routes,
+            updatedAt: seoVersion ?? now,
+          },
+        },
+      ];
+      draft = {};
+    } else {
+      return;
+    }
+
+    saveButton.disabled = true;
+    const originalLabel = saveButton.textContent;
+    saveButton.textContent = 'Saving draft…';
+    message.classList.add('hidden');
+
+    let savedSiteTasks = 0;
+    let latestUpdatedAt: string | undefined;
+    try {
+      const csrfResponse = await fetch('/admin/session-csrf', {
+        credentials: 'same-origin',
+        cache: 'no-store',
+      });
+      const csrfPayload = await csrfResponse.json() as { csrfToken?: unknown };
+      if (!csrfResponse.ok || typeof csrfPayload.csrfToken !== 'string') {
+        throw new Error('Could not verify this request. Reload the page and try again.');
+      }
+      const csrfToken = csrfPayload.csrfToken;
+
+      const saveOne = async (
+        saveKind: string,
+        saveExpectedUpdatedAt: string | null,
+        saveDraftValue: Record<string, unknown>,
+      ) => {
+        const response = await fetch('/admin/api/drafts', {
+          method: 'POST',
+          credentials: 'same-origin',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-Token': csrfToken,
+          },
+          body: JSON.stringify({
+            kind: saveKind,
+            action: 'save',
+            expectedUpdatedAt: saveExpectedUpdatedAt,
+            draft: saveDraftValue,
+          }),
+        });
+        const payload = await response.json() as {
+          draft?: { id?: string; updatedAt?: string };
+          error?: string;
+          detail?: string;
+        };
+        if (!response.ok) {
+          throw new Error(payload.detail ?? payload.error ?? 'The draft could not be saved.');
+        }
+        return payload;
+      };
+
+      if (kind === 'siteContent') {
+        for (const task of siteTasks) {
+          const result = await saveOne(task.kind, task.expectedUpdatedAt, task.draft);
+          const key = task.kind === 'pages'
+            ? String(task.draft.pageId)
+            : task.kind === 'businessDetails' ? 'business' : 'seo';
+          if (typeof result.draft?.updatedAt === 'string') {
+            form.dataset[`expected${key[0]?.toUpperCase()}${key.slice(1)}`] = result.draft.updatedAt;
+          }
+          latestUpdatedAt = result.draft?.updatedAt;
+          savedSiteTasks += 1;
+        }
+        message.textContent = 'Draft content saved. The public site has not changed.';
+      } else {
+        const result = await saveOne(kind, expectedUpdatedAt, draft);
+        latestUpdatedAt = result.draft?.updatedAt;
+        if (expectedUpdatedAt === null && typeof result.draft?.id === 'string') {
+          const path = kind === 'services' ? '/admin/services/edit' : '/admin/projects/edit';
+          window.location.assign(`${path}?id=${encodeURIComponent(result.draft.id)}`);
+          return;
+        }
+        message.textContent = 'Draft saved. The public site has not changed.';
+      }
+      message.classList.remove('hidden');
+      initialValues.clear();
+      controls.forEach((control) => initialValues.set(control, valueOf(control)));
+      initialTags = serializeTags(root);
+      if (latestUpdatedAt) {
+        form.dataset.expectedUpdatedAt = latestUpdatedAt;
+      }
+      setDirty(false);
+    } catch (error) {
+      message.textContent = error instanceof Error
+        ? savedSiteTasks > 0
+          ? `${savedSiteTasks} of ${siteTasks.length} drafts saved before an error: ${error.message} Reload to review the saved versions.`
+          : error.message
+        : 'The draft could not be saved. Try again.';
+      message.classList.remove('hidden');
+      message.setAttribute('tabindex', '-1');
+      message.focus();
+    } finally {
+      saveButton.disabled = false;
+      saveButton.textContent = originalLabel;
+    }
+  };
+
+  root.querySelector<HTMLButtonElement>('[data-editor-save]')?.addEventListener('click', () => {
+    const results = validateAll();
+    const firstInvalidIndex = results.indexOf(false);
+    if (firstInvalidIndex >= 0) {
+      controls[firstInvalidIndex]?.focus();
+      return;
+    }
+    void saveDraft();
+  });
+
+  // ---- Submit validates; persistence is an explicit button action --------
   form.addEventListener('submit', (event) => {
     event.preventDefault();
     const results = validateAll();
@@ -195,7 +474,9 @@ const initEditor = (form: EditorForm) => {
       controls[firstInvalidIndex]?.focus();
       return;
     }
-    if (message) {
+    if (form.dataset.draftKind) {
+      void saveDraft();
+    } else if (message) {
       message.textContent =
         'Saving is unavailable. Content storage and the publishing pipeline are not connected, so nothing was stored or published.';
       message.classList.remove('hidden');

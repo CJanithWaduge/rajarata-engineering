@@ -1,0 +1,10 @@
+.gcloudignore
+.git
+.gitignore
+node_modules/
+.astro/
+.env
+.env.*
+UI-UX-design/
+AGENTS.md
+IMPLEMENTATION.md

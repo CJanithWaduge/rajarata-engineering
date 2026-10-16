@@ -2,14 +2,8 @@
 /**
  * Admin — Project editor (Phase 11, Step A11.6).
  *
- * Mirrors the service editor's field, validation, status, and unsaved-state
- * patterns. Covers the project fields in DESIGN.md: title/reference, type,
- * summary, detailed description/specification, image alt text and caption,
- * display order, featured status, and SEO.
- *
- * Location, year, and client inputs are present but empty and explicitly
- * marked as verified-business-data only — no portfolio fact is invented.
- * Save draft and Publish remain unavailable.
+ * Draft editing is emulator-only. Saving changes the working copy and never
+ * updates the statically generated public pages.
  */
 import AdminLayout from '../../../layouts/AdminLayout.astro';
 import AdminPageHeader from '../../../components/admin/AdminPageHeader.astro';
@@ -19,6 +13,9 @@ import FormSection from '../../../components/admin/FormSection.astro';
 import AdminField from '../../../components/admin/AdminField.astro';
 import AssetThumb from '../../../components/admin/AssetThumb.astro';
 import EditorActionBar from '../../../components/admin/EditorActionBar.astro';
+import { CONTENT_SCHEMA_VERSION, type ProjectDraft } from '../../../lib/contentModel';
+import { getDraftFirestore } from '../../../lib/firebaseAdmin';
+import { getProjectDraft } from '../../../lib/draftRepository';
 
 const focusRing =
   'focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-container';
@@ -34,32 +31,42 @@ const types = [
   'Surge & Transient Defense',
 ];
 
-// Illustrative record for layout review. No client, location, or year fact is
-// invented; those inputs are intentionally left empty for the owner to supply.
-const record = {
-  id: 'project-01',
-  title: 'Sample project 01',
-  type: 'LV Distribution',
-  summary: 'Illustrative summary — a short description of the project for the portfolio card.',
-  description:
-    'Illustrative specification — a detailed account of the works delivered. Placeholder text for layout review only.',
-  alt: 'Illustrative alt text describing the project image',
-  caption: '',
+const id = Astro.url.searchParams.get('id');
+let loadError = '';
+let record: ProjectDraft = {
+  schemaVersion: CONTENT_SCHEMA_VERSION,
+  id: '',
+  order: 0,
+  category: '',
+  title: '',
+  summary: '',
+  specifications: '',
   location: '',
-  year: '',
-  client: '',
-  order: 1,
+  year: null,
+  reference: '',
+  clientName: null,
+  imageRef: null,
+  altText: '',
   featured: false,
-  seoTitle: '',
-  seoDescription: '',
+  archived: false,
+  updatedAt: new Date().toISOString(),
 };
+
+if (id) {
+  try {
+    record = await getProjectDraft(getDraftFirestore(), Astro.locals.authUser, id);
+  } catch (error) {
+    loadError = error instanceof Error ? error.message : 'The project draft could not be loaded.';
+    console.error('Project draft could not be loaded.', error);
+  }
+}
 ---
 
 <AdminLayout title="Edit project" pageLabel="Edit project">
   <div class="space-y-6 pb-4" data-editor-root>
-    <AdminPageHeader title="Edit project" description="Update the project's public content and metadata.">
+    <AdminPageHeader title={id ? 'Edit project draft' : 'Create project draft'} description="Update the unpublished working copy.">
       <Fragment slot="actions">
-        <StatusChip status="published" />
+        <StatusChip status={record.archived ? 'archived' : 'draft'} />
         <a
           href="/admin/projects"
           class={`inline-flex h-10 items-center gap-2 rounded-control border-[1.5px] border-outline-variant px-4 font-label-md text-label-md text-on-surface hover:bg-surface-container-high ${focusRing}`}
@@ -70,13 +77,18 @@ const record = {
       </Fragment>
     </AdminPageHeader>
 
-    <AdminNotice tone="unavailable" title="Not connected — nothing here is saved">
-      This editor is a frontend preview. Validation and the unsaved-change indicator work locally,
-      but Save draft and Publish are unavailable and no value is written to the public site. Fields
-      shown are illustrative placeholders; verified business details must be supplied by the owner.
-    </AdminNotice>
+    {loadError && <AdminNotice tone="error" title="Couldn’t load project draft">{loadError}</AdminNotice>}
 
-    <form novalidate data-editor-form class="space-y-6">
+    <form
+      novalidate
+      data-editor-form
+      data-draft-kind="projects"
+      data-expected-updated-at={id ? record.updatedAt : 'null'}
+      hidden={Boolean(loadError)}
+      class="space-y-6"
+    >
+      <input type="hidden" name="imageRef" value={record.imageRef ?? ''} />
+      <input type="hidden" name="archived" value={String(record.archived)} />
       <FormSection
         title="Identity"
         description="How the project is named and addressed. The reference is stable and anchors the public link."
@@ -84,16 +96,16 @@ const record = {
         <AdminField
           name="title"
           label="Project title"
-          required
-          requiredMessage="Enter a project title."
           value={record.title}
           helper="Shown as the portfolio card and page heading."
         />
         <AdminField
-          name="reference"
-          label="Stable reference"
+          name="id"
+          label="Stable identifier"
           value={record.id}
-          readonly
+          required
+          requiredMessage="Enter a stable lowercase identifier."
+          readonly={Boolean(id)}
           mono
           helper="Read-only: it anchors the public URL and cannot be edited after creation."
         />
@@ -101,9 +113,7 @@ const record = {
           name="type"
           type="select"
           label="Type / category"
-          required
-          requiredMessage="Choose a project type."
-          value={record.type}
+          value={record.category}
           options={types.map((t) => ({ value: t, label: t }))}
           helper="Groups the project on the public portfolio."
         />
@@ -114,8 +124,6 @@ const record = {
           name="summary"
           type="textarea"
           label="Short summary"
-          required
-          requiredMessage="Enter a short summary."
           rows={3}
           maxlength={180}
           counter
@@ -127,14 +135,14 @@ const record = {
           type="textarea"
           label="Detailed description / specification"
           rows={8}
-          value={record.description}
+          value={record.specifications}
           helper="Plain text only. Formatted text is not enabled and arbitrary HTML, scripts, or embeds are not accepted."
         />
       </FormSection>
 
       <FormSection
         title="Image, alt text, and caption"
-        description="The project image with descriptive alt text. Alt text is required for accessibility."
+        description="Media is retained as a reference; upload and selection are handled in the media-management phase."
       >
         <div class="flex flex-wrap items-center gap-4">
           <AssetThumb variant="missing" class="w-24" />
@@ -167,22 +175,10 @@ const record = {
         <AdminField
           name="alt"
           label="Image alt text"
-          required
-          requiredMessage="Describe the image for assistive technology."
-          value={record.alt}
+          value={record.altText}
           maxlength={150}
           counter
           helper="Describe the content and purpose of the image, not the file name."
-        />
-        <AdminField
-          name="caption"
-          label="Caption"
-          optional
-          maxlength={200}
-          counter
-          value={record.caption}
-          placeholder="Optional caption shown with the image"
-          helper="Use only if the caption adds information beyond the alt text."
         />
       </FormSection>
 
@@ -208,7 +204,7 @@ const record = {
             name="year"
             label="Year"
             optional
-            value={record.year}
+            value={record.year ?? ''}
             placeholder="e.g. 2025"
             helper="Only from verified business data."
           />
@@ -217,7 +213,7 @@ const record = {
           name="client"
           label="Client"
           optional
-          value={record.client}
+          value={record.clientName ?? ''}
           placeholder="Only if the client has approved being named"
           helper="Only from verified business data. Never guess a client name."
         />
@@ -250,34 +246,6 @@ const record = {
         </div>
       </FormSection>
 
-      <FormSection
-        title="SEO"
-        description="Optional search metadata. Leave blank to fall back to the project title and summary."
-      >
-        <AdminField
-          name="seoTitle"
-          label="SEO title"
-          optional
-          maxlength={60}
-          counter
-          value={record.seoTitle}
-          placeholder="Leave blank to use the project title"
-          helper="Around 60 characters shows fully in search results."
-        />
-        <AdminField
-          name="seoDescription"
-          type="textarea"
-          label="Meta description"
-          optional
-          rows={3}
-          maxlength={160}
-          counter
-          value={record.seoDescription}
-          placeholder="Leave blank to use the short summary"
-          helper="Around 160 characters shows fully in search results."
-        />
-      </FormSection>
-
       <div
         data-editor-message
         role="alert"
@@ -290,8 +258,9 @@ const record = {
     </form>
 
     <p class="font-body-sm text-body-sm text-secondary">
-      Validation, counters, and unsaved-change tracking are local only. Leaving with unsaved changes
-      prompts a browser confirmation; no data leaves this page.
+      Saving writes the validated working copy to the local Firestore emulator. It does not publish
+      content or modify the public build. Location, year, and client details must come from verified
+      business records.
     </p>
   </div>
 </AdminLayout>

@@ -31,6 +31,7 @@ const { title, pageLabel } = Astro.props;
 const path = Astro.url.pathname;
 const trail = adminBreadcrumb(path, pageLabel ?? title);
 const documentTitle = `${title} · Rajarata Engineering Admin`;
+const authUser = Astro.locals.authUser;
 
 const focusRing =
   'focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-container';
@@ -132,10 +133,10 @@ const focusRing =
               <div class="flex items-center gap-2 border-l border-outline-variant pl-3">
                 <div class="hidden text-right sm:block">
                   <p class="font-label-md text-label-md leading-tight text-on-surface">
-                    Administrator
+                    {authUser?.name ?? 'Administrator'}
                   </p>
                   <p class="font-body-sm text-body-sm leading-tight text-secondary">
-                    Identity placeholder
+                    {authUser?.email ?? 'Verified admin session'}
                   </p>
                 </div>
                 <div
@@ -146,23 +147,18 @@ const focusRing =
                 </div>
                 <button
                   type="button"
-                  disabled
-                  aria-describedby="admin-signout-note"
-                  title="Sign-out is unavailable until authentication is connected."
-                  class="hidden h-10 items-center gap-2 rounded-control px-3 font-label-md text-label-md text-on-surface-variant opacity-60 sm:inline-flex"
+                  data-admin-signout
+                  class={`inline-flex h-10 w-10 items-center justify-center gap-2 rounded-control px-2 font-label-md text-label-md text-on-surface-variant hover:bg-surface-container-high sm:w-auto sm:px-3 ${focusRing}`}
                 >
                   <span class="material-symbols-outlined text-[18px]" aria-hidden="true"
                     >logout</span
                   >
-                  Sign out
+                  <span class="sr-only sm:not-sr-only">Sign out</span>
                 </button>
               </div>
             </div>
           </div>
-          <p id="admin-signout-note" class="sr-only">
-            Sign-out becomes available once Firebase Authentication is connected. It is shown
-            here to represent the intended control.
-          </p>
+          <p id="admin-session-status" class="sr-only" role="status" aria-live="polite"></p>
         </header>
 
         <!-- Content canvas -->
@@ -252,5 +248,29 @@ const focusRing =
         });
       }
     </script>
+    <script>
+      import { signOutAdminSession } from '../lib/adminBrowserSession';
+
+      const signOutButton = document.querySelector<HTMLButtonElement>('[data-admin-signout]');
+      const sessionStatus = document.getElementById('admin-session-status');
+
+      signOutButton?.addEventListener('click', async () => {
+        signOutButton.disabled = true;
+        signOutButton.setAttribute('aria-busy', 'true');
+        if (sessionStatus) sessionStatus.textContent = '';
+
+        try {
+          await signOutAdminSession();
+          window.location.assign('/admin/login');
+        } catch (error) {
+          console.error('Admin sign-out failed.', error);
+          if (sessionStatus) {
+            sessionStatus.textContent = 'Sign-out could not be confirmed. Please try again.';
+          }
+          signOutButton.disabled = false;
+          signOutButton.removeAttribute('aria-busy');
+        }
+      });
+    </script>
   </body>
-</html>
+  </html>
