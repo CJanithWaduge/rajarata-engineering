@@ -19,6 +19,7 @@ import {
   setReleaseBuildId,
   setReleaseStatus,
 } from '../src/lib/releaseRepository.ts';
+import { createMediaDraft } from '../src/lib/mediaRepository.ts';
 
 const projectId = 'demo-rajarata-engineering';
 const actor = { uid: 'publishing-emulator-admin', admin: true };
@@ -29,6 +30,7 @@ let app;
 let firestore;
 let bucket;
 let testQueue = Promise.resolve();
+let testMedia;
 
 function serialTest(name, run) {
   test(name, () => {
@@ -110,6 +112,13 @@ after(async () => {
 
 afterEach(async () => {
   if (!firestore) return;
+  if (testMedia) {
+    await Promise.all([
+      firestore.doc(`drafts/media/records/${testMedia.id}`).delete(),
+      bucket.file(testMedia.storagePath).delete({ ignoreNotFound: true }),
+    ]);
+    testMedia = undefined;
+  }
   const collections = [
     'drafts/services/records',
     'drafts/projects/records',
@@ -236,6 +245,60 @@ serialTest('rollback creates a new release from a retained published snapshot', 
   assert.equal(parseReleaseRecord(persisted).status, 'live');
   assert.equal(persisted.rollbackOf, original.release.id);
   assert.equal((await listReleases(firestore)).length >= 2, true);
+});
+
+serialTest('media referenced by multiple releases remains available through rollback', async () => {
+  await seedRequiredDrafts();
+  testMedia = await createMediaDraft(firestore, bucket, actor, {
+    originalName: `${marker}-panel.png`,
+    alt: 'Test switchboard image for release retention',
+    contentType: 'image/png',
+    bytes: new Uint8Array([
+      0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a,
+      0, 0, 0, 13, 0x49, 0x48, 0x44, 0x52,
+      0, 0, 0, 32, 0, 0, 0, 24,
+    ]),
+  });
+  const imageServiceId = `${marker}-media-service`;
+  await firestore.doc(`drafts/services/records/${imageServiceId}`).set(
+    service(imageServiceId, 0, { imageRef: testMedia.id }),
+  );
+
+  const first = await createPublishRelease(
+    firestore,
+    bucket,
+    actor,
+    `${marker}-media-release-1`,
+  );
+  await completeBuild(first.release.id);
+  assert.deepEqual(first.release.mediaRefs, [testMedia.id]);
+
+  const second = await createPublishRelease(
+    firestore,
+    bucket,
+    actor,
+    `${marker}-media-release-2`,
+  );
+  await completeBuild(second.release.id);
+  assert.deepEqual(second.release.mediaRefs, [testMedia.id]);
+  assert.equal((await bucket.file(testMedia.storagePath).exists())[0], true);
+
+  const rollback = await createRollbackRelease(
+    firestore,
+    bucket,
+    actor,
+    first.release.id,
+    `${marker}-media-rollback`,
+  );
+  assert.deepEqual(rollback.release.mediaRefs, [testMedia.id]);
+  assert.equal((await bucket.file(testMedia.storagePath).exists())[0], true);
+  await setReleaseStatus(firestore, rollback.release.id, 'building');
+  await setReleaseStatus(firestore, rollback.release.id, 'deploying');
+  await finishRelease(firestore, rollback.release.id, {
+    status: 'live',
+    hostVersionId: `sites/${projectId}/versions/media-rollback-${rollback.release.id}`,
+  });
+  assert.equal((await firestore.doc('locks/publish').get()).exists, false);
 });
 
 serialTest('failed build records do not claim Hosting success and allow a deliberate retry', async () => {

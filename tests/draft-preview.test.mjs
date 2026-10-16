@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import { spawn } from 'node:child_process';
 import { after, before, test } from 'node:test';
 import { createServer } from 'node:net';
@@ -24,6 +25,7 @@ import {
   saveSeoDraft,
   saveServiceDraft,
 } from '../src/lib/draftRepository.ts';
+import { isRejectedSession } from '../src/lib/adminSession.ts';
 
 const projectId = 'demo-rajarata-engineering';
 const suffix = Date.now().toString();
@@ -339,6 +341,45 @@ test('SSR preview, draft data, and image bytes require a verified admin session'
   assert.equal(adminImage.headers.get('content-type'), 'image/png');
   assert.match(adminImage.headers.get('cache-control') ?? '', /no-store/);
   assert.deepEqual(new Uint8Array(await adminImage.arrayBuffer()), pngHeader(48, 32));
+});
+
+test('expired and revoked session errors are classified as authentication failures', () => {
+  assert.equal(isRejectedSession({ code: 'auth/session-cookie-expired' }), true);
+  assert.equal(isRejectedSession({ code: 'auth/session-cookie-revoked' }), true);
+});
+
+test('Admin sign-out clears the session cookie and returns to the login boundary', async () => {
+  const sessionValue = adminCookie.slice('__session='.length);
+  const response = await fetch(new URL('/admin/sign-out', serverUrl), {
+    method: 'POST',
+    headers: {
+      Origin: serverUrl.origin,
+      Cookie: adminCookie,
+      'X-CSRF-Token': createHash('sha256').update(sessionValue).digest('hex'),
+    },
+  });
+  assert.equal(response.status, 200);
+  assert.deepEqual(await response.json(), { signedOut: true });
+  assert.match(response.headers.get('set-cookie') ?? '', /__session=;.*Max-Age=0/);
+
+  const signedOutRequest = await fetch(new URL('/admin/preview?page=home', serverUrl), {
+    redirect: 'manual',
+  });
+  assert.equal(signedOutRequest.status, 302);
+  assert.match(signedOutRequest.headers.get('location') ?? '', /\/admin\/login/);
+});
+
+test('removing the admin claim and revoking tokens denies an existing session', async () => {
+  await auth.setCustomUserClaims(adminUser.uid, {});
+  await auth.revokeRefreshTokens(adminUser.uid);
+
+  const response = await fetch(new URL('/admin/preview?page=home', serverUrl), {
+    headers: { Cookie: adminCookie },
+    redirect: 'manual',
+  });
+  assert.equal(response.status, 302);
+  assert.match(response.headers.get('location') ?? '', /\/admin\/login/);
+  assert.match(response.headers.get('cache-control') ?? '', /no-store/);
 });
 
 test('public static output contains no Admin preview HTML or draft data', async () => {

@@ -16,6 +16,8 @@
  */
 import Container from './Container.astro';
 import Logo from './Logo.astro';
+import WhatsAppIcon from './ui/WhatsAppIcon.astro';
+import { parseWhatsAppNumber } from '../lib/whatsapp';
 
 const quickLinks = [
   { label: 'Home', href: '/' },
@@ -44,8 +46,12 @@ const details = {
   phone: '+94 77 XXX XXXX',
   email: 'contact@rajarata.lk',
   hours: 'Mon – Fri, 8:00 – 17:30',
-  whatsapp: '',
 };
+
+const whatsapp = parseWhatsAppNumber(import.meta.env.PUBLIC_WHATSAPP_NUMBER);
+if (whatsapp.status === 'invalid') {
+  console.warn('PUBLIC_WHATSAPP_NUMBER must be 8–15 digits in international format.');
+}
 
 // Each row pairs its icon with the field key and how to rebuild its href.
 // `href` is optional: address and hours are plain text, the rest are links.
@@ -161,16 +167,18 @@ const focus = 'focus:outline-none focus-visible:outline-2 focus-visible:outline-
               </div>
             ))
           }
-          <div class="pt-2">
-            <span
-              hidden
-              aria-label="WhatsApp direct chat"
-              class={`inline-flex items-center gap-2 px-3 py-1.5 rounded-control bg-whatsapp text-white font-label-sm text-label-sm hover:bg-whatsapp-hover transition-colors ${focus}`}
-            >
-              <span class="material-symbols-outlined text-[16px]">chat</span>
-              <span>WhatsApp Direct</span>
-            </span>
-          </div>
+          {whatsapp.status === 'ready' && (
+            <div class="pt-2">
+              <a
+                href={whatsapp.href}
+                aria-label={`Chat with Rajarata Engineering on WhatsApp at ${whatsapp.displayNumber}`}
+                class={`inline-flex min-h-11 max-w-full flex-wrap items-center gap-2 break-all rounded-control bg-whatsapp px-3 py-2 font-label-sm text-label-sm text-white transition-colors hover:bg-whatsapp-hover active:translate-y-px ${focus}`}
+              >
+                <WhatsAppIcon class="h-5 w-5" />
+                <span>{whatsapp.displayNumber}</span>
+              </a>
+            </div>
+          )}
         </div>
       </div>
     </div>

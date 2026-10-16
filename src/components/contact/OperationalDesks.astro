@@ -6,6 +6,13 @@
  * stays as supplied prototype text pending verification.
  */
 import Container from '../Container.astro';
+import WhatsAppIcon from '../ui/WhatsAppIcon.astro';
+import { parseWhatsAppNumber } from '../../lib/whatsapp';
+
+const whatsapp = parseWhatsAppNumber(import.meta.env.PUBLIC_WHATSAPP_NUMBER);
+if (whatsapp.status === 'invalid') {
+  console.warn('PUBLIC_WHATSAPP_NUMBER must be 8–15 digits in international format.');
+}
 ---
 
 <section class="w-full py-16 bg-surface" data-scroll-reveal>
@@ -108,19 +115,18 @@ import Container from '../Container.astro';
             Technicians on on-call rotation over weekends.
           </p>
         </div>
-        <div class="mt-4 pt-3">
-          <span
-            hidden
-            data-site-field="whatsapp"
-            data-site-href="whatsapp"
-            data-site-text="false"
-            aria-label="WhatsApp direct chat"
-            class="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-whatsapp text-white font-label-md text-label-md hover:bg-whatsapp-hover transition-all shadow-sm focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
-          >
-            <span class="material-symbols-outlined text-[18px]">chat</span>
-            <span>WhatsApp Direct</span>
-          </span>
-        </div>
+        {whatsapp.status === 'ready' && (
+          <div class="mt-4 pt-3">
+            <a
+              href={whatsapp.href}
+              aria-label={`Chat with Rajarata Engineering on WhatsApp at ${whatsapp.displayNumber}`}
+              class="inline-flex min-h-11 w-full max-w-full flex-wrap items-center justify-center gap-2 break-all rounded-lg bg-whatsapp px-4 py-2.5 font-label-md text-label-md text-white shadow-sm transition-colors hover:bg-whatsapp-hover active:translate-y-px focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+            >
+              <WhatsAppIcon class="h-5 w-5" />
+              <span>{whatsapp.displayNumber}</span>
+            </a>
+          </div>
+        )}
       </div>
     </div>
   </Container>

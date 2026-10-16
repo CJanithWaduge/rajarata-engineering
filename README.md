@@ -42,6 +42,7 @@ Available scripts:
 | `npm run test:phase15` | Check/build and run schema, Storage rules, and media repository emulator tests |
 | `npm run test:preview` | Run protected-preview integration tests with local Auth, Firestore, and Storage emulators |
 | `npm run test:phase16` | Check/build and test protected draft preview, Auth/Firestore/Storage emulators, and public-output isolation |
+| `npm run test:phase19` | Check/build and test WhatsApp number validation and `wa.me` link generation |
 
 ## Pages
 
@@ -115,6 +116,10 @@ Phase 16 `/admin/preview` is rendered on demand from saved draft content, media,
 The public quotation form calls the `submitContactInquiry` Firebase callable in `asia-south1`. The function enforces App Check, validates and bounds every field server-side, requires the inquiry consent flag, rejects a filled honeypot, limits each source address to five requests per 15 minutes, and sends a plain-text email through configurable SMTP. Inquiry bodies are not written to Firestore or logged. Only an HMAC of the source address and the rate counter are stored in `contactRateLimits`; Firestore TTL is configured to expire those records after 24 hours.
 
 `functions/.env.example` contains reserved `.invalid` sample addresses and localhost SMTP settings. It is not a real mail configuration. Before enabling delivery, register the Firebase Web App with App Check, set `PUBLIC_FIREBASE_APPCHECK_SITE_KEY` and the Functions emulator address for local testing, configure `CONTACT_SMTP_HOST`, `CONTACT_SMTP_PORT`, `CONTACT_SMTP_SECURE`, `CONTACT_SENDER`, and `CONTACT_RECIPIENT`, and provide `CONTACT_SMTP_USER`, `CONTACT_SMTP_PASSWORD`, and a random `CONTACT_RATE_LIMIT_SALT` using Firebase Functions secrets. Secret values must never be placed in browser variables or committed files. The caller owns the recipient, provider account, and retention/consent review. Run `npm run test:contact` for validation, abuse-limit, and delivery-failure tests; `npm run test:phase18` runs the full local gate. No function or secret is deployed by these commands.
+
+## WhatsApp contact link (Phase 19)
+
+Set the optional public build variable `PUBLIC_WHATSAPP_NUMBER` to the business number in international format using digits only, including its country code (for example, `94771234567`). The static Contact page and footer render the clickable number as a `https://wa.me/` link only when the value is valid; blank or invalid values do not produce a link. Since it is a `PUBLIC_*` value, it is included in the public site output and must not contain anything private. The Admin Business Details WhatsApp field remains a draft; it is not connected to the public build until the publishing pipeline is implemented. Run `npm run test:phase19` for checks, build, and number/link validation tests.
 
 ## Build and hosting
 

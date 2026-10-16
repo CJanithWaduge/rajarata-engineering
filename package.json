@@ -21,6 +21,8 @@
     "test:contact": "node --test tests/contact-function.test.mjs",
     "test:contact:emulator": "firebase emulators:exec --project demo-rajarata-engineering --only firestore,functions \"node --test tests/contact-function.test.mjs tests/contact-callable-emulator.test.mjs\"",
     "test:phase18": "npm run check && npm run build && npm run test:content && npm run test:rules && npm run test:preview && npm run test:publishing && npm run test:contact:emulator",
+    "test:whatsapp": "node --experimental-strip-types --test tests/whatsapp.test.mjs",
+    "test:phase19": "npm run check && npm run build && npm run test:whatsapp",
     "astro": "astro"
   },
   "dependencies": {

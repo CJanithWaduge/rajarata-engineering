@@ -587,9 +587,10 @@ operator/custodian (trusted humans with cloud access); pipeline service accounts
 `firestore.rules` requires the `admin` claim for reads and writes, except for
 the user's own `/users/{uid}` identity document. `storage.rules` permits
 anonymous reads only under `media/published/**`, admin-only draft access, and
-denies other paths. These rules and the route authorization middleware are
-implemented locally but have not been deployed to staging or run in the
-Firebase Emulator Suite yet.
+denies other paths. The rules and route authorization middleware are
+implemented and verified against the local Firebase Emulator Suite, including
+anonymous, authenticated non-admin, and admin contexts. They have not been
+deployed to or verified in staging.
 
 ---
 
@@ -618,7 +619,7 @@ Release approval:
   performance claims) verified by the owner before the first production publish.
 - **Explicit authorization required** before creating or changing Firebase
   projects, configuring secrets, and every production deployment. Production
-  publishing stays disabled until the Phase 13–17 exit gates pass and P19.5 is
+  publishing stays disabled until the Phase 13–17 exit gates pass and P20.5 is
   approved.
 
 ### Build commands (today)
