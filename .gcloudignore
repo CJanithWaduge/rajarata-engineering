@@ -5,6 +5,8 @@ node_modules/
 .astro/
 .env
 .env.*
+**/.secret.local
+**/.secret.*.local
 UI-UX-design/
 AGENTS.md
 IMPLEMENTATION.md

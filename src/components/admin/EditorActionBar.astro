@@ -23,7 +23,21 @@ const focusRing =
  * "Return to editor" link; the preview validates it against a fixed allowlist,
  * keeping destinations code-controlled rather than free-form.
  */
-const previewHref = `/admin/preview?from=${encodeURIComponent(Astro.url.pathname)}`;
+const editorPath = Astro.url.pathname;
+const previewPage = editorPath.startsWith('/admin/services/')
+  ? 'services'
+  : editorPath.startsWith('/admin/projects/')
+    ? 'projects'
+    : 'home';
+const previewQuery = new URLSearchParams({
+  page: previewPage,
+  from: editorPath,
+});
+const recordId = Astro.url.searchParams.get('id');
+if (recordId && /^[a-z][a-z0-9-]{0,62}[a-z0-9]$/.test(recordId)) {
+  previewQuery.set('id', recordId);
+}
+const previewHref = `/admin/preview?${previewQuery}`;
 ---
 
 <div
@@ -62,7 +76,7 @@ const previewHref = `/admin/preview?from=${encodeURIComponent(Astro.url.pathname
         class={`inline-flex h-10 items-center gap-2 rounded-control border-[1.5px] border-outline-variant px-4 font-label-md text-label-md text-on-surface hover:bg-surface-container-high ${focusRing}`}
       >
         <span class="material-symbols-outlined text-[18px]" aria-hidden="true">visibility</span>
-        Preview draft
+        Preview saved draft
       </a>
 
       <button

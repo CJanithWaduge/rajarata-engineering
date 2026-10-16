@@ -1,762 +1,458 @@
 ---
-/**
- * Admin — Publish, deployment status, and history UI (Phase 11, Step A11.10).
- *
- * Publishing is a consequential action, so DESIGN.md §8 requires: an explicit
- * confirmation dialog that summarises the included content and blocking
- * validation errors; a Queued → Building → Deploying → Live / Failed status
- * sequence with plain labels and illustrative timestamps; a 2–5 minute note
- * stated as a target, not an SLA; release history with snapshot details; and a
- * rollback flow that names the snapshot to restore and distinguishes
- * in-progress from complete.
- *
- * Honesty boundary (IMPLEMENTATION.md A11.10): no pipeline is connected, so
- * nothing is published or rolled back. Status sequences, release rows, and
- * times are clearly identified illustrative examples; the previous public
- * release is described as staying live until a real pipeline reports success.
- */
 import AdminLayout from '../../../layouts/AdminLayout.astro';
 import AdminPageHeader from '../../../components/admin/AdminPageHeader.astro';
-import AdminNotice from '../../../components/admin/AdminNotice.astro';
-import StatusChip from '../../../components/admin/StatusChip.astro';
-
-type PipelineChip = 'queued' | 'building' | 'deploying' | 'live' | 'failed';
-type ReleaseStatus = 'live' | 'failed';
-
-interface Pipeline {
-  key: string;
-  label: string;
-  chip: PipelineChip;
-  detail: string;
-  elapsed: string;
-}
-
-const stages = ['Queued', 'Building', 'Deploying', 'Live'];
-
-const pipelines: Pipeline[] = [
-  {
-    key: 'queued',
-    label: 'Queued',
-    chip: 'queued',
-    detail: 'Waiting for a build runner to accept the release.',
-    elapsed: 'Elapsed: 0m 08s (illustrative)',
-  },
-  {
-    key: 'building',
-    label: 'Building',
-    chip: 'building',
-    detail: 'Compiling the public site from the draft snapshot.',
-    elapsed: 'Elapsed: 1m 12s (illustrative)',
-  },
-  {
-    key: 'deploying',
-    label: 'Deploying',
-    chip: 'deploying',
-    detail: 'Uploading the built output to hosting. The previous release is still live.',
-    elapsed: 'Elapsed: 2m 40s (illustrative)',
-  },
-  {
-    key: 'live',
-    label: 'Live',
-    chip: 'live',
-    detail: 'Deployment confirmed by the pipeline.',
-    elapsed: 'Elapsed: 3m 21s (illustrative)',
-  },
-  {
-    key: 'failed',
-    label: 'Failed',
-    chip: 'failed',
-    detail: 'The build failed. The previous release stays live.',
-    elapsed: 'Elapsed: 1m 04s (illustrative)',
-  },
-];
-
-/** Per-stage state within a pipeline run. */
-function stageState(key: string, index: number): 'done' | 'active' | 'failed' | 'pending' {
-  if (key === 'failed') return index < 1 ? 'done' : index === 1 ? 'failed' : 'pending';
-  if (key === 'live') return 'done';
-  const reached = pipelines.findIndex((p) => p.key === key);
-  if (index < reached) return 'done';
-  if (index === reached) return 'active';
-  return 'pending';
-}
-
-interface Release {
-  id: string;
-  snapshot: string;
-  status: ReleaseStatus;
-  admin: string;
-  started: string;
-  finished: string;
-  scope: string[];
-}
-
-const releases: Release[] = [
-  {
-    id: 'v2026.10.14-2',
-    snapshot: 'snap-2026.10.14-2',
-    status: 'live',
-    admin: 'Administrator (placeholder)',
-    started: 'Sample 09:44',
-    finished: 'Sample 09:47',
-    scope: ['Services', 'Projects', 'Business Details'],
-  },
-  {
-    id: 'v2026.10.13-2',
-    snapshot: 'snap-2026.10.13-2',
-    status: 'failed',
-    admin: 'Administrator (placeholder)',
-    started: 'Sample 08:38',
-    finished: 'Sample 08:40',
-    scope: ['Home hero'],
-  },
-  {
-    id: 'v2026.10.12-1',
-    snapshot: 'snap-2026.10.12-1',
-    status: 'live',
-    admin: 'Administrator (placeholder)',
-    started: 'Sample 16:52',
-    finished: 'Sample 16:55',
-    scope: ['SEO metadata', 'About Us'],
-  },
-];
-
-const pipelineStates = pipelines.map((p) => ({ key: p.key, label: p.label }));
-
-const listViews = [
-  { key: 'list', label: 'Illustrative releases' },
-  { key: 'empty', label: 'No releases' },
-  { key: 'loading', label: 'Loading' },
-  { key: 'error', label: 'Couldn’t load' },
-];
-
-const rollbackStates = [
-  { key: 'idle', label: 'Idle' },
-  { key: 'inprogress', label: 'Rollback in progress' },
-  { key: 'complete', label: 'Rollback complete' },
-];
 
 const focusRing =
   'focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-container';
-
-const secondaryBtn = `inline-flex h-10 items-center gap-2 rounded-control border-[1.5px] border-outline-variant px-4 font-label-md text-label-md text-on-surface hover:bg-surface-container-high ${focusRing}`;
-
-const toggleBtn =
-  'inline-flex min-h-10 items-center rounded-chip border border-outline-variant bg-surface-container-lowest px-2.5 py-1 font-label-sm text-label-sm text-on-surface-variant hover:border-outline aria-pressed:border-primary-container aria-pressed:bg-primary-fixed aria-pressed:text-on-primary-fixed focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-container sm:min-h-9';
-
-const stageStyles = {
-  done: 'border-tertiary-fixed bg-tertiary-fixed text-on-tertiary-fixed',
-  active: 'border-primary-fixed bg-primary-fixed text-on-primary-fixed',
-  failed: 'border-error-container bg-error-container text-on-error-container',
-  pending: 'border-outline-variant bg-surface-container text-secondary',
-} as const;
-
-const stageIcons = {
-  done: 'check',
-  active: 'autorenew',
-  failed: 'error',
-  pending: 'radio_button_unchecked',
-} as const;
-
-const stageWords = {
-  done: 'Done',
-  active: 'In progress',
-  failed: 'Failed',
-  pending: 'Pending',
-} as const;
+const secondaryButton =
+  `inline-flex min-h-10 items-center gap-2 rounded-control border-[1.5px] border-outline-variant px-4 font-label-md text-label-md text-on-surface hover:bg-surface-container-high ${focusRing}`;
 ---
 
 <AdminLayout title="Publishing History" pageLabel="Publishing History">
-  <div class="space-y-6" data-history-root>
+  <div class="space-y-6" data-publishing-root>
     <AdminPageHeader
       title="Publishing History"
-      description="Review past releases and restore a previous published snapshot."
+      description="Publish a complete saved snapshot, inspect verified deployment status, or restore an earlier live release."
     >
       <Fragment slot="actions">
-        <button type="button" data-publish-open class={`inline-flex h-10 items-center gap-2 rounded-control bg-primary-container px-5 font-label-md text-label-md text-on-primary hover:bg-primary ${focusRing}`}>
+        <button
+          type="button"
+          data-publish-open
+          class={`inline-flex h-10 items-center gap-2 rounded-control bg-primary-container px-5 font-label-md text-label-md text-on-primary hover:bg-primary ${focusRing}`}
+        >
           <span class="material-symbols-outlined text-[18px]" aria-hidden="true">rocket_launch</span>
           Publish current draft
         </button>
       </Fragment>
     </AdminPageHeader>
 
-    <AdminNotice tone="unavailable" title="Publishing pipeline not connected">
-      Nothing is published or rolled back from this console. The release rows, status steps, and
-      times below are clearly identified illustrative examples. Until a real pipeline reports
-      status, the previous public release is described as staying live.
-    </AdminNotice>
-
-    <!-- Release pipeline -->
-    <section class="rounded-card border border-outline-variant bg-surface-container-lowest shadow-card">
-      <header
-        class="flex flex-col gap-3 border-b border-outline-variant px-5 py-4 sm:flex-row sm:items-center sm:justify-between"
-      >
+    <section
+      class="rounded-card border border-outline-variant bg-surface-container-lowest p-5 shadow-card"
+      aria-labelledby="release-status-heading"
+    >
+      <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h2 class="font-title-lg text-title-lg text-on-surface">Release pipeline</h2>
-          <p class="mt-0.5 font-body-sm text-body-sm text-secondary">
-            Queued → Building → Deploying → Live, or Failed. Status is shown with plain labels and
-            illustrative times, never colour alone.
+          <h2 id="release-status-heading" class="font-title-lg text-title-lg text-on-surface">
+            Deployment status
+          </h2>
+          <p data-current-live class="mt-1 font-body-md text-body-md text-secondary">
+            Checking the most recent confirmed Hosting release…
           </p>
         </div>
-        <div class="flex flex-wrap items-center gap-2">
-          <span id="pipeline-state-label" class="font-label-sm text-label-sm font-semibold text-secondary">
-            Status preview
-          </span>
-          <div role="group" aria-labelledby="pipeline-state-label" class="flex flex-wrap gap-1.5">
-            {
-              pipelineStates.map((s) => (
-                <button type="button" data-pipeline-btn={s.key} aria-pressed={s.key === 'queued' ? 'true' : 'false'} class={toggleBtn}>
-                  {s.label}
-                </button>
-              ))
-            }
-          </div>
-        </div>
+        <button type="button" data-refresh class={secondaryButton}>
+          <span class="material-symbols-outlined text-[18px]" aria-hidden="true">refresh</span>
+          Refresh status
+        </button>
+      </div>
+      <div
+        data-active-release
+        class="mt-4 hidden rounded-control border border-outline-variant bg-surface-container-low p-4"
+        aria-live="polite"
+      ></div>
+    </section>
+
+    <section
+      class="rounded-card border border-outline-variant bg-surface-container-lowest shadow-card"
+      aria-labelledby="release-history-heading"
+    >
+      <header class="border-b border-outline-variant px-5 py-4">
+        <h2 id="release-history-heading" class="font-title-lg text-title-lg text-on-surface">
+          Release history
+        </h2>
+        <p class="mt-1 font-body-sm text-body-sm text-secondary">
+          Up to 20 immutable snapshots are retained. A release is marked live only after Hosting confirms it.
+        </p>
       </header>
-
-      <div class="p-5">
-        {
-          pipelines.map((p) => (
-            <div data-pipeline-state={p.key} hidden={p.key !== 'queued'} class="space-y-4">
-              <div class="flex flex-wrap items-center justify-between gap-3">
-                <div class="flex flex-wrap items-center gap-2">
-                  <StatusChip status={p.chip} />
-                  <p class="font-body-md text-body-md text-secondary">{p.detail}</p>
-                </div>
-                <p class="font-label-sm text-label-sm text-secondary">{p.elapsed}</p>
-              </div>
-
-              <ol class="grid gap-2 sm:grid-cols-4">
-                {stages.map((stage, i) => {
-                  const st = stageState(p.key, i);
-                  return (
-                    <li class={`flex items-center gap-2 rounded-control border px-3 py-2 ${stageStyles[st]}`}>
-                      <span class="material-symbols-outlined text-[18px]" aria-hidden="true">
-                        {stageIcons[st]}
-                      </span>
-                      <span class="font-label-md text-label-md">{stage}</span>
-                      <span class="sr-only">— {stageWords[st]}</span>
-                      <span class="ml-auto font-label-sm text-label-sm">{stageWords[st]}</span>
-                    </li>
-                  );
-                })}
-              </ol>
-
-              <p class="font-body-sm text-body-sm text-secondary">
-                Typical publication takes 2–5 minutes. That is a target, not a guaranteed SLA — actual
-                status is reported by the pipeline and no live status is shown here.
-              </p>
-
-              {p.key === 'live' && (
-                <div class="space-y-3 rounded-control border border-outline-variant bg-surface-container-low p-4">
-                  <div class="grid gap-3 sm:grid-cols-2">
-                    <div>
-                      <p class="font-label-caps text-label-caps uppercase tracking-widest text-secondary">
-                        Deployed release
-                      </p>
-                      <p class="font-title-md text-title-md text-on-surface">v2026.10.14-2</p>
-                    </div>
-                    <div>
-                      <p class="font-label-caps text-label-caps uppercase tracking-widest text-secondary">
-                        Completed
-                      </p>
-                      <p class="font-body-md text-body-md text-on-surface">Sample 09:47</p>
-                    </div>
-                  </div>
-                  <StatusChip status="info" label="Illustrative example" />
-                  <div class="flex flex-wrap gap-2">
-                    <a href="/" class={secondaryBtn}>
-                      <span class="material-symbols-outlined text-[18px]" aria-hidden="true">open_in_new</span>
-                      View public site
-                    </a>
-                  </div>
-                </div>
-              )}
-
-              {p.key === 'failed' && (
-                <div class="space-y-3 rounded-control border border-outline-variant bg-surface-container-low p-4">
-                  <p class="font-body-md text-body-md text-on-surface">
-                    v2026.10.13-2 failed while building. The previous release, v2026.10.14-2, stays live.
-                  </p>
-                  <StatusChip status="info" label="Illustrative example" />
-                  <div class="flex flex-wrap gap-2">
-                    <button
-                      type="button"
-                      disabled
-                      aria-describedby="pipeline-retry-note"
-                      class={`inline-flex h-10 items-center gap-2 rounded-control border-[1.5px] border-outline-variant px-4 font-label-md text-label-md text-on-surface-variant opacity-60 ${focusRing}`}
-                    >
-                      <span class="material-symbols-outlined text-[18px]" aria-hidden="true">refresh</span>
-                      Retry release
-                    </button>
-                  </div>
-                  <p id="pipeline-retry-note" class="font-body-sm text-body-sm text-secondary">
-                    Retry is available only through the connected pipeline. Reviewing the failed build
-                    is the safe next step.
-                  </p>
-                </div>
-              )}
-            </div>
-          ))
-        }
+      <div class="space-y-3 p-5" data-release-list aria-live="polite" aria-busy="true">
+        <p class="font-body-md text-body-md text-secondary" role="status">Loading releases…</p>
       </div>
     </section>
 
-    <!-- Release history -->
-    <section class="rounded-card border border-outline-variant bg-surface-container-lowest shadow-card">
-      <header
-        class="flex flex-col gap-3 border-b border-outline-variant px-5 py-4 sm:flex-row sm:items-center sm:justify-between"
-      >
-        <div>
-          <h2 class="font-title-lg text-title-lg text-on-surface">Release history</h2>
-          <p class="mt-0.5 font-body-sm text-body-sm text-secondary">
-            Each release keeps its snapshot so a previous version can be restored.
-          </p>
-        </div>
-        <div class="flex flex-wrap items-center gap-2">
-          <span id="history-view-label" class="font-label-sm text-label-sm font-semibold text-secondary">
-            List state preview
-          </span>
-          <div role="group" aria-labelledby="history-view-label" class="flex flex-wrap gap-1.5">
-            {
-              listViews.map((v) => (
-                <button type="button" data-history-view-btn={v.key} aria-pressed={v.key === 'list' ? 'true' : 'false'} class={toggleBtn}>
-                  {v.label}
-                </button>
-              ))
-            }
-          </div>
-        </div>
-      </header>
-
-      <div class="space-y-4 p-5">
-        <div data-history-view="list" class="space-y-3">
-          {
-            releases.map((r) => (
-              <details class="group rounded-control border border-outline-variant bg-surface-container-low">
-                <summary
-                  class={`flex cursor-pointer list-none flex-wrap items-center justify-between gap-3 p-4 hover:bg-surface-container-high ${focusRing} [&::-webkit-details-marker]:hidden`}
-                >
-                  <span class="flex min-w-0 items-center gap-3">
-                    <span class="material-symbols-outlined text-[20px] text-secondary transition-transform duration-150 group-open:rotate-90 motion-reduce:transition-none" aria-hidden="true">
-                      chevron_right
-                    </span>
-                    <span class="min-w-0">
-                      <span class="block font-title-md text-title-md text-on-surface">{r.id}</span>
-                      <span class="block font-body-sm text-body-sm text-secondary">
-                        {r.scope.length} {r.scope.length === 1 ? 'section' : 'sections'} · {r.started} → {r.finished}
-                      </span>
-                    </span>
-                  </span>
-                  <StatusChip status={r.status} />
-                </summary>
-
-                <div class="space-y-4 border-t border-outline-variant p-4">
-                  <dl class="grid gap-3 sm:grid-cols-2">
-                    <div>
-                      <dt class="font-label-caps text-label-caps uppercase tracking-widest text-secondary">
-                        Snapshot
-                      </dt>
-                      <dd class="font-body-md text-body-md text-on-surface">{r.snapshot}</dd>
-                    </div>
-                    <div>
-                      <dt class="font-label-caps text-label-caps uppercase tracking-widest text-secondary">
-                        Published by
-                      </dt>
-                      <dd class="font-body-md text-body-md text-on-surface">{r.admin}</dd>
-                    </div>
-                    <div>
-                      <dt class="font-label-caps text-label-caps uppercase tracking-widest text-secondary">
-                        Started / finished
-                      </dt>
-                      <dd class="font-body-md text-body-md text-on-surface">
-                        {r.started} → {r.finished}
-                      </dd>
-                    </div>
-                    <div>
-                      <dt class="font-label-caps text-label-caps uppercase tracking-widest text-secondary">
-                        Status
-                      </dt>
-                      <dd><StatusChip status={r.status} /></dd>
-                    </div>
-                  </dl>
-
-                  <div>
-                    <p class="font-label-caps text-label-caps uppercase tracking-widest text-secondary">
-                      Included content
-                    </p>
-                    <ul class="mt-1.5 flex flex-wrap gap-1.5">
-                      {r.scope.map((s) => (
-                        <li class="rounded-chip border border-outline-variant bg-surface-container-lowest px-2 py-0.5 font-label-sm text-label-sm text-on-surface-variant">
-                          {s}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  <div class="flex flex-wrap items-center gap-2">
-                    {r.status === 'live' ? (
-                      <>
-                        <button
-                          type="button"
-                          disabled
-                          class={`inline-flex h-10 items-center gap-2 rounded-control border-[1.5px] border-outline-variant px-4 font-label-md text-label-md text-secondary opacity-60 ${focusRing}`}
-                        >
-                          <span class="material-symbols-outlined text-[18px]" aria-hidden="true">check</span>
-                          Currently live
-                        </button>
-                        <a href="/admin/preview" class={secondaryBtn}>
-                          <span class="material-symbols-outlined text-[18px]" aria-hidden="true">visibility</span>
-                          Preview draft
-                        </a>
-                      </>
-                    ) : (
-                      <button
-                        type="button"
-                        data-rollback-open
-                        data-rollback-release={r.id}
-                        data-rollback-snapshot={r.snapshot}
-                        class={secondaryBtn}
-                      >
-                        <span class="material-symbols-outlined text-[18px]" aria-hidden="true">history</span>
-                        Roll back to this release
-                      </button>
-                    )}
-                  </div>
-
-                  <p class="font-body-sm text-body-sm text-secondary">
-                    Prior snapshots and their media are retained. Rollback never overwrites or deletes
-                    earlier releases.
-                  </p>
-                </div>
-              </details>
-            ))
-          }
-        </div>
-
-        <div data-history-view="empty" hidden>
-          <div class="flex flex-col items-center gap-2 py-8 text-center">
-            <span class="material-symbols-outlined text-[28px] text-secondary" aria-hidden="true">history</span>
-            <p class="font-title-md text-title-md text-on-surface">No releases recorded</p>
-            <p class="max-w-[28rem] font-body-sm text-body-sm text-secondary">
-              Release history appears here after the publishing pipeline is connected and the first
-              release completes. This state is illustrative.
-            </p>
-          </div>
-        </div>
-
-        <div data-history-view="loading" hidden class="space-y-3">
-          <p class="sr-only" role="status">Loading release history…</p>
-          <span class="block h-16 w-full rounded-control bg-surface-container-high" aria-hidden="true"></span>
-          <span class="block h-16 w-full rounded-control bg-surface-container-high" aria-hidden="true"></span>
-          <span class="block h-16 w-full rounded-control bg-surface-container-high" aria-hidden="true"></span>
-        </div>
-
-        <div data-history-view="error" hidden>
-          <AdminNotice tone="error" title="Couldn’t load release history">
-            The pipeline service did not respond. This is a visual state preview — no request was
-            made.
-          </AdminNotice>
-        </div>
-      </div>
-    </section>
-
-    <!-- Rollback status -->
-    <section class="rounded-card border border-outline-variant bg-surface-container-lowest shadow-card">
-      <header
-        class="flex flex-col gap-3 border-b border-outline-variant px-5 py-4 sm:flex-row sm:items-center sm:justify-between"
-      >
-        <div>
-          <h2 class="font-title-lg text-title-lg text-on-surface">Rollback status</h2>
-          <p class="mt-0.5 font-body-sm text-body-sm text-secondary">
-            Rollback-in-progress is clearly distinct from rollback-complete.
-          </p>
-        </div>
-        <div class="flex flex-wrap items-center gap-2">
-          <span id="rollback-state-label" class="font-label-sm text-label-sm font-semibold text-secondary">
-            Status preview
-          </span>
-          <div role="group" aria-labelledby="rollback-state-label" class="flex flex-wrap gap-1.5">
-            {
-              rollbackStates.map((s) => (
-                <button type="button" data-rollback-state-btn={s.key} aria-pressed={s.key === 'idle' ? 'true' : 'false'} class={toggleBtn}>
-                  {s.label}
-                </button>
-              ))
-            }
-          </div>
-        </div>
-      </header>
-
-      <div class="p-5">
-        <div data-rollback-state="idle" class="space-y-2">
-          <div class="flex items-center gap-2">
-            <StatusChip status="info" label="No rollback in progress" />
-          </div>
-          <p class="font-body-md text-body-md text-secondary">
-            The public site is serving its current release. Rolling back is unavailable from this
-            console.
-          </p>
-        </div>
-
-        <div data-rollback-state="inprogress" hidden class="space-y-3">
-          <div class="flex flex-wrap items-center gap-2">
-            <StatusChip status="deploying" label="Rollback in progress" />
-            <p class="font-body-md text-body-md text-secondary">
-              Restoring snapshot snap-2026.10.12-1. The current release remains live until the restore
-              is confirmed.
-            </p>
-          </div>
-          <div
-            role="progressbar"
-            aria-valuemin="0"
-            aria-valuemax="100"
-            aria-valuenow="60"
-            aria-label="Illustrative rollback progress"
-            class="h-2 w-full overflow-hidden rounded-chip bg-surface-container-high"
-          >
-            <div class="h-full w-[60%] rounded-chip bg-primary-container"></div>
-          </div>
-          <p class="font-label-sm text-label-sm text-secondary">60% · Illustrative progress</p>
-          <AdminNotice tone="unavailable" title="Illustrative state — no rollback occurs">
-            This is a design preview. No snapshot is restored.
-          </AdminNotice>
-        </div>
-
-        <div data-rollback-state="complete" hidden class="space-y-3">
-          <div class="flex items-center gap-2">
-            <StatusChip status="live" label="Rollback complete" />
-          </div>
-          <p class="font-body-md text-body-md text-secondary">
-            Snapshot snap-2026.10.12-1 is now described as the live release. Completion is only shown
-            when a real pipeline confirms it.
-          </p>
-          <AdminNotice tone="unavailable" title="Illustrative state — nothing was restored">
-            A real completion state appears only after the pipeline confirms the restore.
-          </AdminNotice>
-        </div>
-      </div>
-    </section>
+    <p data-feedback class="font-body-sm text-body-sm text-secondary" role="status" aria-live="polite"></p>
   </div>
 
-  <!-- Publish confirmation dialog -->
   <dialog
-    data-publish-dialog
-    aria-labelledby="publish-dialog-title"
+    data-confirm-dialog
+    aria-labelledby="confirm-title"
     class={`w-[min(600px,92vw)] rounded-card border border-outline-variant bg-surface-container-lowest p-0 text-on-surface shadow-overlay backdrop:bg-inverse-surface/60 ${focusRing}`}
   >
     <div class="flex items-start justify-between gap-4 border-b border-outline-variant px-5 py-4">
-      <h2 id="publish-dialog-title" class="font-headline-sm text-headline-sm text-on-surface">
+      <h2 data-confirm-title id="confirm-title" class="font-headline-sm text-headline-sm text-on-surface">
         Confirm publish
       </h2>
-      <button type="button" data-publish-close aria-label="Close publish dialog" class={`flex h-9 w-9 items-center justify-center rounded-control text-on-surface-variant hover:bg-surface-container-high ${focusRing}`}>
+      <button
+        type="button"
+        data-confirm-close
+        aria-label="Close confirmation"
+        class={`flex h-9 w-9 items-center justify-center rounded-control text-on-surface-variant hover:bg-surface-container-high ${focusRing}`}
+      >
         <span class="material-symbols-outlined text-[20px]" aria-hidden="true">close</span>
       </button>
     </div>
-
     <div class="space-y-4 px-5 py-4">
-      <p class="font-body-md text-body-md text-secondary">
-        Publishing rebuilds the public site from the current draft. Review what is included before
-        confirming.
-      </p>
-
-      <div>
+      <p data-confirm-description class="font-body-md text-body-md text-secondary"></p>
+      <div data-confirm-snapshot hidden class="rounded-control border border-outline-variant bg-surface-container-low p-4">
         <p class="font-label-caps text-label-caps uppercase tracking-widest text-secondary">
-          Included in this release
+          Snapshot to restore
         </p>
-        <ul class="mt-1.5 flex flex-wrap gap-1.5">
-          {
-            ['Services', 'Projects', 'Business Details'].map((s) => (
-              <li class="rounded-chip border border-outline-variant bg-surface-container-low px-2 py-0.5 font-label-sm text-label-sm text-on-surface-variant">
-                {s}
-              </li>
-            ))
-          }
-        </ul>
-        <p class="mt-2 font-body-sm text-body-sm text-secondary">
-          This scope is illustrative — the real release scope is computed by the backend.
-        </p>
+        <p data-confirm-release class="mt-1 break-all font-body-md text-body-md text-on-surface"></p>
       </div>
-
-      <div class="rounded-control border border-outline-variant bg-surface-container-low p-3">
-        <p class="flex items-center gap-2 font-label-md text-label-md text-on-surface">
-          <span class="material-symbols-outlined text-[18px] text-primary-container" aria-hidden="true">error</span>
-          2 blocking validation issues
-        </p>
-        <ul class="mt-1.5 list-disc space-y-1 pl-5 font-body-sm text-body-sm text-secondary">
-          <li>Services · Service 01 — short card summary is empty.</li>
-          <li>Home · hero image — image is missing, so alt text cannot be confirmed.</li>
-        </ul>
-        <p class="mt-2 font-body-sm text-body-sm text-secondary">
-          Blocking issues must be resolved before the pipeline will accept a release.
-        </p>
-      </div>
-
       <p class="font-body-sm text-body-sm text-secondary">
-        Typical publication takes 2–5 minutes. The previous release stays live if the build or deploy
-        fails.
+        The previous public release remains live unless the publishing pipeline confirms the new deployment.
       </p>
+      <p data-confirm-error class="hidden font-body-sm text-body-sm text-error" role="alert"></p>
     </div>
-
     <div class="flex flex-col-reverse gap-2 border-t border-outline-variant px-5 py-4 sm:flex-row sm:justify-end">
-      <button type="button" data-publish-close class={secondaryBtn}>Cancel</button>
+      <button type="button" data-confirm-close class={secondaryButton}>Cancel</button>
       <button
         type="button"
-        disabled
-        aria-describedby="publish-confirm-note"
-        class={`inline-flex h-10 items-center gap-2 rounded-control bg-primary-container px-5 font-label-md text-label-md text-on-primary opacity-60 ${focusRing}`}
+        data-confirm-submit
+        class={`inline-flex h-10 items-center justify-center gap-2 rounded-control bg-primary-container px-5 font-label-md text-label-md text-on-primary hover:bg-primary disabled:cursor-not-allowed disabled:opacity-60 ${focusRing}`}
       >
         <span class="material-symbols-outlined text-[18px]" aria-hidden="true">rocket_launch</span>
-        Confirm publish
+        <span data-confirm-label>Confirm publish</span>
       </button>
     </div>
-    <p id="publish-confirm-note" class="border-t border-outline-variant px-5 py-3 font-body-sm text-body-sm text-secondary">
-      Confirm publish is unavailable: the build and deploy pipeline is not connected.
-    </p>
-  </dialog>
-
-  <!-- Rollback confirmation dialog -->
-  <dialog
-    data-rollback-dialog
-    aria-labelledby="rollback-dialog-title"
-    class={`w-[min(600px,92vw)] rounded-card border border-outline-variant bg-surface-container-lowest p-0 text-on-surface shadow-overlay backdrop:bg-inverse-surface/60 ${focusRing}`}
-  >
-    <div class="flex items-start justify-between gap-4 border-b border-outline-variant px-5 py-4">
-      <h2 id="rollback-dialog-title" class="font-headline-sm text-headline-sm text-on-surface">
-        Confirm rollback
-      </h2>
-      <button type="button" data-rollback-close aria-label="Close rollback dialog" class={`flex h-9 w-9 items-center justify-center rounded-control text-on-surface-variant hover:bg-surface-container-high ${focusRing}`}>
-        <span class="material-symbols-outlined text-[20px]" aria-hidden="true">close</span>
-      </button>
-    </div>
-
-    <div class="space-y-4 px-5 py-4">
-      <p class="font-body-md text-body-md text-secondary">
-        Rolling back restores a previous published snapshot. Confirm which snapshot will be restored.
-      </p>
-
-      <dl class="grid gap-3 sm:grid-cols-2">
-        <div>
-          <dt class="font-label-caps text-label-caps uppercase tracking-widest text-secondary">
-            Snapshot to restore
-          </dt>
-          <dd data-rollback-target class="font-body-md text-body-md text-on-surface">snap-2026.10.12-1</dd>
-        </div>
-        <div>
-          <dt class="font-label-caps text-label-caps uppercase tracking-widest text-secondary">
-            Currently live
-          </dt>
-          <dd class="font-body-md text-body-md text-on-surface">snap-2026.10.14-2</dd>
-        </div>
-      </dl>
-
-      <AdminNotice tone="warning" title="This changes the public site">
-        Rollback replaces the live release with the selected snapshot. Earlier snapshots and their
-        media are retained, so this can be reversed by rolling forward again.
-      </AdminNotice>
-    </div>
-
-    <div class="flex flex-col-reverse gap-2 border-t border-outline-variant px-5 py-4 sm:flex-row sm:justify-end">
-      <button type="button" data-rollback-close class={secondaryBtn}>Cancel</button>
-      <button
-        type="button"
-        disabled
-        aria-describedby="rollback-confirm-note"
-        class={`inline-flex h-10 items-center gap-2 rounded-control bg-primary-container px-5 font-label-md text-label-md text-on-primary opacity-60 ${focusRing}`}
-      >
-        <span class="material-symbols-outlined text-[18px]" aria-hidden="true">history</span>
-        Confirm rollback
-      </button>
-    </div>
-    <p id="rollback-confirm-note" class="border-t border-outline-variant px-5 py-3 font-body-sm text-body-sm text-secondary">
-      Confirm rollback is unavailable: no publishing pipeline is connected to perform the restore.
-    </p>
   </dialog>
 </AdminLayout>
 
 <script>
-  const root = document.querySelector<HTMLElement>('[data-history-root]');
+  type ReleaseStatus = 'queued' | 'snapshotting' | 'building' | 'deploying' | 'live' | 'failed' | 'rollback';
+  interface Release {
+    id: string;
+    createdAt: string;
+    completedAt: string | null;
+    createdBy: string;
+    status: ReleaseStatus;
+    hostVersionId: string | null;
+    buildId: string | null;
+    failure: { code: string; message: string } | null;
+    rollbackOf: string | null;
+    snapshot: {
+      services: unknown[];
+      projects: unknown[];
+      pages: unknown[];
+      media: unknown[];
+    };
+  }
+  interface HistoryResponse {
+    releases: Release[];
+    activeReleaseId: string | null;
+  }
 
-  if (root) {
-    // ---- Pipeline status preview ---------------------------------------
-    const pipelineButtons = Array.from(
-      root.querySelectorAll<HTMLButtonElement>('[data-pipeline-btn]')
+  const root = document.querySelector<HTMLElement>('[data-publishing-root]');
+  const list = root?.querySelector<HTMLElement>('[data-release-list]');
+  const currentLive = root?.querySelector<HTMLElement>('[data-current-live]');
+  const activePanel = root?.querySelector<HTMLElement>('[data-active-release]');
+  const feedback = root?.querySelector<HTMLElement>('[data-feedback]');
+  const dialog = document.querySelector<HTMLDialogElement>('[data-confirm-dialog]');
+  const confirmDescription = dialog?.querySelector<HTMLElement>('[data-confirm-description]');
+  const confirmSnapshot = dialog?.querySelector<HTMLElement>('[data-confirm-snapshot]');
+  const confirmRelease = dialog?.querySelector<HTMLElement>('[data-confirm-release]');
+  const confirmError = dialog?.querySelector<HTMLElement>('[data-confirm-error]');
+  const confirmButton = dialog?.querySelector<HTMLButtonElement>('[data-confirm-submit]');
+  const confirmTitle = dialog?.querySelector<HTMLElement>('[data-confirm-title]');
+  const statusStyles: Record<ReleaseStatus, string> = {
+    queued: 'border-outline-variant bg-surface-container text-secondary',
+    snapshotting: 'border-primary-fixed bg-primary-fixed text-on-primary-fixed',
+    building: 'border-primary-fixed bg-primary-fixed text-on-primary-fixed',
+    deploying: 'border-primary-fixed bg-primary-fixed text-on-primary-fixed',
+    live: 'border-tertiary-fixed bg-tertiary-fixed text-on-tertiary-fixed',
+    failed: 'border-error-container bg-error-container text-on-error-container',
+    rollback: 'border-primary-fixed bg-primary-fixed text-on-primary-fixed',
+  };
+  const statuses = new Set<ReleaseStatus>([
+    'queued', 'snapshotting', 'building', 'deploying', 'live', 'failed', 'rollback',
+  ]);
+  let pendingAction: { action: 'publish' } | { action: 'rollback'; releaseId: string } | undefined;
+  let pollingTimer: number | undefined;
+
+  function node<K extends keyof HTMLElementTagNameMap>(
+    tag: K,
+    className = '',
+    text = '',
+  ): HTMLElementTagNameMap[K] {
+    const result = document.createElement(tag);
+    if (className) result.className = className;
+    if (text) result.textContent = text;
+    return result;
+  }
+
+  function formatDate(value: string | null): string {
+    if (!value) return 'Not completed';
+    const date = new Date(value);
+    return Number.isNaN(date.valueOf()) ? 'Unknown time' : date.toLocaleString();
+  }
+
+  function parseHistory(value: unknown): HistoryResponse | undefined {
+    if (!value || typeof value !== 'object') return undefined;
+    const candidate = value as Partial<HistoryResponse>;
+    if (!Array.isArray(candidate.releases) ||
+        !(candidate.activeReleaseId === null || typeof candidate.activeReleaseId === 'string')) {
+      return undefined;
+    }
+    const releases = candidate.releases.filter((release): release is Release =>
+      Boolean(release && typeof release.id === 'string' && statuses.has(release.status)),
     );
-    const pipelinePanels = Array.from(
-      root.querySelectorAll<HTMLElement>('[data-pipeline-state]')
+    return { releases, activeReleaseId: candidate.activeReleaseId };
+  }
+
+  function appendStatus(parent: HTMLElement, status: ReleaseStatus): void {
+    parent.append(node(
+      'span',
+      `inline-flex items-center rounded-chip border px-2.5 py-1 font-label-sm text-label-sm ${statusStyles[status]}`,
+      status === 'rollback' ? 'Rollback queued' : status[0].toUpperCase() + status.slice(1),
+    ));
+  }
+
+  function snapshotSummary(release: Release): string {
+    const parts = [
+      `${release.snapshot.services.length} services`,
+      `${release.snapshot.projects.length} projects`,
+      `${release.snapshot.pages.length} page records`,
+      `${release.snapshot.media.length} media assets`,
+    ];
+    return parts.join(' · ');
+  }
+
+  function renderRelease(release: Release, currentLiveId: string | null, busy: boolean): HTMLElement {
+    const details = node('details', 'group rounded-control border border-outline-variant bg-surface-container-low');
+    const summary = node(
+      'summary',
+      'flex cursor-pointer list-none flex-wrap items-center justify-between gap-3 p-4 hover:bg-surface-container-high focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-container [&::-webkit-details-marker]:hidden',
     );
-    pipelineButtons.forEach((btn) => {
-      btn.addEventListener('click', () => {
-        const key = btn.dataset.pipelineBtn;
-        pipelineButtons.forEach((b) => b.setAttribute('aria-pressed', String(b === btn)));
-        pipelinePanels.forEach((panel) => {
-          panel.hidden = panel.dataset.pipelineState !== key;
-        });
-      });
+    const identity = node('span', 'min-w-0');
+    identity.append(
+      node('span', 'block break-all font-title-md text-title-md text-on-surface', release.id),
+      node('span', 'mt-1 block font-body-sm text-body-sm text-secondary',
+        `${formatDate(release.createdAt)} · ${snapshotSummary(release)}`),
+    );
+    summary.append(identity);
+    appendStatus(summary, release.status);
+    details.append(summary);
+
+    const body = node('div', 'space-y-4 border-t border-outline-variant p-4');
+    const metadata = node('dl', 'grid gap-3 sm:grid-cols-2');
+    const values: Array<[string, string]> = [
+      ['Requested', formatDate(release.createdAt)],
+      ['Completed', formatDate(release.completedAt)],
+      ['Build ID', release.buildId || 'Not reported'],
+      ['Hosting version', release.hostVersionId || 'Not confirmed'],
+    ];
+    if (release.rollbackOf) values.push(['Restored from', release.rollbackOf]);
+    values.forEach(([label, value]) => {
+      const item = node('div');
+      item.append(
+        node('dt', 'font-label-caps text-label-caps uppercase tracking-widest text-secondary', label),
+        node('dd', 'mt-1 break-all font-body-sm text-body-sm text-on-surface', value),
+      );
+      metadata.append(item);
     });
+    body.append(metadata);
 
-    // ---- Release-list view preview -------------------------------------
-    const viewButtons = Array.from(
-      root.querySelectorAll<HTMLButtonElement>('[data-history-view-btn]')
-    );
-    const views = Array.from(root.querySelectorAll<HTMLElement>('[data-history-view]'));
-    viewButtons.forEach((btn) => {
-      btn.addEventListener('click', () => {
-        const key = btn.dataset.historyViewBtn;
-        viewButtons.forEach((b) => b.setAttribute('aria-pressed', String(b === btn)));
-        views.forEach((panel) => {
-          panel.hidden = panel.dataset.historyView !== key;
-        });
-      });
-    });
+    if (release.failure) {
+      const failure = node(
+        'p',
+        'rounded-control border border-error-container bg-error-container p-3 font-body-sm text-body-sm text-on-error-container',
+        `Failure (${release.failure.code}): ${release.failure.message}`,
+      );
+      body.append(failure);
+    }
+    if (release.status === 'live' && release.id === currentLiveId) {
+      const liveRow = node('div', 'flex flex-wrap items-center gap-2');
+      liveRow.append(
+        node('span', 'font-label-md text-label-md text-tertiary', 'Currently confirmed live'),
+      );
+      const siteLink = node('a', 'inline-flex min-h-10 items-center gap-2 rounded-control border-[1.5px] border-outline-variant px-4 font-label-md text-label-md text-on-surface hover:bg-surface-container-high focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-container');
+      siteLink.href = '/';
+      siteLink.append(
+        node('span', 'material-symbols-outlined text-[18px]', 'open_in_new'),
+        document.createTextNode('View public site'),
+      );
+      liveRow.append(siteLink);
+      body.append(liveRow);
+    } else if (release.status === 'live' && !busy) {
+      const rollback = node('button', 'inline-flex min-h-10 items-center gap-2 rounded-control border-[1.5px] border-outline-variant px-4 font-label-md text-label-md text-on-surface hover:bg-surface-container-high focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-container', 'Roll back to this release') as HTMLButtonElement;
+      rollback.type = 'button';
+      rollback.addEventListener('click', () => openConfirm({
+        action: 'rollback',
+        releaseId: release.id,
+      }));
+      body.append(rollback);
+    }
+    body.append(node(
+      'p',
+      'font-body-sm text-body-sm text-secondary',
+      'Snapshots are retained as immutable history. Rollback creates a new release; it never rewrites this record.',
+    ));
+    details.append(body);
+    return details;
+  }
 
-    // ---- Rollback status preview ---------------------------------------
-    const rbButtons = Array.from(
-      root.querySelectorAll<HTMLButtonElement>('[data-rollback-state-btn]')
-    );
-    const rbPanels = Array.from(root.querySelectorAll<HTMLElement>('[data-rollback-state]'));
-    rbButtons.forEach((btn) => {
-      btn.addEventListener('click', () => {
-        const key = btn.dataset.rollbackStateBtn;
-        rbButtons.forEach((b) => b.setAttribute('aria-pressed', String(b === btn)));
-        rbPanels.forEach((panel) => {
-          panel.hidden = panel.dataset.rollbackState !== key;
-        });
-      });
+  function render(data: HistoryResponse): void {
+    if (!list || !currentLive || !activePanel) return;
+    const publishButton = root?.querySelector<HTMLButtonElement>('[data-publish-open]');
+    if (publishButton) publishButton.disabled = Boolean(data.activeReleaseId);
+    const current = data.releases.find((release) => release.status === 'live');
+    currentLive.textContent = current
+      ? `Current confirmed release: ${current.id} · completed ${formatDate(current.completedAt)}`
+      : 'No release has yet been confirmed live. The current public site has not been changed by this view.';
+
+    activePanel.replaceChildren();
+    activePanel.classList.toggle('hidden', !data.activeReleaseId);
+    if (data.activeReleaseId) {
+      const active = data.releases.find(({ id }) => id === data.activeReleaseId);
+      activePanel.append(
+        node('p', 'font-label-md text-label-md text-on-surface',
+          active ? `Release ${active.id} is ${active.status}.` : 'A release operation is in progress.'),
+        node('p', 'mt-1 font-body-sm text-body-sm text-secondary',
+          'Status remains in progress until the trusted pipeline records a verified result.'),
+      );
+    }
+
+    list.replaceChildren();
+    list.setAttribute('aria-busy', 'false');
+    if (data.releases.length === 0) {
+      list.append(node(
+        'p',
+        'py-8 text-center font-body-md text-body-md text-secondary',
+        'No releases have been recorded yet.',
+      ));
+      return;
+    }
+    data.releases.forEach((release) => {
+      list.append(renderRelease(release, current?.id ?? null, Boolean(data.activeReleaseId)));
     });
   }
 
-  // ---- Dialogs ---------------------------------------------------------
-  const publishDialog = document.querySelector<HTMLDialogElement>('[data-publish-dialog]');
-  const rollbackDialog = document.querySelector<HTMLDialogElement>('[data-rollback-dialog]');
+  async function loadHistory(): Promise<void> {
+    if (!list) return;
+    try {
+      const response = await fetch('/admin/api/publishing', {
+        credentials: 'same-origin',
+        cache: 'no-store',
+        headers: { Accept: 'application/json' },
+      });
+      const payload: unknown = await response.json();
+      if (!response.ok) throw new Error('Release history is unavailable. Check your session and retry.');
+      const data = parseHistory(payload);
+      if (!data) throw new Error('The publishing service returned an invalid release history response.');
+      render(data);
+      if (data.activeReleaseId) {
+        if (pollingTimer === undefined) {
+          pollingTimer = window.setInterval(() => void loadHistory(), 10_000);
+        }
+      } else if (pollingTimer !== undefined) {
+        window.clearInterval(pollingTimer);
+        pollingTimer = undefined;
+      }
+    } catch (error) {
+      list.replaceChildren(node(
+        'p',
+        'rounded-control border border-error-container bg-error-container p-4 font-body-sm text-body-sm text-on-error-container',
+        error instanceof Error ? error.message : 'Release history could not be loaded.',
+      ));
+      list.setAttribute('aria-busy', 'false');
+    }
+  }
 
-  const wireDialog = (
-    dialog: HTMLDialogElement | null,
-    openSelector: string,
-    closeSelector: string
-  ) => {
-    if (!dialog) return;
-    document.querySelectorAll<HTMLElement>(openSelector).forEach((btn) => {
-      btn.addEventListener('click', () => dialog.showModal());
+  async function getCsrfToken(): Promise<string> {
+    const response = await fetch('/admin/session-csrf', {
+      credentials: 'same-origin',
+      cache: 'no-store',
+      headers: { Accept: 'application/json' },
     });
-    dialog.querySelectorAll<HTMLElement>(closeSelector).forEach((btn) => {
-      btn.addEventListener('click', () => dialog.close());
-    });
-    // Close when the backdrop (the dialog element itself) is clicked.
-    dialog.addEventListener('click', (event) => {
-      if (event.target === dialog) dialog.close();
-    });
-  };
+    const payload: unknown = await response.json();
+    if (!response.ok || !payload || typeof payload !== 'object' ||
+        !('csrfToken' in payload) || typeof payload.csrfToken !== 'string') {
+      throw new Error('Your secure session could not be verified. Sign in again and retry.');
+    }
+    return payload.csrfToken;
+  }
 
-  wireDialog(publishDialog, '[data-publish-open]', '[data-publish-close]');
-  wireDialog(rollbackDialog, '[data-rollback-open]', '[data-rollback-close]');
+  function openConfirm(action: { action: 'publish' } | { action: 'rollback'; releaseId: string }): void {
+    if (!dialog || !confirmDescription || !confirmButton || !confirmTitle) return;
+    pendingAction = action;
+    if (confirmError) {
+      confirmError.textContent = '';
+      confirmError.classList.add('hidden');
+    }
+    const isRollback = action.action === 'rollback';
+    confirmTitle.textContent = isRollback ? 'Confirm rollback' : 'Confirm publish';
+    confirmDescription.textContent = isRollback
+      ? 'A new release will be built from this previously published snapshot. The current site remains live unless Hosting confirms the restore.'
+      : 'This publishes all saved services, projects, page copy, business details, SEO metadata, and referenced media as one immutable snapshot.';
+    const label = confirmButton.querySelector<HTMLElement>('[data-confirm-label]');
+    if (label) label.textContent = isRollback ? 'Confirm rollback' : 'Confirm publish';
+    confirmButton.querySelector('span')?.replaceChildren(
+      document.createTextNode(isRollback ? 'history' : 'rocket_launch'),
+    );
+    if (confirmSnapshot && confirmRelease) {
+      confirmSnapshot.hidden = !isRollback;
+      confirmRelease.textContent = isRollback ? action.releaseId : '';
+    }
+    dialog.showModal();
+  }
 
-  // Reflect the chosen snapshot in the rollback dialog.
-  document.querySelectorAll<HTMLElement>('[data-rollback-open]').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      const snapshot = btn.dataset.rollbackSnapshot;
-      const target = rollbackDialog?.querySelector('[data-rollback-target]');
-      if (target && snapshot) target.textContent = snapshot;
-    });
+  document.querySelectorAll<HTMLElement>('[data-publish-open]').forEach((button) => {
+    button.addEventListener('click', () => openConfirm({ action: 'publish' }));
   });
+  document.querySelectorAll<HTMLElement>('[data-confirm-close]').forEach((button) => {
+    button.addEventListener('click', () => dialog?.close());
+  });
+  dialog?.addEventListener('click', (event) => {
+    if (event.target === dialog) dialog.close();
+  });
+  root?.querySelector('[data-refresh]')?.addEventListener('click', () => void loadHistory());
+
+  confirmButton?.addEventListener('click', async () => {
+    if (!pendingAction || !confirmButton || !feedback) return;
+    confirmButton.disabled = true;
+    feedback.textContent = 'Submitting the release request…';
+    if (confirmError) {
+      confirmError.textContent = '';
+      confirmError.classList.add('hidden');
+    }
+    try {
+      const csrfToken = await getCsrfToken();
+      const response = await fetch('/admin/api/publishing', {
+        method: 'POST',
+        credentials: 'same-origin',
+        cache: 'no-store',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': csrfToken,
+        },
+        body: JSON.stringify({
+          ...pendingAction,
+          requestId: crypto.randomUUID(),
+        }),
+      });
+      const payload: unknown = await response.json();
+      if (!response.ok) {
+        let message = 'The publishing request was not accepted.';
+        if (payload && typeof payload === 'object') {
+          if ('detail' in payload && typeof payload.detail === 'string') message = payload.detail;
+          else if ('issues' in payload && Array.isArray(payload.issues)) {
+            message = payload.issues.filter((issue): issue is string => typeof issue === 'string').join(' ');
+          }
+        }
+        throw new Error(message);
+      }
+      dialog?.close();
+      feedback.textContent = 'Request accepted. Waiting for the pipeline to report a verified result.';
+      await loadHistory();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'The publishing request failed.';
+      if (confirmError) {
+        confirmError.textContent = message;
+        confirmError.classList.remove('hidden');
+      }
+      feedback.textContent = message;
+    } finally {
+      confirmButton.disabled = false;
+    }
+  });
+
+  void loadHistory();
 </script>

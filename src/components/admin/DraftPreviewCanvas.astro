@@ -1,0 +1,303 @@
+---
+import Logo from '../Logo.astro';
+import AssetThumb from './AssetThumb.astro';
+import {
+  PAGE_IDS,
+  type PageId,
+  type ProjectDraft,
+  type ServiceDraft,
+} from '../../lib/contentModel';
+import type { DraftPreviewSnapshot } from '../../lib/draftPreview';
+
+interface Props {
+  pageId: PageId;
+  selectedId: string | null;
+  from: string;
+  snapshot: DraftPreviewSnapshot;
+}
+
+const { pageId, selectedId, from, snapshot } = Astro.props;
+const pageLabels: Record<PageId, string> = {
+  home: 'Home',
+  services: 'Services',
+  projects: 'Projects',
+  about: 'About Us',
+  contact: 'Contact',
+};
+const seo = snapshot.seo?.routes[pageId];
+const pageDraft = snapshot.pages[pageId];
+const sections = Object.entries(pageDraft?.sections ?? {});
+const mediaById = new Map(snapshot.media.map((asset) => [asset.id, asset]));
+const availableMediaIds = new Set(snapshot.availableMediaIds);
+const activeServices = snapshot.services.filter((item) =>
+  !item.archived || (pageId === 'services' && item.id === selectedId),
+);
+const activeProjects = snapshot.projects.filter((item) =>
+  !item.archived || (pageId === 'projects' && item.id === selectedId),
+);
+const focusRing =
+  'focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-container';
+
+function previewHref(nextPage: PageId): string {
+  const query = new URLSearchParams({ page: nextPage });
+  if (from) query.set('from', from);
+  if (selectedId && nextPage === pageId && (nextPage === 'services' || nextPage === 'projects')) {
+    query.set('id', selectedId);
+  }
+  return `/admin/preview?${query}`;
+}
+
+function assetFor(id: string | null) {
+  const asset = id ? mediaById.get(id) : undefined;
+  return asset && availableMediaIds.has(asset.id) ? asset : undefined;
+}
+
+function sectionLabel(id: string): string {
+  return id.replace(/([a-z])([A-Z])/g, '$1 $2').replace(/^./, (letter) => letter.toUpperCase());
+}
+
+function serviceEditHref(service: ServiceDraft, field = 'title'): string {
+  return `/admin/services/edit?id=${encodeURIComponent(service.id)}#${field}`;
+}
+
+function projectEditHref(project: ProjectDraft, field = 'title'): string {
+  return `/admin/projects/edit?id=${encodeURIComponent(project.id)}#${field}`;
+}
+---
+
+<div class="bg-background text-on-surface" data-draft-canvas data-page={pageId}>
+  <div class="border-b border-outline-variant bg-surface-container-lowest px-4 py-4 sm:px-8">
+    <div class="flex flex-wrap items-center justify-between gap-4">
+      <a href={previewHref('home')} aria-label="Rajarata Engineering preview home" class={focusRing}>
+        <Logo class="h-9 w-auto" />
+      </a>
+      <nav aria-label="Preview page" class="flex flex-wrap gap-1.5">
+        {PAGE_IDS.map((id) => (
+          <a
+            href={previewHref(id)}
+            aria-current={id === pageId ? 'page' : undefined}
+            class:list={[
+              'rounded-chip px-3 py-2 font-label-sm text-label-sm',
+              id === pageId
+                ? 'bg-primary-container text-on-primary'
+                : 'text-on-surface-variant hover:bg-surface-container-high',
+              focusRing,
+            ]}
+          >
+            {pageLabels[id]}
+          </a>
+        ))}
+      </nav>
+    </div>
+  </div>
+
+  <main class="min-h-[32rem]">
+    <header class="border-b border-outline-variant bg-surface-container-low px-5 py-10 sm:px-10">
+      <div class="mx-auto max-w-5xl space-y-3">
+        <p class="font-label-caps text-label-caps uppercase tracking-wider text-primary">
+          Saved CMS draft · {pageLabels[pageId]}
+        </p>
+        <h2 class="font-headline-lg text-headline-lg text-on-surface">
+          {seo?.title.trim() || pageLabels[pageId]}
+        </h2>
+        {seo?.description && <p class="max-w-3xl font-body-lg text-body-lg text-secondary">{seo.description}</p>}
+        <p class="font-body-sm text-body-sm text-secondary">
+          This preview renders saved CMS fields. Code-managed page sections remain unchanged until a release is built.
+        </p>
+      </div>
+    </header>
+
+    <div class="mx-auto max-w-5xl space-y-8 px-4 py-8 sm:px-8">
+      {sections.length > 0 ? (
+        <section aria-label="Saved page content" class="space-y-4">
+          {sections.map(([sectionId, section]) => (
+            <article class="space-y-3 rounded-card border border-outline-variant bg-surface-container-lowest p-5 shadow-card sm:p-7">
+              <p class="font-label-caps text-label-caps uppercase tracking-wider text-primary">
+                {sectionLabel(sectionId)}
+              </p>
+              {section.heading && <h3 class="font-headline-md text-headline-md text-on-surface">{section.heading}</h3>}
+              {section.label && <p class="font-label-md text-label-md text-secondary">{section.label}</p>}
+              {section.intro && <p class="font-body-lg text-body-lg text-secondary">{section.intro}</p>}
+              {section.body && <p class="whitespace-pre-wrap font-body-md text-body-md text-on-surface">{section.body}</p>}
+              {section.items && section.items.length > 0 && (
+                <ul class="list-disc space-y-1 pl-5 font-body-md text-body-md text-on-surface">
+                  {section.items.map((item) => <li>{item}</li>)}
+                </ul>
+              )}
+              {section.ctaLabel && (
+                <div class="inline-flex rounded-control bg-primary-container px-4 py-2 font-label-md text-label-md text-on-primary">
+                  {section.ctaLabel}
+                </div>
+              )}
+            </article>
+          ))}
+        </section>
+      ) : (
+        <div class="rounded-card border border-dashed border-outline-variant bg-surface-container-lowest p-5">
+          <p class="font-body-md text-body-md text-secondary">
+            No saved page-copy overrides exist for {pageLabels[pageId]}. The code-managed public content is not changed by this draft.
+          </p>
+        </div>
+      )}
+
+      {pageId === 'services' && (
+        <section aria-labelledby="preview-services-title" class="space-y-4">
+          <div>
+            <p class="font-label-caps text-label-caps uppercase tracking-wider text-primary">Service drafts</p>
+            <h3 id="preview-services-title" class="font-headline-md text-headline-md text-on-surface">
+              {activeServices.length} {activeServices.length === 1 ? 'service' : 'services'}
+            </h3>
+          </div>
+          {activeServices.length ? (
+            <div class="grid gap-4 lg:grid-cols-2">
+              {activeServices.map((service) => {
+                const asset = assetFor(service.imageRef);
+                const editorHref = serviceEditHref(service);
+                return (
+                  <article
+                    id={`service-${service.id}`}
+                    class:list={[
+                      'overflow-hidden rounded-card border bg-surface-container-lowest shadow-card',
+                      service.id === selectedId ? 'border-primary-container ring-2 ring-primary-container' : 'border-outline-variant',
+                    ]}
+                  >
+                    {service.imageRef && (
+                      <div class="flex h-44 items-center justify-center border-b border-outline-variant bg-surface-container-low">
+                        {asset ? (
+                          <img
+                            src={`/admin/api/media?id=${encodeURIComponent(asset.id)}&image=1`}
+                            alt={asset.alt}
+                            loading="lazy"
+                            width={asset.width}
+                            height={asset.height}
+                            class="h-full w-full object-contain"
+                          />
+                        ) : <AssetThumb variant="missing" class="h-24 w-24" />}
+                      </div>
+                    )}
+                    <div class="space-y-3 p-5">
+                      <p class="font-label-caps text-label-caps uppercase text-primary">{service.category || 'Uncategorised'}</p>
+                      <h4 class="font-title-lg text-title-lg text-on-surface">{service.title || 'Untitled service'}</h4>
+                      <p class="font-body-md text-body-md text-secondary">{service.summary || 'No summary saved.'}</p>
+                      {service.body && <p class="whitespace-pre-wrap font-body-sm text-body-sm text-on-surface">{service.body}</p>}
+                      {service.scope && <p class="font-body-sm text-body-sm text-secondary"><strong>Scope:</strong> {service.scope}</p>}
+                      {service.suitability.length > 0 && (
+                        <ul class="flex flex-wrap gap-2">
+                          {service.suitability.map((item) => (
+                            <li class="rounded-chip bg-surface-container px-2 py-1 font-label-sm text-label-sm text-secondary">{item}</li>
+                          ))}
+                        </ul>
+                      )}
+                      <a href={editorHref} class={`inline-flex rounded-control border border-outline-variant px-3 py-2 font-label-sm text-label-sm ${focusRing}`}>
+                        Edit saved service
+                      </a>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          ) : <p class="font-body-md text-body-md text-secondary">No service drafts are saved.</p>}
+        </section>
+      )}
+
+      {pageId === 'projects' && (
+        <section aria-labelledby="preview-projects-title" class="space-y-4">
+          <div>
+            <p class="font-label-caps text-label-caps uppercase tracking-wider text-primary">Project drafts</p>
+            <h3 id="preview-projects-title" class="font-headline-md text-headline-md text-on-surface">
+              {activeProjects.length} {activeProjects.length === 1 ? 'project' : 'projects'}
+            </h3>
+          </div>
+          {activeProjects.length ? (
+            <div class="grid gap-4 lg:grid-cols-2">
+              {activeProjects.map((project) => {
+                const asset = assetFor(project.imageRef);
+                return (
+                  <article
+                    id={`project-${project.id}`}
+                    class:list={[
+                      'overflow-hidden rounded-card border bg-surface-container-lowest shadow-card',
+                      project.id === selectedId ? 'border-primary-container ring-2 ring-primary-container' : 'border-outline-variant',
+                    ]}
+                  >
+                    {project.imageRef && (
+                      <div class="flex h-44 items-center justify-center border-b border-outline-variant bg-surface-container-low">
+                        {asset ? (
+                          <img
+                            src={`/admin/api/media?id=${encodeURIComponent(asset.id)}&image=1`}
+                            alt={project.altText || asset.alt}
+                            loading="lazy"
+                            width={asset.width}
+                            height={asset.height}
+                            class="h-full w-full object-contain"
+                          />
+                        ) : <AssetThumb variant="missing" class="h-24 w-24" />}
+                      </div>
+                    )}
+                    <div class="space-y-3 p-5">
+                      <p class="font-label-caps text-label-caps uppercase text-primary">{project.category || 'Uncategorised'}</p>
+                      <h4 class="font-title-lg text-title-lg text-on-surface">{project.title || 'Untitled project'}</h4>
+                      <p class="font-body-md text-body-md text-secondary">{project.summary || 'No summary saved.'}</p>
+                      {project.specifications && <p class="whitespace-pre-wrap font-body-sm text-body-sm text-on-surface">{project.specifications}</p>}
+                      <p class="font-body-sm text-body-sm text-secondary">
+                        {[project.location, project.year, project.reference].filter(Boolean).join(' · ') || 'No project details saved.'}
+                      </p>
+                      <a href={projectEditHref(project)} class={`inline-flex rounded-control border border-outline-variant px-3 py-2 font-label-sm text-label-sm ${focusRing}`}>
+                        Edit saved project
+                      </a>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          ) : <p class="font-body-md text-body-md text-secondary">No project drafts are saved.</p>}
+        </section>
+      )}
+
+      {pageId === 'contact' && snapshot.businessDetails && (
+        <section aria-labelledby="preview-contact-title" class="space-y-4 rounded-card border border-outline-variant bg-surface-container-lowest p-5 shadow-card sm:p-7">
+          <p class="font-label-caps text-label-caps uppercase tracking-wider text-primary">Saved business details</p>
+          <h3 id="preview-contact-title" class="font-headline-md text-headline-md text-on-surface">Contact information</h3>
+          <dl class="grid gap-4 sm:grid-cols-2">
+            {[
+              ['Address', snapshot.businessDetails.address],
+              ['Phone', snapshot.businessDetails.phone],
+              ['Email', snapshot.businessDetails.email],
+              ['Hours', snapshot.businessDetails.hours],
+              ['WhatsApp', snapshot.businessDetails.whatsapp],
+            ].filter(([, value]) => value).map(([label, value]) => (
+              <div class="space-y-1">
+                <dt class="font-label-sm text-label-sm text-secondary">{label}</dt>
+                <dd class="font-body-md text-body-md text-on-surface">{value}</dd>
+              </div>
+            ))}
+          </dl>
+          <a href="/admin/content#business" class={`inline-flex rounded-control border border-outline-variant px-3 py-2 font-label-sm text-label-sm ${focusRing}`}>
+            Edit business details
+          </a>
+        </section>
+      )}
+
+      {pageId === 'home' && (
+        <section aria-label="Home page draft collections" class="grid gap-4 sm:grid-cols-2">
+          <div class="rounded-card border border-outline-variant bg-surface-container-lowest p-5">
+            <h3 class="font-title-lg text-title-lg text-on-surface">Service drafts</h3>
+            <p class="mt-2 font-body-md text-body-md text-secondary">{snapshot.services.filter(({ archived }) => !archived).length} active services saved.</p>
+            <a href={previewHref('services')} class={`mt-3 inline-flex rounded-control border border-outline-variant px-3 py-2 font-label-sm text-label-sm ${focusRing}`}>Review services</a>
+          </div>
+          <div class="rounded-card border border-outline-variant bg-surface-container-lowest p-5">
+            <h3 class="font-title-lg text-title-lg text-on-surface">Project drafts</h3>
+            <p class="mt-2 font-body-md text-body-md text-secondary">{snapshot.projects.filter(({ archived }) => !archived).length} active projects saved.</p>
+            <a href={previewHref('projects')} class={`mt-3 inline-flex rounded-control border border-outline-variant px-3 py-2 font-label-sm text-label-sm ${focusRing}`}>Review projects</a>
+          </div>
+        </section>
+      )}
+    </div>
+  </main>
+
+  <footer class="border-t border-outline-variant bg-surface-container-low px-5 py-5 sm:px-8">
+    <p class="mx-auto max-w-5xl font-body-sm text-body-sm text-secondary">
+      Draft preview only. Contact details, page copy, and media shown here are unpublished working data.
+    </p>
+  </footer>
+</div>

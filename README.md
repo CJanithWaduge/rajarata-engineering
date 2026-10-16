@@ -40,6 +40,8 @@ Available scripts:
 | `npm run test:rules` | Test Firestore and Storage rules with local emulators (requires Java 21+) |
 | `npm run test:phase14` | Build, test content schemas, and run Firestore/Storage plus draft-repository emulator tests |
 | `npm run test:phase15` | Check/build and run schema, Storage rules, and media repository emulator tests |
+| `npm run test:preview` | Run protected-preview integration tests with local Auth, Firestore, and Storage emulators |
+| `npm run test:phase16` | Check/build and test protected draft preview, Auth/Firestore/Storage emulators, and public-output isolation |
 
 ## Pages
 
@@ -104,7 +106,15 @@ Server-side Admin SDK access uses Application Default Credentials; never put ser
 
 Phase 14 draft writes are server-side, version-checked, and emulator-only. Firestore client rules allow admins to read draft documents but deny client writes; the Admin SSR API validates content and uses the Admin SDK against the local demo project. Saving drafts does not change the public static build. Run `npm run test:phase14` to execute the build, schema tests, rules tests, repository tests, and public-output draft-leak check (requires Java 21+).
 
-Phase 15 media uploads are served through the verified Admin SSR session and restricted to local Firebase emulators until Phase 13 staging verification is complete. JPEG, PNG, and WebP files are limited to 10 MiB; alt text is required. Replacing an asset creates a new draft object, and archive/restore only changes metadata—there is no permanent-delete action. Admin image previews are served privately; only the published Storage prefix is public. Run `npm run test:phase15` (Java 21+) for the media, rules, schema, and build checks.
+Phase 15 media uploads are served through the verified Admin SSR session and restricted to local Firebase emulators until Phase 13 staging verification is complete. JPEG, PNG, and WebP files are limited to 10 MiB; alt text is required. Replacing an asset creates a new draft object, and archive/restore only changes metadata—there is no permanent-delete action. Admin image previews are served privately; only the published Storage prefix is public.
+
+Phase 16 `/admin/preview` is rendered on demand from saved draft content, media, and SEO metadata. It is protected by the same verified session-cookie and Admin-claim middleware as the editors. The preview's validation rail links issues to editable fields, and referenced draft images are served only through the protected Admin media endpoint. The preview does not include unsaved editor changes, publish content, or alter the static site. Run `npm run test:phase16` (Java 21+) to verify the SSR access boundary, no-store/noindex responses, media access, emulator data, and absence of Admin HTML from `dist/client/`.
+
+## Contact inquiries (Phase 18)
+
+The public quotation form calls the `submitContactInquiry` Firebase callable in `asia-south1`. The function enforces App Check, validates and bounds every field server-side, requires the inquiry consent flag, rejects a filled honeypot, limits each source address to five requests per 15 minutes, and sends a plain-text email through configurable SMTP. Inquiry bodies are not written to Firestore or logged. Only an HMAC of the source address and the rate counter are stored in `contactRateLimits`; Firestore TTL is configured to expire those records after 24 hours.
+
+`functions/.env.example` contains reserved `.invalid` sample addresses and localhost SMTP settings. It is not a real mail configuration. Before enabling delivery, register the Firebase Web App with App Check, set `PUBLIC_FIREBASE_APPCHECK_SITE_KEY` and the Functions emulator address for local testing, configure `CONTACT_SMTP_HOST`, `CONTACT_SMTP_PORT`, `CONTACT_SMTP_SECURE`, `CONTACT_SENDER`, and `CONTACT_RECIPIENT`, and provide `CONTACT_SMTP_USER`, `CONTACT_SMTP_PASSWORD`, and a random `CONTACT_RATE_LIMIT_SALT` using Firebase Functions secrets. Secret values must never be placed in browser variables or committed files. The caller owns the recipient, provider account, and retention/consent review. Run `npm run test:contact` for validation, abuse-limit, and delivery-failure tests; `npm run test:phase18` runs the full local gate. No function or secret is deployed by these commands.
 
 ## Build and hosting
 

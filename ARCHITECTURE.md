@@ -43,7 +43,7 @@ flowchart TB
     SSR --> ST[(Cloud Storage)]
   end
 
-  subgraph publish["Content publishing — approved, not implemented"]
+  subgraph publish["Content publishing — local implementation; staging blocked"]
     SSR -- "authorized Publish" --> PIPE[Server-side publish pipeline]
     PIPE -- "freeze snapshot" --> FS
     PIPE -- "RELEASE_ID" --> BUILD["Astro build<br/>(reads one release doc)"]
@@ -76,9 +76,9 @@ Fixed. Do not substitute a layer without asking first.
 | Database | Firebase Firestore | Authorization rules, audit/rate-limit use, and local versioned CMS schemas implemented; no CMS records or migrations deployed |
 | Auth | Firebase Auth, admin-only via the `admin` custom claim | `implemented` locally; staging configuration and verification pending |
 | Files | Firebase Storage with admin-only drafts and public published media | Rules and local Admin media management implemented; staging verification pending |
-| Functions | Cloud Functions for the contact form; server-side publish pipeline | `planned`; session handling is in the Admin SSR service |
+| Functions | Cloud Functions for contact form; server-side publishing pipeline | Contact callable implemented locally with configurable SMTP; not deployed or delivery-verified. Publishing staging pipeline remains blocked. |
 | Hosting | Firebase Hosting — static `dist/client/` for public pages, rewrite for `/admin/**` | `implemented` locally; not deployed |
-| CI/CD | GitHub Actions on merge to `main` for **code**; server-side pipeline for **content** | `approved` |
+| CI/CD | GitHub Actions on merge to `main` for **code**; Cloud Build trigger for **content** | `approved`; local trigger client implemented, staging trigger not configured |
 
 No client-side UI framework. Interactivity is progressive enhancement in small
 TypeScript modules and inline `<script>` blocks. No `.astro` component may ship
@@ -114,14 +114,15 @@ footer. It reuses the brand, tokens, focus conventions, and Material Symbols onl
 | `/admin/projects`, `/admin/projects/edit` | list + editor | `implemented` as frontend |
 | `/admin/content` | Home / About / Contact / Business Details / SEO editors | `implemented` as frontend |
 | `/admin/media` | media library, upload, metadata, archive/restore | `implemented` locally; emulator-only until staging verification |
-| `/admin/preview` | draft preview frame | `implemented` as frontend |
-| `/admin/history` | release history + rollback | `implemented` as frontend |
+| `/admin/preview` | saved-draft preview and validation rail | `implemented` locally; emulator-only until staging verification |
+| `/admin/history` | release history + rollback | connected to the local publishing API; staging pipeline not configured |
 
 "Implemented as frontend" means the UI exists and is reviewed, but every
 backend-dependent control is disabled or reports "not connected". The local
 Phase 14 draft and Phase 15 media paths are exceptions: they are wired to
-emulators only. Publishing and preview remain unavailable. The full list of
-unavailable actions is recorded in `IMPLEMENTATION.md`.
+emulators only. The Phase 17 history UI and protected publishing API are wired
+locally, but the Cloud Build trigger, Hosting deployer, and status-writing
+pipeline are not configured. Publishing is not available in staging.
 
 ### 3.3 Components
 
@@ -173,6 +174,8 @@ Components never hardcode hex values.
 | `src/lib/adminEditor.ts` | Editor runtime: dirty tracking, validation surfacing, counters | `implemented` |
 | `src/lib/adminMediaLibrary.ts` | Local preview, upload progress/cancel, metadata updates, archive/restore | `implemented` locally; emulator-only |
 | `src/lib/adminMediaSelection.ts` | Protected asset previews and unavailable-image fallback in editors | `implemented` locally; emulator-only |
+| `src/lib/draftPreview.ts` | Authorized saved-draft snapshot assembly and media/content diagnostics | `implemented` locally; emulator-only |
+| `src/components/admin/DraftPreviewCanvas.astro` | Responsive saved-draft canvas for page, service, project, SEO, and business fields | `implemented` locally; emulator-only |
 | Static footer content | Business details rendered into the build by `src/components/Footer.astro` | `implemented`; no public Firestore reads |
 
 ---
@@ -210,10 +213,12 @@ sequenceDiagram
 - The admin service verifies a **Firebase Auth session cookie** server-side on
   every request and additionally requires `admin === true`. Nothing is rendered
   before that check passes.
-- `/admin/preview` runs in the same service, so the preview renders genuine
-  draft content through the same Astro components the public site uses. This is
-  the main reason the on-demand model was chosen: preview and production cannot
-  drift apart.
+- `/admin/preview` runs in the same service and loads genuine saved draft
+  content through the versioned schema and protected media route. Its responsive
+  canvas renders the CMS-managed fields present in schema v1 with the shared
+  design system. Code-managed page sections are explicitly identified as
+  unchanged; this preview is not a pixel-identical rendering of the eventual
+  published release.
 - Hosting rewrites to Cloud Run and Functions v2 support `pinTag`, pinning the
   admin service revision to the Hosting release so they roll back together.
 - Session cookie: `HttpOnly`, `Secure`, `SameSite=Lax`, path `/`, 5-day lifetime
@@ -289,7 +294,7 @@ Field inventory (from the Phase 10 editable-content inventory):
 | `drafts/settings/records/businessDetails` | `schemaVersion`, `address`, `phone`, `email`, `hours`, `whatsapp`, `updatedAt` | Replaces `siteSettings/public` (D3) |
 | `drafts/settings/records/seo` | `schemaVersion`, per-route `title`, `description`, share-image reference, `updatedAt` | Must be in the generated document |
 | `drafts/media/records/{assetId}` | `schemaVersion`, `filename`, `alt`, `width`, `height`, `contentType`, `bytes`, `storagePath`, `archived`, `updatedAt` | Metadata only; JPEG/PNG/WebP, 10 MiB maximum; bytes live in Storage |
-| `releases/{releaseId}` | `schemaVersion`, `createdAt`, `createdBy`, `snapshot`, `mediaRefs[]`, `status`, `hostVersionId`, `buildId`, `failure`, `rollbackOf` | Immutable to clients; states validated by the model |
+| `releases/{releaseId}` | `schemaVersion`, `createdAt`, `completedAt`, `createdBy`, `snapshot`, `mediaRefs[]`, `status`, `hostVersionId`, `buildId`, `failure`, `rollbackOf` | Snapshot immutable to clients; status and deploy fields are pipeline-managed |
 
 The TypeScript contracts and runtime parsers live in
 `src/lib/contentModel.ts`; `src/lib/draftRepository.ts` provides validated,
@@ -439,6 +444,15 @@ clears ID-token state after the exchange.
 
 ## 7. Publishing pipeline
 
+**Implementation status (2026-10-16):** the local release repository, protected
+publish/rollback API, Cloud Build trigger client, and release-history UI are
+implemented. The trigger client passes `_RELEASE_ID` so a pipeline can consume
+the frozen release instead of building against mutable drafts. The staging
+project has no associated billing account; required APIs could not be enabled.
+No trigger, build definition, service identities, or Hosting deployment has
+been provisioned or verified. Phase 17 remains incomplete until its staging
+exit gate passes.
+
 ### 7.1 Trigger comparison — D6 `APPROVED`
 
 | | GitHub Actions as the CMS trigger | Server-side pipeline |
@@ -554,6 +568,7 @@ Rules:
 | Draft data | `firestore.rules`: `request.auth.token.admin == true` | Client-side role checks |
 | Media | `storage.rules`: drafts admin-only, published read-only | Unlisted/download-token URLs alone |
 | Publish | Server-side callable verifying token + claim, then a serialised pipeline | A browser-initiated build with a general-purpose token |
+| Contact inquiries | HTTPS callable with App Check, server-side validation, Firestore abuse limit, and SMTP secrets | Client-side validation or a honeypot alone |
 | Deploy | Dedicated service accounts, WIF for GitHub Actions, no committed keys | Keys in `.env`, repo files, or client bundles |
 | Public content | Static `dist/` built from exactly one release snapshot | Public Firestore reads for page content |
 

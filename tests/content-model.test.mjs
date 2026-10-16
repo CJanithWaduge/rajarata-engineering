@@ -136,6 +136,7 @@ test('release parser accepts sortable numeric-prefix ids and rejects unknown sta
     schemaVersion: CONTENT_SCHEMA_VERSION,
     id: '20261015-1349-abc123',
     createdAt: updatedAt,
+    completedAt: null,
     createdBy: 'admin-uid',
     snapshot: {
       schemaVersion: CONTENT_SCHEMA_VERSION,

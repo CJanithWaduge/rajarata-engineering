@@ -1,64 +1,78 @@
 ---
 /**
- * Admin — Draft preview UI (Phase 11, Step A11.9).
- *
- * A preview frame with responsive viewport controls, a persistent
- * "Draft preview — not published" indicator, a validation rail that surfaces
- * blocking issues and missing-media fallbacks before publish, and an obvious
- * return-to-editor action.
- *
- * Honesty boundary (DESIGN.md §7, IMPLEMENTATION.md A11.9): a real preview
- * must be private and authenticated. This static route is not access control,
- * so the frame renders clearly identified illustrative content — it does not
- * pretend a draft was loaded from a preview service.
+ * Authenticated, server-rendered preview of the currently saved CMS drafts.
+ * This route and its protected image requests are gated by Admin middleware.
  */
 import AdminLayout from '../../../layouts/AdminLayout.astro';
 import AdminPageHeader from '../../../components/admin/AdminPageHeader.astro';
 import AdminNotice from '../../../components/admin/AdminNotice.astro';
 import StatusChip from '../../../components/admin/StatusChip.astro';
-import AssetThumb from '../../../components/admin/AssetThumb.astro';
-import Skeleton from '../../../components/admin/Skeleton.astro';
+import DraftPreviewCanvas from '../../../components/admin/DraftPreviewCanvas.astro';
+import { PAGE_IDS, type PageId } from '../../../lib/contentModel';
+import { getDraftFirestore, getDraftStorage } from '../../../lib/firebaseAdmin';
+import {
+  collectDraftPreviewIssues,
+  loadDraftPreview,
+  type DraftPreviewSnapshot,
+} from '../../../lib/draftPreview';
 
-interface Issue {
-  scope: string;
-  message: string;
-  blocking: boolean;
+const pageParam = Astro.url.searchParams.get('page');
+const validPage = PAGE_IDS.includes(pageParam as PageId);
+const pageId: PageId = validPage ? pageParam as PageId : 'home';
+const selectedIdParam = Astro.url.searchParams.get('id');
+const selectedId = selectedIdParam && /^[a-z][a-z0-9-]{0,62}[a-z0-9]$/.test(selectedIdParam)
+  ? selectedIdParam
+  : null;
+const allowedReturnPaths = new Set([
+  '/admin/services/edit',
+  '/admin/projects/edit',
+  '/admin/content',
+]);
+const fromParam = Astro.url.searchParams.get('from');
+const returnPath = fromParam && allowedReturnPaths.has(fromParam) ? fromParam : '/admin/content';
+const returnUrl = new URL(returnPath, Astro.url);
+if (
+  selectedId &&
+  (returnPath === '/admin/services/edit' || returnPath === '/admin/projects/edit')
+) {
+  returnUrl.searchParams.set('id', selectedId);
+}
+const returnHref = `${returnUrl.pathname}${returnUrl.search}`;
+
+let snapshot: DraftPreviewSnapshot | undefined;
+let issues: ReturnType<typeof collectDraftPreviewIssues> = [];
+let loadError = '';
+
+if (!validPage && pageParam) {
+  Astro.response.status = 400;
+  loadError = 'The requested preview page is not supported.';
+} else if (!Astro.locals.authUser?.admin) {
+  Astro.response.status = 403;
+  loadError = 'A verified administrator session is required to load draft content.';
+} else {
+  try {
+    snapshot = await loadDraftPreview(
+      getDraftFirestore(),
+      getDraftStorage(),
+      Astro.locals.authUser,
+    );
+    issues = collectDraftPreviewIssues(snapshot);
+  } catch (error) {
+    Astro.response.status = 503;
+    loadError = 'The saved draft preview could not be loaded. Check local emulator availability and retry.';
+    console.error('Draft preview could not be loaded.', error);
+  }
 }
 
-const issues: Issue[] = [
-  { scope: 'Services · Service 01', message: 'Short card summary is empty.', blocking: true },
-  {
-    scope: 'Home · hero image',
-    message: 'Image is missing, so alt text cannot be confirmed.',
-    blocking: true,
-  },
-  {
-    scope: 'SEO · meta description',
-    message: 'Shorter than the recommended length for search results.',
-    blocking: false,
-  },
-];
-
-const blockingCount = issues.filter((i) => i.blocking).length;
-
-const viewports = [
+const blockingCount = issues.filter(({ blocking }) => blocking).length;
+const viewportOptions = [
   { key: 'desktop', label: 'Desktop', width: '1280px', icon: 'desktop_windows' },
   { key: 'tablet', label: 'Tablet', width: '768px', icon: 'tablet_mac' },
   { key: 'mobile', label: 'Mobile', width: '390px', icon: 'smartphone' },
 ];
-
-const previewStates = [
-  { key: 'frame', label: 'Illustrative frame' },
-  { key: 'loading', label: 'Loading' },
-  { key: 'error', label: 'Couldn’t load' },
-];
-
 const focusRing =
   'focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-container';
-
-const secondaryBtn = `inline-flex h-10 items-center gap-2 rounded-control border-[1.5px] border-outline-variant px-4 font-label-md text-label-md text-on-surface hover:bg-surface-container-high ${focusRing}`;
-
-const toggleBtn =
+const toggleButton =
   'inline-flex min-h-10 items-center gap-1.5 rounded-control border border-outline-variant bg-surface-container-lowest px-3 font-label-sm text-label-sm text-on-surface-variant hover:border-outline aria-pressed:border-primary-container aria-pressed:bg-primary-fixed aria-pressed:text-on-primary-fixed focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-container sm:min-h-9';
 ---
 
@@ -66,318 +80,146 @@ const toggleBtn =
   <div class="space-y-6" data-preview-root>
     <AdminPageHeader
       title="Draft preview"
-      description="Review draft content in the public layout before publishing."
+      description="Review the latest saved draft data and media before a release."
     >
       <Fragment slot="actions">
-        <a href="/admin/content" data-preview-return class={secondaryBtn}>
+        <StatusChip status={blockingCount > 0 ? 'attention' : 'draft'} label={`${blockingCount} blocking`} />
+        <a href={returnHref} class={`inline-flex h-10 items-center gap-2 rounded-control border-[1.5px] border-outline-variant px-4 font-label-md text-label-md text-on-surface hover:bg-surface-container-high ${focusRing}`}>
           <span class="material-symbols-outlined text-[18px]" aria-hidden="true">arrow_back</span>
           Return to editor
         </a>
       </Fragment>
     </AdminPageHeader>
 
-    <AdminNotice tone="unavailable" title="Not a private preview yet">
-      A real draft preview must be private and authenticated. This static route is not access
-      control, so the frame below shows clearly identified illustrative content — no draft has been
-      loaded from a preview service. Protected preview delivery arrives with the backend phase.
+    <AdminNotice tone="warning" title="Draft preview — not published">
+      This page is rendered on demand from saved draft records. It does not update the public site,
+      create a release, or publish content.
     </AdminNotice>
 
-    <!-- Persistent preview indicator + viewport controls -->
-    <div
-      class="sticky top-16 z-20 -mx-4 border-y border-outline-variant bg-surface-container-lowest/95 px-4 py-3 backdrop-blur-md sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8"
-    >
+    <div class="sticky top-16 z-20 -mx-4 border-y border-outline-variant bg-surface-container-lowest/95 px-4 py-3 backdrop-blur-md sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
       <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <p class="flex items-center gap-2 font-label-md text-label-md text-on-surface">
-          <span
-            class="material-symbols-outlined text-[20px] text-primary-container"
-            aria-hidden="true">visibility</span
-          >
-          <span>Draft preview — not published</span>
+          <span class="material-symbols-outlined text-[20px] text-primary-container" aria-hidden="true">visibility</span>
+          Draft preview — not published
         </p>
-
         <div class="flex flex-wrap items-center gap-3">
-          <div class="flex items-center gap-2">
-            <span id="preview-viewport-label" class="font-label-sm text-label-sm text-secondary"
-              >Viewport</span
-            >
-            <div role="group" aria-labelledby="preview-viewport-label" class="flex flex-wrap gap-1.5">
-              {
-                viewports.map((v) => (
-                  <button
-                    type="button"
-                    data-preview-viewport-btn={v.key}
-                    data-preview-viewport-label={v.label}
-                    data-preview-viewport-width={v.width}
-                    aria-pressed={v.key === 'desktop' ? 'true' : 'false'}
-                    class={toggleBtn}
-                  >
-                    <span class="material-symbols-outlined text-[16px]" aria-hidden="true">
-                      {v.icon}
-                    </span>
-                    {v.label}
-                  </button>
-                ))
-              }
-            </div>
+          <span id="preview-viewport-label" class="font-label-sm text-label-sm text-secondary">Viewport</span>
+          <div role="group" aria-labelledby="preview-viewport-label" class="flex flex-wrap gap-1.5">
+            {viewportOptions.map((option) => (
+              <button
+                type="button"
+                data-preview-viewport-btn={option.key}
+                data-preview-viewport-label={option.label}
+                data-preview-viewport-width={option.width}
+                aria-pressed={option.key === 'desktop' ? 'true' : 'false'}
+                class={toggleButton}
+              >
+                <span class="material-symbols-outlined text-[16px]" aria-hidden="true">{option.icon}</span>
+                {option.label}
+              </button>
+            ))}
           </div>
-
-          <p
-            data-preview-viewport-note
-            class="font-label-sm text-label-sm text-secondary"
-            aria-live="polite"
-          >
+          <p data-preview-viewport-note aria-live="polite" class="font-label-sm text-label-sm text-secondary">
             Desktop · 1280px
           </p>
         </div>
       </div>
     </div>
 
-    <div class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
-      <!-- Preview frame -->
-      <div class="min-w-0 space-y-3">
-        <!-- Frame state preview -->
-        <div class="flex flex-wrap items-center gap-2">
-          <span id="preview-state-label" class="font-label-sm text-label-sm font-semibold text-secondary">
-            Frame state preview
-          </span>
-          <div role="group" aria-labelledby="preview-state-label" class="flex flex-wrap gap-1.5">
-            {
-              previewStates.map((s) => (
-                <button
-                  type="button"
-                  data-preview-state-btn={s.key}
-                  aria-pressed={s.key === 'frame' ? 'true' : 'false'}
-                  class={toggleBtn}
-                >
-                  {s.label}
-                </button>
-              ))
-            }
+    {loadError ? (
+      <AdminNotice tone="error" title="Preview unavailable">{loadError}</AdminNotice>
+    ) : snapshot ? (
+      <div class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
+        <section aria-label="Saved draft preview" class="min-w-0 overflow-hidden rounded-card border border-outline-variant bg-surface-container-lowest shadow-card">
+          <div
+            data-preview-frame
+            data-viewport="desktop"
+            class="mx-auto w-full data-[viewport=desktop]:max-w-[1280px] data-[viewport=tablet]:max-w-[768px] data-[viewport=mobile]:max-w-[390px]"
+          >
+            <DraftPreviewCanvas
+              pageId={pageId}
+              selectedId={selectedId}
+              from={returnPath}
+              snapshot={snapshot}
+            />
           </div>
-        </div>
+        </section>
 
-        <div
-          data-preview-frame
-          data-viewport="desktop"
-          class="mx-auto w-full overflow-hidden rounded-card border border-outline-variant bg-surface-container-lowest shadow-card data-[viewport=desktop]:max-w-[1280px] data-[viewport=tablet]:max-w-[768px] data-[viewport=mobile]:max-w-[390px]"
-        >
-          <!-- Illustrative frame -->
-          <div data-preview-state="frame">
-            <p class="border-b border-outline-variant bg-primary-fixed px-4 py-2 font-label-sm text-label-sm text-on-primary-fixed">
-              Illustrative preview content — not a live draft.
-            </p>
-
-            <div class="bg-background">
-              <!-- Illustrative public header (decorative structure) -->
-              <div
-                class="flex items-center justify-between gap-4 border-b border-outline-variant bg-surface-container-lowest px-4 py-3 sm:px-6"
-              >
-                <span class="flex items-center gap-2">
-                  <span
-                    class="flex h-8 w-8 items-center justify-center rounded-chip bg-primary-container font-label-caps text-label-caps text-on-primary"
-                    >RE</span
-                  >
-                  <span class="font-title-md text-title-md text-on-surface">Rajarata Engineering</span>
-                </span>
-                <span class="hidden gap-4 font-label-md text-label-md text-secondary sm:flex">
-                  <span>Home</span>
-                  <span>Services</span>
-                  <span>Projects</span>
-                  <span>About</span>
-                  <span>Contact</span>
-                </span>
-              </div>
-
-              <!-- Illustrative hero -->
-              <div class="grid gap-4 px-4 py-8 sm:px-6 lg:grid-cols-2 lg:items-center">
-                <div class="space-y-3">
-                  <p class="font-label-caps text-label-caps text-primary">Illustrative label</p>
-                  <h2 class="font-headline-lg text-headline-lg text-on-surface">
-                    Illustrative hero headline for the draft
-                  </h2>
-                  <p class="font-body-md text-body-md text-secondary">
-                    This is placeholder body copy used to show the real typography and spacing of the
-                    public layout. It makes no claim about the business.
-                  </p>
-                  <span
-                    class="inline-flex h-10 items-center rounded-control bg-primary-container px-4 font-label-md text-label-md text-on-primary"
-                  >
-                    Illustrative action
-                  </span>
-                </div>
-
-                <!-- Missing-media fallback -->
-                <figure class="space-y-2">
-                  <AssetThumb variant="missing" class="w-full" />
-                  <figcaption class="font-body-sm text-body-sm text-primary-container">
-                    Image unavailable — the referenced asset is missing, so no alt text can be
-                    confirmed.
-                  </figcaption>
-                </figure>
-              </div>
-
-              <!-- Illustrative cards -->
-              <div class="border-t border-outline-variant px-4 py-8 sm:px-6">
-                <h3 class="font-headline-sm text-headline-sm text-on-surface">
-                  Illustrative section heading
-                </h3>
-                <div class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                  {
-                    [1, 2, 3].map((n) => (
-                      <div class="space-y-2 rounded-card border border-outline-variant bg-surface-container-lowest p-4 shadow-card">
-                        <span
-                          class="material-symbols-outlined text-[24px] text-tertiary"
-                          aria-hidden="true"
-                        >
-                          bolt
-                        </span>
-                        <p class="font-title-md text-title-md text-on-surface">
-                          Illustrative card {n}
-                        </p>
-                        <p class="font-body-sm text-body-sm text-secondary">
-                          Placeholder summary for a draft item. Not real content.
-                        </p>
-                      </div>
-                    ))
-                  }
-                </div>
-              </div>
+        <aside class="space-y-4 xl:sticky xl:top-32 xl:self-start">
+          <section class="rounded-card border border-outline-variant bg-surface-container-lowest shadow-card">
+            <header class="flex items-center justify-between gap-3 border-b border-outline-variant px-5 py-4">
+              <h2 class="font-title-lg text-title-lg text-on-surface">Validation</h2>
+              <StatusChip status={blockingCount > 0 ? 'attention' : 'info'} label={`${blockingCount} blocking`} />
+            </header>
+            <div class="space-y-4 p-5">
+              {issues.length > 0 ? (
+                <ul class="space-y-3">
+                  {issues.map((issue) => (
+                    <li class:list={[
+                      'space-y-1 border-l-2 pl-3',
+                      issue.blocking ? 'border-primary-container' : 'border-outline-variant',
+                    ]}>
+                      <p class="flex items-center gap-2 font-label-md text-label-md text-on-surface">
+                        <span class:list={[
+                          'material-symbols-outlined text-[16px]',
+                          issue.blocking ? 'text-primary-container' : 'text-secondary',
+                        ]} aria-hidden="true">{issue.blocking ? 'error' : 'info'}</span>
+                        {issue.blocking ? 'Blocking' : 'Suggestion'} · {issue.scope}
+                      </p>
+                      <p class="font-body-sm text-body-sm text-secondary">{issue.message}</p>
+                      <a href={issue.href} class={`inline-flex font-label-sm text-label-sm text-primary hover:underline ${focusRing}`}>
+                        Go to field
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p class="font-body-sm text-body-sm text-secondary">
+                  No blocking content or media issues were detected in the saved drafts.
+                </p>
+              )}
+              <p class="border-t border-outline-variant pt-3 font-body-sm text-body-sm text-secondary">
+                Diagnostics are based on saved draft data. Unsaved editor changes are not included.
+              </p>
             </div>
-          </div>
+          </section>
 
-          <!-- Loading -->
-          <div data-preview-state="loading" hidden>
-            <p class="sr-only" role="status">Loading draft preview…</p>
-            <div class="space-y-4 bg-background p-4 sm:p-6">
-              <Skeleton class="h-10 w-1/2" />
-              <Skeleton class="h-48 w-full rounded-card" />
-              <div class="grid gap-4 sm:grid-cols-3">
-                <Skeleton class="h-24 w-full rounded-card" />
-                <Skeleton class="h-24 w-full rounded-card" />
-                <Skeleton class="h-24 w-full rounded-card" />
-              </div>
+          <section class="rounded-card border border-outline-variant bg-surface-container-lowest shadow-card">
+            <div class="space-y-3 p-5">
+              <h2 class="font-title-lg text-title-lg text-on-surface">Publish</h2>
+              <p class="font-body-sm text-body-sm text-secondary">
+                Previewing is available; publishing remains disabled until the separate release pipeline is implemented.
+              </p>
+              <button type="button" disabled class={`inline-flex h-10 w-full items-center justify-center gap-2 rounded-control bg-primary-container px-4 font-label-md text-label-md text-on-primary opacity-60 ${focusRing}`}>
+                <span class="material-symbols-outlined text-[18px]" aria-hidden="true">rocket_launch</span>
+                Publish unavailable
+              </button>
             </div>
-            <p class="border-t border-outline-variant bg-surface-container-low px-4 py-2 font-body-sm text-body-sm text-secondary">
-              Illustrative loading state — no preview request was made.
-            </p>
-          </div>
-
-          <!-- Error -->
-          <div data-preview-state="error" hidden class="bg-background p-4 sm:p-6">
-            <AdminNotice tone="error" title="Couldn’t load the draft preview">
-              A real preview requires authenticated delivery from the backend. Until that exists, a
-              failed load cannot be resolved here — this is a visual state, and no request was made.
-            </AdminNotice>
-          </div>
-        </div>
+          </section>
+        </aside>
       </div>
-
-      <!-- Validation rail -->
-      <aside class="space-y-4 xl:sticky xl:top-32 xl:self-start">
-        <section class="rounded-card border border-outline-variant bg-surface-container-lowest shadow-card">
-          <header class="flex items-center justify-between gap-3 border-b border-outline-variant px-5 py-4">
-            <h2 class="font-title-lg text-title-lg text-on-surface">Before publish</h2>
-            <StatusChip status={blockingCount > 0 ? 'attention' : 'info'} label={`${blockingCount} blocking`} />
-          </header>
-          <div class="space-y-4 p-5">
-            <ul class="space-y-3">
-              {
-                issues.map((issue) => (
-                  <li class={issue.blocking ? 'space-y-1 border-l-2 border-primary-container pl-3' : 'space-y-1 border-l-2 border-outline-variant pl-3'}>
-                    <p class="flex items-center gap-2 font-label-md text-label-md text-on-surface">
-                      <span
-                        class={`material-symbols-outlined text-[16px] ${issue.blocking ? 'text-primary-container' : 'text-secondary'}`}
-                        aria-hidden="true"
-                      >
-                        {issue.blocking ? 'error' : 'info'}
-                      </span>
-                      {issue.blocking ? 'Blocking' : 'Suggestion'} · {issue.scope}
-                    </p>
-                    <p class="font-body-sm text-body-sm text-secondary">{issue.message}</p>
-                  </li>
-                ))
-              }
-            </ul>
-
-            <p class="font-body-sm text-body-sm text-secondary">
-              Blocking issues must be resolved before publish becomes available. Publishing itself is
-              not connected in this phase.
-            </p>
-          </div>
-        </section>
-
-        <section class="rounded-card border border-outline-variant bg-surface-container-lowest shadow-card">
-          <div class="space-y-3 p-5">
-            <h2 class="font-title-lg text-title-lg text-on-surface">Continue to publish</h2>
-            <p class="font-body-sm text-body-sm text-secondary">
-              Blocked by {blockingCount} validation {blockingCount === 1 ? 'issue' : 'issues'} and an
-              unavailable publishing pipeline.
-            </p>
-            <button
-              type="button"
-              disabled
-              aria-describedby="preview-publish-note"
-              class={`inline-flex h-10 w-full items-center justify-center gap-2 rounded-control bg-primary-container px-4 font-label-md text-label-md text-on-primary opacity-60 ${focusRing}`}
-            >
-              <span class="material-symbols-outlined text-[18px]" aria-hidden="true">rocket_launch</span>
-              Publish
-            </button>
-            <p id="preview-publish-note" class="font-body-sm text-body-sm text-secondary">
-              Publishing is unavailable: the build/deploy pipeline is not connected.
-            </p>
-          </div>
-        </section>
-      </aside>
-    </div>
+    ) : null}
   </div>
 </AdminLayout>
 
 <script>
   const root = document.querySelector<HTMLElement>('[data-preview-root]');
+  const frame = root?.querySelector<HTMLElement>('[data-preview-frame]');
+  const viewportButtons = Array.from(
+    root?.querySelectorAll<HTMLButtonElement>('[data-preview-viewport-btn]') ?? [],
+  );
+  const viewportNote = root?.querySelector<HTMLElement>('[data-preview-viewport-note]');
 
-  if (root) {
-    // Return destination: allowlisted, code-controlled (never a free-form link).
-    const allowedFrom = ['/admin/services/edit', '/admin/projects/edit', '/admin/content'];
-    const params = new URLSearchParams(window.location.search);
-    const requested = params.get('from');
-    const target = requested && allowedFrom.includes(requested) ? requested : '/admin/content';
-    root.querySelectorAll<HTMLAnchorElement>('[data-preview-return]').forEach((link) => {
-      link.setAttribute('href', target);
+  viewportButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      const key = button.dataset.previewViewportBtn ?? 'desktop';
+      viewportButtons.forEach((candidate) =>
+        candidate.setAttribute('aria-pressed', String(candidate === button)),
+      );
+      if (frame) frame.dataset.viewport = key;
+      if (viewportNote) {
+        viewportNote.textContent = `${button.dataset.previewViewportLabel ?? key} · ${button.dataset.previewViewportWidth ?? ''}`;
+      }
     });
-
-    // Viewport controls.
-    const frame = root.querySelector<HTMLElement>('[data-preview-frame]');
-    const viewportButtons = Array.from(
-      root.querySelectorAll<HTMLButtonElement>('[data-preview-viewport-btn]')
-    );
-    const viewportNote = root.querySelector<HTMLElement>('[data-preview-viewport-note]');
-
-    viewportButtons.forEach((btn) => {
-      btn.addEventListener('click', () => {
-        const key = btn.dataset.previewViewportBtn ?? 'desktop';
-        viewportButtons.forEach((b) => b.setAttribute('aria-pressed', String(b === btn)));
-        if (frame) frame.dataset.viewport = key;
-        if (viewportNote) {
-          const label = btn.dataset.previewViewportLabel ?? key;
-          const width = btn.dataset.previewViewportWidth ?? '';
-          viewportNote.textContent = width ? `${label} · ${width}` : label;
-        }
-      });
-    });
-
-    // Frame state preview.
-    const stateButtons = Array.from(
-      root.querySelectorAll<HTMLButtonElement>('[data-preview-state-btn]')
-    );
-    const statePanels = Array.from(root.querySelectorAll<HTMLElement>('[data-preview-state]'));
-    stateButtons.forEach((btn) => {
-      btn.addEventListener('click', () => {
-        const key = btn.dataset.previewStateBtn;
-        stateButtons.forEach((b) => b.setAttribute('aria-pressed', String(b === btn)));
-        statePanels.forEach((panel) => {
-          panel.hidden = panel.dataset.previewState !== key;
-        });
-      });
-    });
-  }
+  });
 </script>

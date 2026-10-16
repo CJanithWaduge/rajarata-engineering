@@ -135,6 +135,7 @@ export interface ReleaseRecord {
   schemaVersion: typeof CONTENT_SCHEMA_VERSION;
   id: string;
   createdAt: string;
+  completedAt: string | null;
   createdBy: string;
   snapshot: ContentSnapshot;
   mediaRefs: string[];
@@ -460,6 +461,9 @@ export function parseReleaseRecord(value: unknown): ReleaseRecord {
     schemaVersion: CONTENT_SCHEMA_VERSION,
     id: asReleaseId(record.id),
     createdAt: asIsoDate(record.createdAt, 'createdAt'),
+    completedAt: record.completedAt === null
+      ? null
+      : asIsoDate(record.completedAt, 'completedAt'),
     createdBy: asString(record.createdBy, 'createdBy', 128),
     snapshot: parseContentSnapshot(record.snapshot),
     mediaRefs: asStringArray(record.mediaRefs, 'mediaRefs', 1_000),

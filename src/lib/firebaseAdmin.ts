@@ -21,7 +21,13 @@ export function getAdminFirestore() {
 
 export function getDraftFirestore() {
   const projectId = process.env.FIREBASE_PROJECT_ID || process.env.PUBLIC_FIREBASE_PROJECT_ID;
-  if (!process.env.FIRESTORE_EMULATOR_HOST || !projectId?.startsWith('demo-')) {
+  const emulatorAccess =
+    Boolean(process.env.FIRESTORE_EMULATOR_HOST) && projectId?.startsWith('demo-') === true;
+  const cloudAccess =
+    process.env.NODE_ENV === 'production' &&
+    process.env.FIREBASE_CMS_ENABLED === 'true' &&
+    Boolean(projectId);
+  if (!emulatorAccess && !cloudAccess) {
     throw new Error('Draft access is restricted to the local Firebase emulator project.');
   }
   return getAdminFirestore();
@@ -29,12 +35,17 @@ export function getDraftFirestore() {
 
 export function getDraftStorage() {
   const projectId = process.env.FIREBASE_PROJECT_ID || process.env.PUBLIC_FIREBASE_PROJECT_ID;
-  if (
-    !process.env.FIRESTORE_EMULATOR_HOST ||
-    !process.env.FIREBASE_STORAGE_EMULATOR_HOST ||
-    !projectId?.startsWith('demo-')
-  ) {
+  const emulatorAccess =
+    Boolean(process.env.FIRESTORE_EMULATOR_HOST) &&
+    Boolean(process.env.FIREBASE_STORAGE_EMULATOR_HOST) &&
+    projectId?.startsWith('demo-') === true;
+  const cloudAccess =
+    process.env.NODE_ENV === 'production' &&
+    process.env.FIREBASE_CMS_ENABLED === 'true' &&
+    Boolean(projectId);
+  if (!emulatorAccess && !cloudAccess) {
     throw new Error('Draft media access is restricted to the local Firebase emulators.');
   }
-  return getStorage(getAdminApp()).bucket(`${projectId}.appspot.com`);
+  const bucketName = process.env.FIREBASE_STORAGE_BUCKET || `${projectId}.appspot.com`;
+  return getStorage(getAdminApp()).bucket(bucketName);
 }
