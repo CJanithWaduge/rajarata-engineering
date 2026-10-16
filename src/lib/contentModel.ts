@@ -1,4 +1,6 @@
 export const CONTENT_SCHEMA_VERSION = 1 as const;
+export const MAX_MEDIA_BYTES = 10 * 1024 * 1024;
+export const MEDIA_CONTENT_TYPES = ['image/jpeg', 'image/png', 'image/webp'] as const;
 
 export const PAGE_IDS = ['home', 'services', 'projects', 'about', 'contact'] as const;
 export type PageId = (typeof PAGE_IDS)[number];
@@ -99,10 +101,11 @@ export interface SeoDraft {
 export interface MediaDraft {
   schemaVersion: typeof CONTENT_SCHEMA_VERSION;
   id: string;
+  filename: string;
   alt: string;
   width: number;
   height: number;
-  contentType: 'image/jpeg' | 'image/png' | 'image/webp';
+  contentType: (typeof MEDIA_CONTENT_TYPES)[number];
   bytes: number;
   storagePath: string;
   archived: boolean;
@@ -377,21 +380,31 @@ export function parseMediaDraft(value: unknown): MediaDraft {
   const record = asRecord(value, 'media');
   checkVersion(record);
   const contentType = record.contentType;
-  if (!['image/jpeg', 'image/png', 'image/webp'].includes(String(contentType))) {
+  if (!MEDIA_CONTENT_TYPES.includes(String(contentType) as (typeof MEDIA_CONTENT_TYPES)[number])) {
     throw new ContentValidationError('contentType', 'must be an approved raster image type');
   }
+  const id = asId(record.id, 'id');
+  const filename = asString(record.filename, 'filename', 120);
+  if (!/^[a-z0-9][a-z0-9._-]*\.(jpg|png|webp)$/.test(filename)) {
+    throw new ContentValidationError('filename', 'must be a safe image filename');
+  }
   const storagePath = asString(record.storagePath, 'storagePath', 1_024);
-  if (!/^media\/drafts\/[a-z][a-z0-9-]{0,62}\/.+$/.test(storagePath)) {
+  if (storagePath !== `media/drafts/${id}/${filename}`) {
     throw new ContentValidationError('storagePath', 'must identify a draft media object');
+  }
+  const bytes = asInteger(record.bytes, 'bytes', 1);
+  if (bytes > MAX_MEDIA_BYTES) {
+    throw new ContentValidationError('bytes', `must not exceed ${MAX_MEDIA_BYTES} bytes`);
   }
   return {
     schemaVersion: CONTENT_SCHEMA_VERSION,
-    id: asId(record.id, 'id'),
+    id,
+    filename,
     alt: asString(record.alt, 'alt', 500),
     width: asInteger(record.width, 'width', 1),
     height: asInteger(record.height, 'height', 1),
     contentType: contentType as MediaDraft['contentType'],
-    bytes: asInteger(record.bytes, 'bytes', 1),
+    bytes,
     storagePath,
     archived: asBoolean(record.archived, 'archived'),
     updatedAt: asIsoDate(record.updatedAt, 'updatedAt'),

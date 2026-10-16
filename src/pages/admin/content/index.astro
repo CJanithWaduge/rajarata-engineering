@@ -18,6 +18,7 @@ import FormSection from '../../../components/admin/FormSection.astro';
 import AdminField from '../../../components/admin/AdminField.astro';
 import TagInput from '../../../components/admin/TagInput.astro';
 import AssetThumb from '../../../components/admin/AssetThumb.astro';
+import { listMediaDrafts, type MediaListItem } from '../../../lib/mediaRepository';
 import EditorActionBar from '../../../components/admin/EditorActionBar.astro';
 import { CONTENT_SCHEMA_VERSION, type PageDraft, type PageSectionDraft, type SeoDraft } from '../../../lib/contentModel';
 import { getDraftFirestore } from '../../../lib/firebaseAdmin';
@@ -74,6 +75,8 @@ let aboutPage = blankPage('about');
 let contactPage = blankPage('contact');
 let business = blankBusiness;
 let seo = blankSeo;
+let mediaLoadError = '';
+let mediaAssets: MediaListItem[] = [];
 const expected = { home: 'null', about: 'null', contact: 'null', business: 'null', seo: 'null' };
 
 try {
@@ -102,6 +105,13 @@ try {
 } catch (error) {
   loadError = error instanceof Error ? error.message : 'Draft storage is unavailable.';
   console.error('Site content drafts could not be loaded.', error);
+}
+
+try {
+  mediaAssets = await listMediaDrafts(getDraftFirestore(), Astro.locals.authUser);
+} catch (error) {
+  mediaLoadError = 'The media library is unavailable. Site-content drafts can still be saved.';
+  console.error('Media assets could not be loaded in the site-content editor.', error);
 }
 
 const section = (page: PageDraft, key: string): PageSectionDraft => page.sections[key] ?? {};
@@ -353,35 +363,9 @@ const contactVisitors = section(contactPage, 'visitorInformation');
       <div id="seo" class="scroll-mt-36">
         <FormSection
           title="SEO metadata"
-          description="Per-route title and description, present in the generated document."
+          description="Per-route title, description, and optional social preview image."
         >
-          <div class="flex flex-wrap items-center gap-4">
-            <AssetThumb variant="missing" class="w-24" />
-            <div class="space-y-2">
-              <div class="flex flex-wrap items-center gap-2">
-                <button
-                  type="button"
-                  disabled
-                  title="Assigning an asset to this field is not connected."
-                  class={`inline-flex h-10 items-center gap-2 rounded-control border-[1.5px] border-outline-variant px-4 font-label-md text-label-md text-on-surface-variant opacity-60 ${focusRing}`}
-                >
-                  <span class="material-symbols-outlined text-[18px]" aria-hidden="true">perm_media</span>
-                  Choose share image
-                </button>
-                <a
-                  href="/admin/media"
-                  class={`inline-flex h-10 items-center gap-2 rounded-control border-[1.5px] border-outline-variant px-4 font-label-md text-label-md text-on-surface hover:bg-surface-container-high ${focusRing}`}
-                >
-                  <span class="material-symbols-outlined text-[18px]" aria-hidden="true">folder_open</span>
-                  Open media library
-                </a>
-              </div>
-              <p class="font-body-sm text-body-sm text-secondary">
-                Optional social preview image. No asset is assigned in this preview, and selecting one
-                is not connected yet.
-              </p>
-            </div>
-          </div>
+          {mediaLoadError && <AdminNotice tone="error" title="Media selection unavailable">{mediaLoadError}</AdminNotice>}
 
           {
             seoRoutes.map((route) => (
@@ -389,11 +373,73 @@ const contactVisitors = section(contactPage, 'visitorInformation');
                 <p class="font-label-md text-label-md text-on-surface">
                   {route.label} <span class="font-mono text-body-sm text-body-sm text-secondary">{route.path}</span>
                 </p>
-                <input
-                  type="hidden"
-                  name={`seo-share-image-${route.key}`}
-                  value={seo.routes[route.key as keyof typeof seo.routes]?.shareImageRef ?? ''}
-                />
+                <div class="grid gap-4 sm:grid-cols-[minmax(0,1fr)_144px] sm:items-start">
+                  <div class="space-y-2">
+                    <label for={`seo-share-image-${route.key}`} class="font-label-sm text-label-sm font-semibold text-on-surface">
+                      Social preview image
+                    </label>
+                    <select
+                      id={`seo-share-image-${route.key}`}
+                      name={`seo-share-image-${route.key}`}
+                      data-media-select
+                      disabled={Boolean(mediaLoadError)}
+                      class={`block h-12 w-full rounded-control border-[1.5px] border-outline-variant bg-surface-container-lowest px-3 font-body-md text-body-md text-on-surface ${focusRing}`}
+                    >
+                      <option
+                        value=""
+                        selected={!seo.routes[route.key as keyof typeof seo.routes]?.shareImageRef}
+                      >
+                        No share image
+                      </option>
+                      {seo.routes[route.key as keyof typeof seo.routes]?.shareImageRef &&
+                        !mediaAssets.some((asset) => asset.id === seo.routes[route.key as keyof typeof seo.routes]?.shareImageRef) && (
+                          <option
+                            value={seo.routes[route.key as keyof typeof seo.routes]?.shareImageRef ?? ''}
+                            selected
+                          >
+                            Assigned media is unavailable
+                          </option>
+                        )}
+                      {mediaAssets
+                        .filter((asset) =>
+                          !asset.archived ||
+                          asset.id === seo.routes[route.key as keyof typeof seo.routes]?.shareImageRef
+                        )
+                        .map((asset) => (
+                          <option
+                            value={asset.id}
+                            selected={asset.id === seo.routes[route.key as keyof typeof seo.routes]?.shareImageRef}
+                            data-media-url={`/admin/api/media?id=${encodeURIComponent(asset.id)}&image=1`}
+                            data-media-alt={asset.alt}
+                          >
+                            {asset.filename}{asset.archived ? ' (archived — existing assignment)' : ''}
+                          </option>
+                        ))}
+                    </select>
+                    <p data-media-preview-status role="status" class="font-body-sm text-body-sm text-secondary">
+                      {seo.routes[route.key as keyof typeof seo.routes]?.shareImageRef
+                        ? 'Loading protected image preview…'
+                        : 'Optional. No image assigned.'}
+                    </p>
+                  </div>
+                  <div class="overflow-hidden rounded-control border border-outline-variant bg-surface-container-low">
+                    <img
+                      data-media-preview
+                      src={seo.routes[route.key as keyof typeof seo.routes]?.shareImageRef
+                        ? `/admin/api/media?id=${encodeURIComponent(seo.routes[route.key as keyof typeof seo.routes]!.shareImageRef!)}&image=1`
+                        : undefined}
+                      alt=""
+                      aria-hidden="true"
+                      class={`aspect-[4/3] w-full object-contain ${seo.routes[route.key as keyof typeof seo.routes]?.shareImageRef ? '' : 'hidden'}`}
+                    />
+                    <div
+                      data-media-fallback
+                      class={`flex aspect-[4/3] items-center justify-center ${seo.routes[route.key as keyof typeof seo.routes]?.shareImageRef ? 'hidden' : ''}`}
+                    >
+                      <AssetThumb variant="missing" class="w-14" />
+                    </div>
+                  </div>
+                </div>
                 <AdminField
                   name={`seo-title-${route.key}`}
                   label="SEO title"

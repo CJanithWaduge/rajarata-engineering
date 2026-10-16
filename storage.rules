@@ -8,7 +8,13 @@ service firebase.storage {
     }
 
     match /media/drafts/{assetId}/{path=**} {
-      allow read, write: if isAdmin();
+      allow read: if isAdmin();
+      allow create, update: if isAdmin()
+        && request.resource != null
+        && request.resource.size > 0
+        && request.resource.size <= 10 * 1024 * 1024
+        && request.resource.contentType.matches('image/(jpeg|png|webp)');
+      allow delete: if false;
     }
 
     match /{path=**} {

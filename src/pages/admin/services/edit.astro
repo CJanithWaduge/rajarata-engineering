@@ -13,6 +13,7 @@ import FormSection from '../../../components/admin/FormSection.astro';
 import AdminField from '../../../components/admin/AdminField.astro';
 import TagInput from '../../../components/admin/TagInput.astro';
 import AssetThumb from '../../../components/admin/AssetThumb.astro';
+import { listMediaDrafts, type MediaListItem } from '../../../lib/mediaRepository';
 import EditorActionBar from '../../../components/admin/EditorActionBar.astro';
 import { CONTENT_SCHEMA_VERSION, type ServiceDraft } from '../../../lib/contentModel';
 import { getDraftFirestore } from '../../../lib/firebaseAdmin';
@@ -35,6 +36,8 @@ const categories = [
 const id = Astro.url.searchParams.get('id');
 const now = new Date().toISOString();
 let loadError = '';
+let mediaLoadError = '';
+let mediaAssets: MediaListItem[] = [];
 let record: ServiceDraft = {
   schemaVersion: CONTENT_SCHEMA_VERSION,
   id: '',
@@ -57,6 +60,13 @@ if (id) {
     loadError = error instanceof Error ? error.message : 'The service draft could not be loaded.';
     console.error('Service draft could not be loaded.', error);
   }
+}
+
+try {
+  mediaAssets = await listMediaDrafts(getDraftFirestore(), Astro.locals.authUser);
+} catch (error) {
+  mediaLoadError = 'The media library is unavailable. Existing draft content can still be saved.';
+  console.error('Media assets could not be loaded in the service editor.', error);
 }
 ---
 
@@ -86,7 +96,6 @@ if (id) {
       hidden={Boolean(loadError)}
       class="space-y-6"
     >
-      <input type="hidden" name="imageRef" value={record.imageRef ?? ''} />
       <input type="hidden" name="archived" value={String(record.archived)} />
       <FormSection
         title="Identity"
@@ -167,32 +176,52 @@ if (id) {
         />
       </FormSection>
 
-      <FormSection title="Image" description="Asset selection is handled in the media-management phase.">
-        <div class="flex flex-wrap items-center gap-4">
-          <AssetThumb variant="missing" class="w-24" />
+      <FormSection title="Image" description="Choose a private draft asset from the Media Library.">
+        {mediaLoadError && <AdminNotice tone="error" title="Media selection unavailable">{mediaLoadError}</AdminNotice>}
+        <div class="grid gap-4 sm:grid-cols-[minmax(0,1fr)_160px] sm:items-start">
           <div class="space-y-2">
-            <div class="flex flex-wrap items-center gap-2">
-              <button
-                type="button"
-                disabled
-                title="Image selection is not part of Phase 14."
-                class={`inline-flex h-10 items-center gap-2 rounded-control border-[1.5px] border-outline-variant px-4 font-label-md text-label-md text-on-surface-variant opacity-60 ${focusRing}`}
-              >
-                <span class="material-symbols-outlined text-[18px]" aria-hidden="true">perm_media</span>
-                Choose image
-              </button>
-              <a
-                href="/admin/media"
-                class={`inline-flex h-10 items-center gap-2 rounded-control border-[1.5px] border-outline-variant px-4 font-label-md text-label-md text-on-surface hover:bg-surface-container-high ${focusRing}`}
-              >
-                <span class="material-symbols-outlined text-[18px]" aria-hidden="true">folder_open</span>
-                Open media library
-              </a>
-            </div>
-            <p class="font-body-sm text-body-sm text-secondary">
-              {record.imageRef ? `Assigned media reference: ${record.imageRef}` : 'No media is assigned.'}
-              Draft media selection remains outside Phase 14.
+            <label for="imageRef" class="font-label-sm text-label-sm font-semibold text-on-surface">Service image</label>
+            <select
+              id="imageRef"
+              name="imageRef"
+              data-media-select
+              disabled={Boolean(mediaLoadError)}
+              class={`block h-12 w-full rounded-control border-[1.5px] border-outline-variant bg-surface-container-lowest px-3 font-body-md text-body-md text-on-surface ${focusRing}`}
+            >
+              <option value="" selected={!record.imageRef}>No image</option>
+              {record.imageRef && !mediaAssets.some((asset) => asset.id === record.imageRef) && (
+                <option value={record.imageRef} selected>Assigned media is unavailable</option>
+              )}
+              {mediaAssets.filter((asset) => !asset.archived || asset.id === record.imageRef).map((asset) => (
+                <option
+                  value={asset.id}
+                  selected={asset.id === record.imageRef}
+                  data-media-url={`/admin/api/media?id=${encodeURIComponent(asset.id)}&image=1`}
+                  data-media-alt={asset.alt}
+                >
+                  {asset.filename}{asset.archived ? ' (archived — existing assignment)' : ''}
+                </option>
+              ))}
+            </select>
+            <p data-media-preview-status role="status" class="font-body-sm text-body-sm text-secondary">
+              {record.imageRef ? 'Loading protected image preview…' : 'No image assigned.'}
             </p>
+            <a href="/admin/media" class={`inline-flex h-10 items-center gap-2 rounded-control border-[1.5px] border-outline-variant px-4 font-label-md text-label-md text-on-surface hover:bg-surface-container-high ${focusRing}`}>
+              <span class="material-symbols-outlined text-[18px]" aria-hidden="true">folder_open</span>
+              Manage media
+            </a>
+          </div>
+          <div class="overflow-hidden rounded-control border border-outline-variant bg-surface-container-low">
+            <img
+              data-media-preview
+              src={record.imageRef ? `/admin/api/media?id=${encodeURIComponent(record.imageRef)}&image=1` : undefined}
+              alt=""
+              aria-hidden="true"
+              class={`aspect-[4/3] w-full object-contain ${record.imageRef ? '' : 'hidden'}`}
+            />
+            <div data-media-fallback class={`flex aspect-[4/3] items-center justify-center ${record.imageRef ? 'hidden' : ''}`}>
+              <AssetThumb variant="missing" class="w-16" />
+            </div>
           </div>
         </div>
       </FormSection>
@@ -217,4 +246,5 @@ if (id) {
 
 <script>
   import '../../../lib/adminEditor';
+  import '../../../lib/adminMediaSelection';
 </script>

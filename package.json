@@ -11,8 +11,9 @@
     "preview": "astro preview",
     "check": "astro check",
     "test:content": "node --experimental-strip-types --test tests/content-model.test.mjs",
-    "test:rules": "firebase emulators:exec --project demo-rajarata-engineering --only firestore,storage \"node --test tests/firebase-rules.test.mjs tests/draft-repository.test.mjs\"",
+    "test:rules": "firebase emulators:exec --project demo-rajarata-engineering --only firestore,storage \"node --test tests/firebase-rules.test.mjs tests/draft-repository.test.mjs tests/media-repository.test.mjs\"",
     "test:phase14": "npm run build && npm run test:content && npm run test:rules",
+    "test:phase15": "npm run check && npm run build && npm run test:content && npm run test:rules",
     "astro": "astro"
   },
   "dependencies": {

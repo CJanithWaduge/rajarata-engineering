@@ -39,6 +39,7 @@ Available scripts:
 | `npm run test:content` | Test content schema validation and legacy-settings migration |
 | `npm run test:rules` | Test Firestore and Storage rules with local emulators (requires Java 21+) |
 | `npm run test:phase14` | Build, test content schemas, and run Firestore/Storage plus draft-repository emulator tests |
+| `npm run test:phase15` | Check/build and run schema, Storage rules, and media repository emulator tests |
 
 ## Pages
 
@@ -102,6 +103,8 @@ Server-side Admin SDK access uses Application Default Credentials; never put ser
 `firebase.json` configures the Firestore, Storage, Auth, and Hosting emulators plus the staging Hosting rewrite. The selected staging project is `rajarata-engineering-developer`, with the Admin SSR service planned for Cloud Run in `asia-south1`. No staging resources have been deployed. Admin claim grants remain disabled until two custodian UIDs are designated in `src/config/admin-custodians.json`.
 
 Phase 14 draft writes are server-side, version-checked, and emulator-only. Firestore client rules allow admins to read draft documents but deny client writes; the Admin SSR API validates content and uses the Admin SDK against the local demo project. Saving drafts does not change the public static build. Run `npm run test:phase14` to execute the build, schema tests, rules tests, repository tests, and public-output draft-leak check (requires Java 21+).
+
+Phase 15 media uploads are served through the verified Admin SSR session and restricted to local Firebase emulators until Phase 13 staging verification is complete. JPEG, PNG, and WebP files are limited to 10 MiB; alt text is required. Replacing an asset creates a new draft object, and archive/restore only changes metadata—there is no permanent-delete action. Admin image previews are served privately; only the published Storage prefix is public. Run `npm run test:phase15` (Java 21+) for the media, rules, schema, and build checks.
 
 ## Build and hosting
 

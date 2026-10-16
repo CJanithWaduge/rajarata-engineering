@@ -121,6 +121,35 @@ export async function readJsonBody(
   }
 }
 
+export async function readBytesBody(
+  request: Request,
+  maximumBytes: number,
+): Promise<{ ok: true; value: Uint8Array } | { ok: false; reason: 'too-large' | 'invalid' }> {
+  const reader = request.body?.getReader();
+  if (!reader) return { ok: false, reason: 'invalid' };
+
+  const chunks: Uint8Array[] = [];
+  let totalBytes = 0;
+  while (true) {
+    const result = await reader.read();
+    if (result.done) break;
+    totalBytes += result.value.byteLength;
+    if (totalBytes > maximumBytes) {
+      await reader.cancel();
+      return { ok: false, reason: 'too-large' };
+    }
+    chunks.push(result.value);
+  }
+
+  const bytes = new Uint8Array(totalBytes);
+  let offset = 0;
+  for (const chunk of chunks) {
+    bytes.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  return { ok: true, value: bytes };
+}
+
 export function privateResponseHeaders(): Headers {
   return new Headers({
     'Cache-Control': 'private, no-store, max-age=0',

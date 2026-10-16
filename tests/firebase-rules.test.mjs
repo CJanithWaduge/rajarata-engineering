@@ -12,6 +12,7 @@ import {
   setDoc,
 } from 'firebase/firestore';
 import {
+  deleteObject,
   getBytes,
   ref,
   uploadBytes,
@@ -95,6 +96,21 @@ test('published media is public read-only while draft media is admin-only', asyn
       { contentType: 'image/jpeg' },
     ),
   );
+  await assertFails(
+    uploadBytes(
+      ref(adminStorage, 'media/drafts/draft-1/script.jpg'),
+      new Uint8Array([7, 8, 9]),
+      { contentType: 'text/html' },
+    ),
+  );
+  await assertFails(
+    uploadBytes(
+      ref(adminStorage, 'media/drafts/draft-1/oversized.jpg'),
+      new Uint8Array(10 * 1024 * 1024 + 1),
+      { contentType: 'image/jpeg' },
+    ),
+  );
+  await assertFails(deleteObject(ref(adminStorage, 'media/drafts/draft-1/panel.jpg')));
   await assertFails(
     uploadBytes(
       ref(adminStorage, 'media/published/release-1/forbidden.jpg'),

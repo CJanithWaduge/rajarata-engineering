@@ -1,9 +1,10 @@
-import type { Firestore } from 'firebase-admin/firestore';
+import type { Firestore, Transaction } from 'firebase-admin/firestore';
 import {
   DRAFT_COLLECTION_PATHS,
   ContentValidationError,
   draftDocumentPath,
   parseBusinessDetailsDraft,
+  parseMediaDraft,
   parsePageDraft,
   parseProjectDraft,
   parseSeoDraft,
@@ -47,6 +48,27 @@ function sorted<T extends { id: string; order: number }>(records: T[]): T[] {
 function nextUpdatedAt(previous: unknown): string {
   const previousTime = typeof previous === 'string' ? Date.parse(previous) : Number.NaN;
   return new Date(Math.max(Date.now(), Number.isNaN(previousTime) ? 0 : previousTime + 1)).toISOString();
+}
+
+async function assertMediaReference(
+  transaction: Transaction,
+  firestore: Firestore,
+  id: string | null,
+  previousId: string | null,
+): Promise<void> {
+  if (id === null) return;
+  const reference = firestore.doc(draftDocumentPath('media', id));
+  const document = await transaction.get(reference);
+  if (!document.exists) {
+    throw new ContentValidationError('imageRef', 'must refer to an existing media asset');
+  }
+  const media = parseMediaDraft(document.data());
+  if (media.id !== document.id) {
+    throw new ContentValidationError('imageRef', 'does not match its media document');
+  }
+  if (media.archived && id !== previousId) {
+    throw new ContentValidationError('imageRef', 'cannot select an archived media asset');
+  }
 }
 
 export async function listServiceDrafts(
@@ -98,6 +120,8 @@ export async function saveServiceDraft(
     if (existing.exists && existing.get('updatedAt') !== expectedUpdatedAt) {
       throw new DraftConflictError();
     }
+    const previous = existing.exists ? parseServiceDraft(existing.data()) : undefined;
+    await assertMediaReference(transaction, firestore, parsed.imageRef, previous?.imageRef ?? null);
     const updated = { ...parsed, updatedAt: nextUpdatedAt(existing.get('updatedAt')) };
     saved = updated;
     transaction.set(reference, updated);
@@ -211,6 +235,8 @@ export async function saveProjectDraft(
     if (existing.exists && existing.get('updatedAt') !== expectedUpdatedAt) {
       throw new DraftConflictError();
     }
+    const previous = existing.exists ? parseProjectDraft(existing.data()) : undefined;
+    await assertMediaReference(transaction, firestore, parsed.imageRef, previous?.imageRef ?? null);
     const updated = { ...parsed, updatedAt: nextUpdatedAt(existing.get('updatedAt')) };
     saved = updated;
     transaction.set(reference, updated);
@@ -302,18 +328,37 @@ export function saveBusinessDetailsDraft(
   );
 }
 
-export function saveSeoDraft(
+export async function saveSeoDraft(
   firestore: Firestore,
   actor: AdminActor | undefined,
   value: unknown,
   expectedUpdatedAt: string | null,
 ): Promise<SeoDraft> {
-  return saveSingleton(
-    firestore,
-    actor,
-    draftDocumentPath('settings', 'seo'),
-    value,
-    expectedUpdatedAt,
-    parseSeoDraft,
-  );
+  assertAdmin(actor);
+  const parsed = parseSeoDraft(value);
+  const reference = firestore.doc(draftDocumentPath('settings', 'seo'));
+  let saved = parsed;
+
+  await firestore.runTransaction(async (transaction) => {
+    const existing = await transaction.get(reference);
+    if (expectedUpdatedAt === null ? existing.exists : !existing.exists) {
+      throw new DraftConflictError();
+    }
+    if (existing.exists && existing.get('updatedAt') !== expectedUpdatedAt) {
+      throw new DraftConflictError();
+    }
+    const previous = existing.exists ? parseSeoDraft(existing.data()) : undefined;
+    for (const [route, metadata] of Object.entries(parsed.routes)) {
+      await assertMediaReference(
+        transaction,
+        firestore,
+        metadata.shareImageRef,
+        previous?.routes[route as keyof SeoDraft['routes']]?.shareImageRef ?? null,
+      );
+    }
+    saved = { ...parsed, updatedAt: nextUpdatedAt(existing.get('updatedAt')) };
+    transaction.set(reference, saved);
+  });
+
+  return saved;
 }

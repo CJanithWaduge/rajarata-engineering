@@ -75,7 +75,7 @@ Fixed. Do not substitute a layer without asking first.
 | Admin dynamic rendering | Astro `@astrojs/node` standalone on Cloud Run, `asia-south1` for staging | `implemented` locally; not deployed |
 | Database | Firebase Firestore | Authorization rules, audit/rate-limit use, and local versioned CMS schemas implemented; no CMS records or migrations deployed |
 | Auth | Firebase Auth, admin-only via the `admin` custom claim | `implemented` locally; staging configuration and verification pending |
-| Files | Firebase Storage with admin-only drafts and public published media | Rules implemented locally; CMS media integration planned |
+| Files | Firebase Storage with admin-only drafts and public published media | Rules and local Admin media management implemented; staging verification pending |
 | Functions | Cloud Functions for the contact form; server-side publish pipeline | `planned`; session handling is in the Admin SSR service |
 | Hosting | Firebase Hosting — static `dist/client/` for public pages, rewrite for `/admin/**` | `implemented` locally; not deployed |
 | CI/CD | GitHub Actions on merge to `main` for **code**; server-side pipeline for **content** | `approved` |
@@ -113,13 +113,15 @@ footer. It reuses the brand, tokens, focus conventions, and Material Symbols onl
 | `/admin/services`, `/admin/services/edit` | list + editor | `implemented` as frontend |
 | `/admin/projects`, `/admin/projects/edit` | list + editor | `implemented` as frontend |
 | `/admin/content` | Home / About / Contact / Business Details / SEO editors | `implemented` as frontend |
-| `/admin/media` | media library + upload UI | `implemented` as frontend |
+| `/admin/media` | media library, upload, metadata, archive/restore | `implemented` locally; emulator-only until staging verification |
 | `/admin/preview` | draft preview frame | `implemented` as frontend |
 | `/admin/history` | release history + rollback | `implemented` as frontend |
 
 "Implemented as frontend" means the UI exists and is reviewed, but every
-backend-dependent control is disabled or reports "not connected". The full list
-of unavailable actions is recorded in `IMPLEMENTATION.md` (Phase 11).
+backend-dependent control is disabled or reports "not connected". The local
+Phase 14 draft and Phase 15 media paths are exceptions: they are wired to
+emulators only. Publishing and preview remain unavailable. The full list of
+unavailable actions is recorded in `IMPLEMENTATION.md`.
 
 ### 3.3 Components
 
@@ -169,6 +171,8 @@ Components never hardcode hex values.
 | `src/lib/cardTilt.ts` | Progressive pointer interaction on cards | `implemented` |
 | `src/lib/adminNav.ts` | Admin nav model, active-state resolution, breadcrumbs | `implemented` |
 | `src/lib/adminEditor.ts` | Editor runtime: dirty tracking, validation surfacing, counters | `implemented` |
+| `src/lib/adminMediaLibrary.ts` | Local preview, upload progress/cancel, metadata updates, archive/restore | `implemented` locally; emulator-only |
+| `src/lib/adminMediaSelection.ts` | Protected asset previews and unavailable-image fallback in editors | `implemented` locally; emulator-only |
 | Static footer content | Business details rendered into the build by `src/components/Footer.astro` | `implemented`; no public Firestore reads |
 
 ---
@@ -269,7 +273,7 @@ drafts/projects/records/{slug}   # one doc per project
 drafts/pages/records/{pageId}    # structured page copy; section IDs are code-controlled
 drafts/settings/records/businessDetails
 drafts/settings/records/seo
-drafts/media/records/{assetId}  # metadata mirror: alt, dimensions, storagePath, archived
+drafts/media/records/{assetId}  # metadata mirror; object is under media/drafts/{assetId}/
 releases/{releaseId}            # immutable snapshot + build/deploy result
 locks/publish                   # single-doc mutex, used in a transaction
 adminAudit/{eventId}            # provisioning and publish audit trail
@@ -284,7 +288,7 @@ Field inventory (from the Phase 10 editable-content inventory):
 | `drafts/pages/records/{pageId}` | `schemaVersion`, per-section heading/intro/body/label/CTA/items, `updatedAt` | Structured text fields only; section names and CTA routes are allow-listed |
 | `drafts/settings/records/businessDetails` | `schemaVersion`, `address`, `phone`, `email`, `hours`, `whatsapp`, `updatedAt` | Replaces `siteSettings/public` (D3) |
 | `drafts/settings/records/seo` | `schemaVersion`, per-route `title`, `description`, share-image reference, `updatedAt` | Must be in the generated document |
-| `drafts/media/records/{assetId}` | `schemaVersion`, `alt`, `width`, `height`, `contentType`, `bytes`, `storagePath`, `archived`, `updatedAt` | Metadata only; bytes live in Storage |
+| `drafts/media/records/{assetId}` | `schemaVersion`, `filename`, `alt`, `width`, `height`, `contentType`, `bytes`, `storagePath`, `archived`, `updatedAt` | Metadata only; JPEG/PNG/WebP, 10 MiB maximum; bytes live in Storage |
 | `releases/{releaseId}` | `schemaVersion`, `createdAt`, `createdBy`, `snapshot`, `mediaRefs[]`, `status`, `hostVersionId`, `buildId`, `failure`, `rollbackOf` | Immutable to clients; states validated by the model |
 
 The TypeScript contracts and runtime parsers live in
@@ -319,6 +323,14 @@ collection removes an object only when no retained release references it.
 Draft objects are never public. Because Storage rules cannot consult "the live
 release" cheaply, the publish path copies referenced draft objects into the
 published namespace rather than relying on a runtime lookup.
+
+Phase 15 uploads and Admin previews are mediated by the verified Admin SSR
+session and are restricted to the local demo project until the Phase 13
+staging gate passes. Storage rules additionally constrain draft writes to
+authenticated admins, approved raster MIME types, and 10 MiB. Replacing media
+creates a new uniquely named draft object; archive/restore changes only the
+metadata record. Permanent deletion and garbage collection are not available,
+so retained releases cannot lose their referenced objects.
 
 ### 5.4 Stable identifiers
 
