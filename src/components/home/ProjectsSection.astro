@@ -2,8 +2,7 @@
 /**
  * Featured projects (Step 6.4)
  * Added Project card 1 via ProjectCard component.
- * Markers carried: PROJECT TYPE, PROJECT LOCATION, PROJECT YEAR, PROJECT NAME.
- * Image is a hotlinked placeholder — needs a real Firebase Storage asset.
+ * Cards use clearly labeled sample content and local template artwork.
  */
 import Container from "../Container.astro";
 import ProjectCard from "./ProjectCard.astro";
@@ -24,34 +23,34 @@ import ProjectCard from "./ProjectCard.astro";
         class="inline-flex items-center gap-2 font-label-md text-label-md text-primary-container hover:text-primary transition-colors"
         data-path="projects"
         href="/projects">
-        <span>View All Projects</span>
+        <span>View Sample Projects</span>
         <span class="material-symbols-outlined text-base">arrow_forward</span>
       </a>
     </div>
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
       <ProjectCard
-        imageSrc="https://lh3.googleusercontent.com/aida-public/AB6AXuD-uG0XdKSnk5zesV3RfugA0mdgFAYQ6Dv-LsQYroLUEUKfcfYh1k3xAp9mpqQ2WKAC3Y-VqVwQe5fF_Au8vI3WPekAk-xdlXgssPNmVOV7MaS9npASWyddK-HgwnUJyeO_iMBJZxYx7L4xKqA52i-7HlTESrPc_2bZEKnK2ZucO6fyHzVZG3PxY4w_QCzjHFZt35OE0YijLBUaX6LmOapcfwVrA34vkOr8spI3M8bvXzm0g4rd_zP9Qg"
-        imageAlt="Heavy industrial power substation installation with main distribution switchboards, overhead aluminum cable trays, and busbar connections inside a high-tech corporate facility with bright fluorescent lighting"
-        category="[REPLACE: PROJECT TYPE]"
-        location="[REPLACE: PROJECT LOCATION]"
-        year="[REPLACE: PROJECT YEAR]"
-        name="[REPLACE: PROJECT NAME]"
+        imageSrc="/images/sample-project.svg"
+        imageAlt="Illustrative electrical engineering project artwork; not a photograph of a completed project"
+        category="Sample industrial"
+        location="Sample location"
+        year="20XX"
+        name="Sample distribution project"
       />
       <ProjectCard
-        imageSrc="https://lh3.googleusercontent.com/aida-public/AB6AXuDNJKrYwd43yssPGAVuDct-liOtkbmQ8OILRNTJqN3gWeplftL_SRgmOinvzh92tvpcZejWy6SyxuEReRgpp5ogLY38Ecf0Ru32yOtH3Bdb44QVedOHLcx88SVS3oWDdG32TfusonG9XgmFeN-kiI7VbMcdW-o4bRc02247lHj6-Pzom2JerwmTaPrKWMTwFokYFPO08B4EVXF0N0PQ8feZc4CiJQ8GaRGV0I5PwTowov6vhAMKme47oQ"
-        imageAlt="Precision electrical technician wiring an automated programmable logic controller switchgear inside a commercial manufacturing facility, neat color-coded copper wiring bundles"
-        category="[REPLACE: PROJECT TYPE]"
-        location="[REPLACE: PROJECT LOCATION]"
-        year="[REPLACE: PROJECT YEAR]"
-        name="[REPLACE: PROJECT NAME]"
+        imageSrc="/images/sample-project.svg"
+        imageAlt="Illustrative electrical engineering project artwork; not a photograph of a completed project"
+        category="Sample commercial"
+        location="Sample location"
+        year="20XX"
+        name="Sample control panel project"
       />
       <ProjectCard
-        imageSrc="https://lh3.googleusercontent.com/aida-public/AB6AXuBmhyH13DCjIjVQRKEpq94sML880JOVARDd3PqASOfEiyfRtMsVpENVbwYRv9dde3c_feka-Fv5jZlJZsUcp91RiKEymXk31SBno_JEJEsoCyVuErjBhoQBGUxcu1pgPiHeDCMOQhvB_fiCqlkaukLMLpkV8DX9R7oY_K2dmRfoqVTlPc-VTppC8ON_jcc9DM371Xatkn7SzoPKh9_KQiOXPpTfO1HpZurjdisUQIKLdaPLKSu213DSfQ"
-        imageAlt="Modern commercial corporate high-rise data center installation showing neat structured fiber optic cable management trays, patch panels, and low voltage automation racks"
-        category="[REPLACE: PROJECT TYPE]"
-        location="[REPLACE: PROJECT LOCATION]"
-        year="[REPLACE: PROJECT YEAR]"
-        name="[REPLACE: PROJECT NAME]"
+        imageSrc="/images/sample-project.svg"
+        imageAlt="Illustrative electrical engineering project artwork; not a photograph of a completed project"
+        category="Sample ELV"
+        location="Sample location"
+        year="20XX"
+        name="Sample building systems project"
       />
     </div>
   </Container>

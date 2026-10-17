@@ -7,6 +7,7 @@ interface Props {
 }
 
 const { title, description } = Astro.props;
+const demoMode = import.meta.env.PUBLIC_DEMO_MODE !== 'false';
 ---
 
 <!doctype html>
@@ -35,6 +36,18 @@ const { title, description } = Astro.props;
     <meta name="generator" content={Astro.generator} />
   </head>
   <body class="bg-background text-on-surface font-sans antialiased">
+    {demoMode && (
+      <aside
+        aria-label="Demo content notice"
+        class="mt-20 border-y border-primary-container bg-inverse-surface px-4 py-3 text-center font-label-sm text-label-sm text-inverse-on-surface"
+      >
+        <strong class="text-primary-fixed">DEMO TEMPLATE</strong>
+        <span class="ml-1">
+          Sample content and illustrations only — verify all company details, claims, and projects
+          before real-world use.
+        </span>
+      </aside>
+    )}
     <slot />
     <script>
       import { initCardTilt } from '../lib/cardTilt';

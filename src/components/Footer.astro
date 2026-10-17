@@ -39,13 +39,13 @@ const services = [
   { label: 'Lightning Protection System', href: '/services#service-08' },
 ];
 
-const badges = ['ISO 9001:2015', 'Safety First'];
+const badges = ['Sample content', 'Verify before use'];
 
 const details = {
-  address: 'Rajarata Engineering, Anuradhapura',
-  phone: '+94 77 XXX XXXX',
-  email: 'contact@rajarata.lk',
-  hours: 'Mon – Fri, 8:00 – 17:30',
+  address: 'Sample address — no visitor location configured',
+  phone: 'Sample phone — demo only',
+  email: 'sample@example.invalid',
+  hours: 'Example schedule — verify before use',
 };
 
 const whatsapp = parseWhatsAppNumber(import.meta.env.PUBLIC_WHATSAPP_NUMBER);
@@ -53,13 +53,12 @@ if (whatsapp.status === 'invalid') {
   console.warn('PUBLIC_WHATSAPP_NUMBER must be 8–15 digits in international format.');
 }
 
-// Each row pairs its icon with the field key and how to rebuild its href.
-// `href` is optional: address and hours are plain text, the rest are links.
+// Demo contact values are plain text, never active telephone or email links.
 const contact = [
-  { icon: 'location_on', key: 'address', href: undefined },
-  { icon: 'call', key: 'phone', href: 'tel' },
-  { icon: 'mail', key: 'email', href: 'mailto' },
-  { icon: 'schedule', key: 'hours', href: undefined },
+  { icon: 'location_on', key: 'address' },
+  { icon: 'call', key: 'phone' },
+  { icon: 'mail', key: 'email' },
+  { icon: 'schedule', key: 'hours' },
 ] as const;
 
 const year = new Date().getFullYear();
@@ -89,10 +88,8 @@ const focus = 'focus:outline-none focus-visible:outline-2 focus-visible:outline-
           </span>
         </a>
         <p class="text-secondary font-body-md text-body-md pr-4 leading-relaxed">
-          Premier electrical engineering and contracting infrastructure solutions. Delivering
-          utility-grade industrial power distribution, commercial installations, and
-          mission-critical ELV building automation systems with uncompromising safety and
-          compliance standards.
+          Sample company description for this website template. Replace it with owner-verified
+          services, qualifications, and commitments before real-world use.
         </p>
         <div class="flex items-center gap-2 pt-2">
           {
@@ -159,9 +156,7 @@ const focus = 'focus:outline-none focus-visible:outline-2 focus-visible:outline-
                 <span class="material-symbols-outlined text-primary text-[20px] mt-0.5">
                   {item.icon}
                 </span>
-                <span
-                  class={item.href ? 'truncate' : ''}
-                >
+                <span class="break-words">
                   {details[item.key]}
                 </span>
               </div>
@@ -188,11 +183,10 @@ const focus = 'focus:outline-none focus-visible:outline-2 focus-visible:outline-
       class="mt-12 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-outline-variant"
     >
       <p class="text-xs text-secondary">
-        &copy; {year} Rajarata Engineering. All Rights Reserved. Electrical Engineering
-        &amp; Contracting.
+        &copy; {year} Rajarata Engineering sample template. Replace with verified company details.
       </p>
       <p class="text-xs text-secondary font-label-caps uppercase tracking-wider">
-        Built for Safety &amp; Performance
+        Demonstration content — verify before use
       </p>
     </div>
   </Container>

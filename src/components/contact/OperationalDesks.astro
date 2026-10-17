@@ -1,9 +1,7 @@
 ---
 /**
  * Operational desks and support channels (Steps C6.12–C6.18)
- * Heading block and a responsive grid of direct-contact information cards.
- * Phone, email, address, and hours remain placeholders; availability copy
- * stays as supplied prototype text pending verification.
+ * Heading block and a responsive grid of illustrative contact information.
  */
 import Container from '../Container.astro';
 import WhatsAppIcon from '../ui/WhatsAppIcon.astro';
@@ -27,7 +25,7 @@ if (whatsapp.status === 'invalid') {
         </h2>
       </div>
       <p class="font-body-md text-body-md text-secondary max-w-[28rem]">
-        Direct engineering access for procurement teams, site facility managers, and project contractors.
+        Example contact details for a website template. Replace them with verified business information before use.
       </p>
     </div>
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -41,15 +39,15 @@ if (whatsapp.status === 'invalid') {
           <span class="font-label-caps text-label-caps text-secondary uppercase tracking-wider block mb-1"
             >Direct Telephony</span
           >
-          <h3 class="font-title-lg text-title-lg text-on-surface mb-2 font-bold">Voice Support</h3>
+          <h3 class="font-title-lg text-title-lg text-on-surface mb-2 font-bold">Sample Phone</h3>
           <span class="font-title-md text-title-md text-on-surface font-semibold block mb-3 break-all">
-            [REPLACE: PHONE NUMBER]
+            Sample phone — demo only
           </span>
         </div>
         <div class="pt-4 bg-surface-container-low px-3 py-2 rounded-lg mt-4">
           <div class="flex items-center gap-1.5 text-secondary font-body-sm text-body-sm">
             <span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span>
-            <span>24/7 Emergency dispatch available</span>
+            <span>Example service availability — verify before use</span>
           </div>
         </div>
       </div>
@@ -63,15 +61,15 @@ if (whatsapp.status === 'invalid') {
           <span class="font-label-caps text-label-caps text-secondary uppercase tracking-wider block mb-1"
             >Technical Correspondence</span
           >
-          <h3 class="font-title-lg text-title-lg text-on-surface mb-2 font-bold">Email Desk</h3>
+          <h3 class="font-title-lg text-title-lg text-on-surface mb-2 font-bold">Sample Email</h3>
           <span class="font-title-md text-title-md text-on-surface font-semibold block mb-3 break-all">
-            [REPLACE: EMAIL ADDRESS]
+            sample@example.invalid
           </span>
         </div>
         <div class="pt-4 bg-surface-container-low px-3 py-2 rounded-lg mt-4">
           <div class="flex items-center gap-1.5 text-secondary font-body-sm text-body-sm">
             <span class="material-symbols-outlined text-[16px] text-tertiary">assignment</span>
-            <span>Official project estimation &amp; BOQ tenders</span>
+            <span>Example inquiry channel — not monitored</span>
           </div>
         </div>
       </div>
@@ -85,15 +83,15 @@ if (whatsapp.status === 'invalid') {
           <span class="font-label-caps text-label-caps text-secondary uppercase tracking-wider block mb-1"
             >Central Operations</span
           >
-          <h3 class="font-title-lg text-title-lg text-on-surface mb-2 font-bold">Headquarters</h3>
+          <h3 class="font-title-lg text-title-lg text-on-surface mb-2 font-bold">Sample Location</h3>
           <p class="font-body-md text-body-md text-on-surface font-medium leading-snug mb-3">
-            [REPLACE: BUSINESS ADDRESS]
+            Sample address — no visitor location configured
           </p>
         </div>
         <div class="pt-4 bg-surface-container-low px-3 py-2 rounded-lg mt-4">
           <div class="flex items-center gap-1.5 text-secondary font-body-sm text-body-sm">
             <span class="material-symbols-outlined text-[16px] text-tertiary">factory</span>
-            <span>Engineering workshop &amp; fabrication bay</span>
+            <span>Example facility information — verify before use</span>
           </div>
         </div>
       </div>
@@ -107,12 +105,12 @@ if (whatsapp.status === 'invalid') {
           <span class="font-label-caps text-label-caps text-secondary uppercase tracking-wider block mb-1"
             >Site Availability</span
           >
-          <h3 class="font-title-lg text-title-lg text-on-surface mb-2 font-bold">Working Hours</h3>
+          <h3 class="font-title-lg text-title-lg text-on-surface mb-2 font-bold">Sample Hours</h3>
           <p class="font-body-sm text-body-sm text-on-surface font-semibold mb-1">
-            [REPLACE: BUSINESS HOURS]
+            Example schedule — verify before use
           </p>
           <p class="font-body-sm text-body-sm text-secondary">
-            Technicians on on-call rotation over weekends.
+            Sample availability copy only; no on-call service is represented.
           </p>
         </div>
         {whatsapp.status === 'ready' && (

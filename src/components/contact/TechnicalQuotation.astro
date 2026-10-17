@@ -3,13 +3,15 @@
  * Technical quotation request and estimation process
  * (Steps C6.19–C6.35)
  * Two-column layout: inquiry form (7 cols) and estimation/support
- * sidebar (5 cols). Submissions use the protected contact callable; local
- * example SMTP settings route only to a development sink.
+ * sidebar (5 cols). Submissions are available only when explicitly enabled
+ * after the protected callable and delivery configuration are verified.
  */
 import Container from '../Container.astro';
+
+const contactFormEnabled = import.meta.env.PUBLIC_CONTACT_FORM_ENABLED === 'true';
 ---
 
-<section class="w-full py-16 bg-surface-container-low" data-scroll-reveal>
+<section id="quotation" class="w-full py-16 bg-surface-container-low" data-scroll-reveal>
   <Container>
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
       <div class="lg:col-span-7 bg-surface-container-lowest p-8 lg:p-10 rounded-2xl shadow-md">
@@ -22,9 +24,10 @@ import Container from '../Container.astro';
             Request a Technical Quotation or Consultation
           </h2>
           <p class="font-body-md text-body-md text-secondary mt-2">
-            Submit your project requirements and our engineering estimation team will respond within 24 hours.
+            Sample inquiry copy for this template. No live team or response time is represented.
           </p>
         </div>
+        {contactFormEnabled ? (
         <form class="space-y-6" id="contact-quotation-form">
           <p class="rounded-xl border border-outline-variant bg-surface-container-low p-4 font-body-sm text-body-sm text-on-surface" data-form-notice>
             Sample email settings are placeholders and must be replaced before live inquiries are
@@ -212,25 +215,33 @@ import Container from '../Container.astro';
           </div>
         </div>
       </form>
+      ) : (
+        <p
+          class="rounded-xl border border-outline-variant bg-surface-container-low p-4 font-body-md text-body-md text-on-surface"
+          role="status"
+        >
+          The online inquiry form is unavailable on this static test site. Contact details and service
+          information shown here are samples only and are not connected to a live business.
+        </p>
+      )}
       </div>
       <div class="lg:col-span-5 flex flex-col space-y-8">
         <div class="card-interactive card-tilt relative w-full rounded-2xl overflow-hidden shadow-md bg-surface-container" data-card-tilt>
           <img
             class="w-full h-64 object-cover"
-            alt="An experienced chief electrical engineer in a yellow safety hardhat reviewing high-voltage industrial switchgear blueprints"
+            alt="Sample engineering illustration for a website template; not a real engineer or project"
             loading="lazy"
-            src="https://lh3.googleusercontent.com/aida-public/AB6AXuDIBOjXTE4dV76eMe-J9yzOF3sEWBg5BP4alxNSY1ZKNg9Uy6-kWXKP38MLRNhiB3lEx0ILzoY800gX2jiXg6-UFtUnzyji3IuKT-pK_PAtqPMurSQ79vH-o7TFeIAhKzjGZt227Kemw6Dg3Q46haVtr9ocpkgseq1lokiPc4L4F6RA6boBBvpEvO-59pNoIeygRQPogv9_TeZszpgdCke4uX7eeUo4RBwkOm_7V5JCVD7g_AQqGMvG1A"
+            src="/images/sample-engineering.svg"
           />
           <div
             class="absolute inset-0 bg-gradient-to-t from-inverse-surface/90 via-inverse-surface/40 to-transparent p-6 flex flex-col justify-end text-inverse-on-surface"
           >
             <span class="font-label-caps text-label-caps uppercase text-primary-fixed-dim tracking-wider"
-              >Certified Engineers</span
+              >Sample qualifications</span
             >
-            <h3 class="font-title-lg text-title-lg font-bold">Chartered Technical Supervision</h3>
+            <h3 class="font-title-lg text-title-lg font-bold">Example technical supervision</h3>
             <p class="font-body-sm text-body-sm text-secondary-fixed mt-1">
-              Every proposal is vetted against IEEE regulations, IET wiring guidelines, and national CEB
-              standards.
+              Sample text only. Verify professional qualifications, applicable standards, and review processes before publication.
             </p>
           </div>
         </div>
@@ -252,7 +263,7 @@ import Container from '../Container.astro';
                   >Load &amp; Single Line Diagram Analysis</h5
                 >
                 <p class="font-body-sm text-body-sm text-secondary mt-0.5">
-                  Comprehensive review of client drawings, power distribution requirements, and busbar ratings.
+                  Example workflow step. Confirm actual review scope and deliverables before use.
                 </p>
               </div>
             </div>
@@ -267,8 +278,7 @@ import Container from '../Container.astro';
                   >On-Site Feasibility Audit</h5
                 >
                 <p class="font-body-sm text-body-sm text-secondary mt-0.5">
-                  Physical site inspection for cable tray pathways, transformer housing, and earth pit soil
-                  resistivity tests.
+                  Example workflow step. Confirm availability, scope, and safety requirements before use.
                 </p>
               </div>
             </div>
@@ -283,8 +293,7 @@ import Container from '../Container.astro';
                   >Comprehensive BOQ Delivery</h5
                 >
                 <p class="font-body-sm text-body-sm text-secondary mt-0.5">
-                  Transparent, itemized pricing breakdown covering switchgear, cabling, containment, and labor
-                  certifications.
+                  Example workflow step. Confirm actual quotation format and service terms before publication.
                 </p>
               </div>
             </div>
@@ -297,8 +306,7 @@ import Container from '../Container.astro';
             <h4 class="font-title-md text-title-md font-bold">Have Urgent Tender Deadlines?</h4>
           </div>
           <p class="font-body-sm text-body-sm text-on-secondary-fixed-variant leading-relaxed">
-            For active government or commercial tender submittals requiring quick turnarounds, mark your message
-            urgent or contact our direct project desk.
+            Example urgency guidance. Confirm real response times and contact channels before publication.
           </p>
           <div class="mt-4 flex items-center justify-between">
             <span class="font-label-caps text-label-caps tracking-widest text-primary font-bold"
@@ -315,5 +323,7 @@ import Container from '../Container.astro';
 </section>
 
 <script>
-  import('../../lib/contactForm');
+  if (import.meta.env.PUBLIC_CONTACT_FORM_ENABLED === 'true') {
+    import('../../lib/contactForm');
+  }
 </script>

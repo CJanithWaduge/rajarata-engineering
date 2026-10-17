@@ -43,6 +43,9 @@ Available scripts:
 | `npm run test:preview` | Run protected-preview integration tests with local Auth, Firestore, and Storage emulators |
 | `npm run test:phase16` | Check/build and test protected draft preview, Auth/Firestore/Storage emulators, and public-output isolation |
 | `npm run test:phase19` | Check/build and test WhatsApp number validation and `wa.me` link generation |
+| `npm run build:spark` | Build and audit a static-only Firebase Hosting demo artifact; fails on placeholders, active sample contact links, or private output |
+| `npm run test:spark` | Verify the Spark Hosting configuration and static contact-form behavior |
+| `npm run deploy:spark -- --project <id> --confirm-static-hosting-deploy` | Explicitly deploy Hosting only after the Spark build audit passes |
 
 ## Pages
 
@@ -134,6 +137,44 @@ Astro writes public static files to `dist/client/` and the Admin server runtime 
 
 Before deploying the Admin service from source with `gcloud run deploy --source .`, run `npm run build`. The checked-in `.gcloudignore` keeps the generated `dist/` output in the upload while excluding local environment files and dependencies.
 
-## Before launch
+### No-billing Firebase Hosting test launch
 
-Some page copy and metadata still contain `[REPLACE: ...]` placeholders, and some prototype images use temporary Google-hosted URLs. Replace these with approved company content and durable assets before publishing. Do not invent company credentials, client names, project metrics, or other business facts.
+For a static-only test launch on Firebase Hosting's Spark plan, use
+`firebase.spark.json`; it serves only `dist/client/`, applies `noindex`, and
+does not configure Cloud Run rewrites or Functions deployment. Keep the regular
+`firebase.json` unchanged for a future billing-enabled deployment that includes
+the Admin service.
+
+Run `npm run build:spark` to check and build with the online inquiry form
+disabled, demo mode enabled, and WhatsApp number cleared regardless of local
+environment values. Public pages show a site-wide demo notice; sample
+descriptions, project cards, contact details, and locally stored illustrations
+are illustrative, not claims about a real company. The command audits public
+output and stops if `[REPLACE: ...]` markers, temporary prototype image URLs,
+active sample contact links, Admin-path output, source maps, or credential
+patterns remain.
+
+When the static build is ready, deploy only Firebase Hosting to an explicitly
+named project:
+
+```sh
+npm run deploy:spark -- --project <firebase-project-id> --confirm-static-hosting-deploy
+```
+
+The deploy command rebuilds/audits first, requires the explicit confirmation
+flag, and invokes Firebase CLI with `--only hosting --config firebase.spark.json`.
+Confirm the project is on Spark and inspect the target before running it. This
+static launch does not provide the Admin CMS or online inquiry submission;
+the contact form displays an unavailable notice rather than implying success.
+Firebase plan eligibility and quotas can change; confirm current limits in the
+Firebase console. Do not enable billing or deploy server-side services as part
+of this static-only procedure.
+
+## Before a real business launch
+
+The Spark artifact is intentionally a labeled template demo, not a production
+company site. Replace all sample descriptions, project examples, contact
+details, and illustrations with owner-approved information before removing the
+demo notice or indexing the site. Verify qualifications, standards, service
+claims, contact destinations, legal/privacy requirements, and imagery. The
+static test launch does not provide Admin/CMS routes or inquiry submissions.

@@ -17,11 +17,7 @@
  *   #contact        — Contact page, not started
  *   #services-list  — Services grid, step 4.1 must add `id="services-list"`
  *
- * Images. Every `src` below is still the prototype's `lh3.googleusercontent`
- * hotlink. Those URLs will not survive. Each needs a real asset uploaded to
- * Firebase Storage before Home ships. The parent element carries
- * `bg-surface-container`, so a failed load degrades to a grey panel rather
- * than a broken-image icon.
+ * The local illustration is intentionally labeled as sample artwork.
  *
  * Deliberately no `width`/`height` on the images: each sits in a fixed-height
  * container at `h-full object-cover`, so the box never reflows and there is no
@@ -63,12 +59,12 @@ import Button from '../ui/Button.astro';
         <h1 class="text-[34px] sm:text-[46px] lg:text-[56px] leading-[1.12] tracking-tight font-display-hero text-on-surface">Reliable Electrical Solutions Built for <span class="text-primary-container">Safety &amp; Performance</span></h1>
 
         <p class="w-full max-w-xl font-body-lg text-body-lg text-secondary leading-relaxed">
-          [REPLACE: 1–2 sentence company introduction]
+          Sample electrical engineering and contracting content for this website template. Replace it with an owner-approved company introduction before real-world use.
         </p>
 
         <div class="w-full sm:w-auto flex flex-col sm:flex-row items-stretch sm:items-center gap-4 pt-2">
-          <Button variant="primary" href="/contact#contact-quotation-form">
-            <span>GET A QUOTE</span>
+          <Button variant="primary" href="/contact#quotation">
+            <span>VIEW SAMPLE CONTACT</span>
             <span class="material-symbols-outlined text-lg" aria-hidden="true">arrow_forward</span>
           </Button>
           <Button variant="secondary" href="#services-list">EXPLORE SERVICES</Button>
@@ -79,14 +75,14 @@ import Button from '../ui/Button.astro';
             <span class="material-symbols-outlined text-primary-container text-xl" aria-hidden="true"
               >verified</span
             >
-            <span class="font-label-sm text-label-sm text-on-surface">Certified Compliance</span>
+            <span class="font-label-sm text-label-sm text-on-surface">Example compliance content</span>
           </div>
           <div class="flex items-center gap-2">
             <span
               class="material-symbols-outlined text-primary-container text-xl"
               aria-hidden="true">precision_manufacturing</span
             >
-            <span class="font-label-sm text-label-sm text-on-surface">Industrial Standard</span>
+            <span class="font-label-sm text-label-sm text-on-surface">Verify standards before use</span>
           </div>
         </div>
       </div>
@@ -97,8 +93,8 @@ import Button from '../ui/Button.astro';
         >
           <img
             class="w-full h-full object-cover object-center"
-            src="https://lh3.googleusercontent.com/aida-public/AB6AXuBGCO8SgW7oLqCs8-k81OOZount04OcaGdN0vURh96M3xpQaJ3Pg1m8LRdkTImpJzcKL7SbAA8ESnnXfP5e0H6gXrHEUAMuIR43rsW4jkChGBn4lWyIlSkbFt7HEOBVfrWTJSubBPVpCPt7q9e4LgBocmHQkji7DAGzJpYcw61eRDRR-z_yFTGzXZGbuhtDtmzjWXU6ydWyfZsFQeXH5RQq3u1fiUE_Rb6gb5cscKzkV808qS3luJlobQ"
-            alt="Professional female electrical engineer wearing white safety hardhat, high-visibility orange safety vest, and safety goggles examining an open industrial electrical MDB control panel board with terminal blocks and wiring harnesses inside a modern high-tech manufacturing plant"
+            src="/images/sample-engineering.svg"
+            alt="Sample engineering illustration showing electrical distribution panels; not a photograph of a company project"
             loading="eager"
             fetchpriority="high"
             decoding="async"
@@ -119,10 +115,10 @@ import Button from '../ui/Button.astro';
               </div>
               <div class="flex flex-col flex-1 min-w-0">
               <span class="font-title-md text-title-md text-on-surface leading-tight"
-                >100% Safety &amp; Compliance</span
+                >Example safety content</span
               >
                 <span class="font-label-sm text-label-sm text-secondary truncate"
-                  >Guaranteed Utility Standards</span
+                  >Replace with verified policy</span
                 >
               </div>
             </div>
@@ -130,7 +126,7 @@ import Button from '../ui/Button.astro';
               class="absolute top-5 right-5 z-10 px-3 py-1.5 rounded-lg bg-inverse-surface/90 text-on-primary font-label-caps text-label-caps uppercase flex items-center gap-2"
             >
               <span class="w-2 h-2 rounded-full bg-emerald-400" aria-hidden="true"></span>
-              <span>GRID LEVEL GRADE</span>
+              <span>SAMPLE TEMPLATE</span>
             </div>
           </div>
         </div>

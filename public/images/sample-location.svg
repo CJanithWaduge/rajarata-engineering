@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" role="img">
+  <rect width="1200" height="800" fill="#e8eef2"/>
+  <path d="M-80 200 330 610M160-40l470 840M470-50l470 800M800-40l440 480M-40 690 1220 110M-20 480l1240-580M-20 820 1220 260" fill="none" stroke="#c1cdd5" stroke-width="46"/>
+  <path d="M-80 200 330 610M160-40l470 840M470-50l470 800M800-40l440 480M-40 690 1220 110M-20 480l1240-580M-20 820 1220 260" fill="none" stroke="#fff" stroke-width="7" stroke-dasharray="24 20"/>
+  <g fill="#c4d8ca">
+    <path d="M48 58h220v112H48zM372 64h186v100H372zM728 55h210v125H728zM1005 350h140v220h-140zM68 558h170v160H68zM545 625h212v120H545z"/>
+  </g>
+  <circle cx="600" cy="390" r="108" fill="#d32f2f" fill-opacity=".15"/>
+  <path d="M600 250c-69 0-125 56-125 125 0 94 125 219 125 219s125-125 125-219c0-69-56-125-125-125zm0 170a45 45 0 1 1 0-90 45 45 0 0 1 0 90z" fill="#d32f2f"/>
+  <rect x="345" y="660" width="510" height="82" rx="14" fill="#111827"/>
+  <text x="398" y="713" fill="#fff" font-family="Arial,sans-serif" font-size="31" font-weight="700" letter-spacing="2">SAMPLE LOCATION — NOT A REAL MAP</text>
+</svg>

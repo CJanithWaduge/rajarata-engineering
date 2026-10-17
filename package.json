@@ -23,6 +23,9 @@
     "test:phase18": "npm run check && npm run build && npm run test:content && npm run test:rules && npm run test:preview && npm run test:publishing && npm run test:contact:emulator",
     "test:whatsapp": "node --experimental-strip-types --test tests/whatsapp.test.mjs",
     "test:phase19": "npm run check && npm run build && npm run test:whatsapp",
+    "build:spark": "node scripts/build-spark.mjs",
+    "deploy:spark": "node scripts/deploy-spark.mjs",
+    "test:spark": "node --test tests/spark-hosting.test.mjs",
     "astro": "astro"
   },
   "dependencies": {
